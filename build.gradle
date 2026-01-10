@@ -15,6 +15,10 @@ base {
 
 repositories {
 	maven { url "https://maven.shedaniel.me" }
+	maven {
+		name = "Gegy"
+		url = uri("https://maven.gegy.dev")
+	}
 }
 
 loom {
@@ -45,6 +49,9 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	modImplementation "TechReborn:TechReborn-${project.tech_reborn_version}"
+
+	// We provide LambDynamicLights configuration, even if we don't directly depend on it
+	modLocalRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:4.8.7+1.21.10"
 
 	// To easily check and debug recipes in-game
 	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:21.9.812"
