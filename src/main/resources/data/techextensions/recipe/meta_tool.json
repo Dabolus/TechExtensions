@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " WD",
+    " CE",
+    "S  "
+  ],
+  "key": {
+    "D": "techreborn:industrial_drill",
+    "C": "techreborn:industrial_chainsaw",
+    "S": "techreborn:nanosaber",
+    "W": "techreborn:wrench",
+    "E": "techreborn:energy_flow_chip"
+  },
+  "result": {
+    "id": "techextensions:meta_tool"
+  }
+}

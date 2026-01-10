@@ -1,12 +1,14 @@
 package dev.gga.techextensions;
 
+import dev.gga.techextensions.component.TEDataComponentTypes;
+import dev.gga.techextensions.init.TEContent;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TechExtensions implements ModInitializer {
-	public static final String MOD_ID = "tech-extensions";
+	public static final String MOD_ID = "techextensions";
 
 	// This logger is used to write text to the console and the log file.
 	// It is considered best practice to use your mod id as the logger's name.
@@ -15,10 +17,7 @@ public class TechExtensions implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
-
-		LOGGER.info("Hello Fabric world!");
+		TEContent.register();
+		TEDataComponentTypes.init();
 	}
 }

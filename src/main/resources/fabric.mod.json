@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "tech-extensions",
+	"id": "techextensions",
 	"version": "${version}",
 	"name": "Tech Extensions",
 	"description": "This is an example description! Tell everyone what your mod is about!",
@@ -12,7 +12,7 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/tech-extensions/icon.png",
+	"icon": "assets/techextensions/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -22,13 +22,13 @@
 			"dev.gga.techextensions.TechExtensionsClient"
 		],
 		"fabric-datagen": [
-			"dev.gga.techextensions.TechExtensionsDataGenerator"
+			"dev.gga.techextensions.datagen.TechExtensionsDataGen"
 		]
 	},
 	"mixins": [
-		"tech-extensions.mixins.json",
+		"techextensions.mixins.json",
 		{
-			"config": "tech-extensions.client.mixins.json",
+			"config": "techextensions.client.mixins.json",
 			"environment": "client"
 		}
 	],
