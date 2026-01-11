@@ -29,16 +29,22 @@ public class TEItemGroup {
 
         ItemGroupEvents.modifyEntriesEvent(ITEM_GROUP).register(TEItemGroup::entries);
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(TEItemGroup::addTools);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(TEItemGroup::addIngredients);
     }
 
     private static void entries(FabricItemGroupEntries entries) {
+        entries.addAfter(Items.NETHER_BRICK, TEContent.ELECTRIC_DUCTED_FAN);
         addPoweredItem(TEContent.META_TOOL, entries, null, true);
-        // addPoweredItem(TEContent.JETPACK, entries, null, true);
+        addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, null, true);
     }
 
     private static void addTools(FabricItemGroupEntries entries) {
         addPoweredItem(TEContent.META_TOOL, entries, Items.BUCKET, false);
-        // addPoweredItem(TEContent.JETPACK, entries, Items.OAK_BOAT, false);
+        addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, Items.OAK_BOAT, false);
+    }
+
+    private static void addIngredients(FabricItemGroupEntries entries) {
+        entries.addAfter(Items.NETHER_BRICK, TEContent.ELECTRIC_DUCTED_FAN);
     }
 
     private static void addPoweredItem(Item item, FabricItemGroupEntries entries, ItemLike before, boolean includeUncharged) {

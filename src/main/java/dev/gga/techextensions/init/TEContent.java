@@ -13,7 +13,8 @@ import org.slf4j.MarkerFactory;
 public class TEContent {
     public static final Marker DATAGEN = MarkerFactory.getMarker("datagen");
 
-    public static Item JETPACK;
+    public static Item ELECTRIC_DUCTED_FAN;
+    public static Item ELECTRIC_JETPACK;
     public static Item META_TOOL;
 
     public final static class BlockTags {

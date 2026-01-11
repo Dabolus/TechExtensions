@@ -24,6 +24,7 @@ src/main/generated/
 bin/
 .classpath
 .project
+local.properties
 
 # macos
 

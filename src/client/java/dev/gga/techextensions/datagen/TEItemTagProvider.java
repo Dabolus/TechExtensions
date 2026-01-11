@@ -20,7 +20,8 @@ public class TEItemTagProvider extends FabricTagProvider.ItemTagProvider {
             .add(TEContent.META_TOOL);
 
         valueLookupBuilder(ItemTags.DURABILITY_ENCHANTABLE)
-            .add(TEContent.META_TOOL);
+            .add(TEContent.META_TOOL)
+            .add(TEContent.ELECTRIC_JETPACK);
 
         valueLookupBuilder(ItemTags.MINING_ENCHANTABLE)
             .add(TEContent.META_TOOL);

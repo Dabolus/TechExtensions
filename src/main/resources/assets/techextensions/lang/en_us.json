@@ -1,5 +1,7 @@
 {
   "itemGroup.techextensions.item_group": "Tech Extensions",
+  "item.techextensions.electric_ducted_fan": "Electric Ducted Fan",
+  "item.techextensions.electric_jetpack": "Electric Jetpack",
   "item.techextensions.meta_tool": "Meta-Tool",
   "techextensions.tooltip.meta_tool_motto": "Everything you ever want,\neverything you ever need.",
   "techextensions.message.setTo": "Set to"

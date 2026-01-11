@@ -3,6 +3,8 @@ package dev.gga.techextensions.events;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEInitUtils;
+import dev.gga.techextensions.init.TEItemSettings;
+import dev.gga.techextensions.items.armor.ElectricJetpackItem;
 import dev.gga.techextensions.items.tool.industrial.MetaToolItem;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,6 +31,8 @@ public class ModRegistry {
     }
 
     private static void registerItems() {
+        registerItem(TEContent.ELECTRIC_DUCTED_FAN = TEInitUtils.setup(new Item(TEItemSettings.item("electric_ducted_fan")), "electric_ducted_fan"));
+        registerItem(TEContent.ELECTRIC_JETPACK = TEInitUtils.setup(new ElectricJetpackItem("electric_jetpack"), "electric_jetpack"));
         registerItem(TEContent.META_TOOL = TEInitUtils.setup(new MetaToolItem("meta_tool"), "meta_tool"));
 
         TechExtensions.LOGGER.debug("TechExtension's Items Loaded");

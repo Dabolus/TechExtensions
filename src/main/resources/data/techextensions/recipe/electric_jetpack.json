@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MDM",
+    "CBC",
+    "F F"
+  ],
+  "key": {
+    "B": "techreborn:lithium_ion_batpack",
+    "C": "techreborn:helium_coolant_cell_60k",
+    "D": "techreborn:data_storage_core",
+    "F": "techextensions:electric_ducted_fan",
+    "M": "#c:plates/magnalium"
+  },
+  "result": {
+    "id": "techextensions:electric_jetpack"
+  }
+}
