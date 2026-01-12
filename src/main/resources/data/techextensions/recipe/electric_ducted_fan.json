@@ -1,16 +1,17 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    " P ",
+    "PTP",
     "TCT",
-    " P "
+    "PTP"
   ],
   "key": {
     "P": "techreborn:carbon_plate",
-    "C": "techreborn:advanced_circuit",
+    "C": "techreborn:electronic_circuit",
     "T": "#c:plates/titanium"
   },
   "result": {
-    "id": "techextensions:electric_ducted_fan"
+    "id": "techextensions:electric_ducted_fan",
+    "count": 2
   }
 }
