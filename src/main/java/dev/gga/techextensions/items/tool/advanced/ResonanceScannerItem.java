@@ -228,10 +228,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         int itemsInStack = targetStack.isEmpty() ? 0 : targetStack.getCount();
         long stackScanCost = TechExtensionsConfig.resonanceScannerBaseCost +
             (itemsInStack * TechExtensionsConfig.resonanceScannerPerItemCost);
-        double powerMultiplier = 1;
-        for (int i = 0; i < overclockerUpgrades; i++) {
-            powerMultiplier = powerMultiplier * (1f + TechRebornConfig.overclockerPower);
-        }
+        double powerMultiplier = Math.pow(1f + TechRebornConfig.overclockerPower, overclockerUpgrades);
         return Math.round(stackScanCost * powerMultiplier);
     }
 
