@@ -28,10 +28,10 @@ public class TechExtensionsConfig {
     public static long resonanceScannerPerItemCost = 10;
 
     @Config(config = "items", category = "power", key = "resonanceScannerBaseRange", comment = "Base Range for Resonance Scanner (blocks)")
-    public static double resonanceScannerBaseRange = 4;
+    public static double resonanceScannerBaseRange = 6;
 
     @Config(config = "items", category = "power", key = "resonanceScannerRangeMultiplier", comment = "Range Multiplier per each item in the Resonance Scanner. The formula is round(baseRange + (rangeMultiplier * ln(itemCount)))")
-    public static double resonanceScannerRangeMultiplier = 6.62;
+    public static double resonanceScannerRangeMultiplier = 10;
 
     @Config(config = "items", category = "power", key = "resonanceScannerScanCooldown", comment = "Cooldown between scans for Resonance Scanner (ticks)")
     public static int resonanceScannerScanCooldown = 80;
