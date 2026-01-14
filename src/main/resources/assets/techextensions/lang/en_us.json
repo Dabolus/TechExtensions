@@ -3,6 +3,11 @@
   "item.techextensions.electric_ducted_fan": "Electric Ducted Fan",
   "item.techextensions.electric_jetpack": "Electric Jetpack",
   "item.techextensions.meta_tool": "Meta-Tool",
+  "item.techextensions.resonance_scanner": "Resonance Scanner",
   "techextensions.tooltip.meta_tool_motto": "Everything you ever want,\neverything you ever need.",
-  "techextensions.message.setTo": "Set to"
+  "techextensions.message.setTo": "Set to",
+  "techextensions.message.resonance_scanner.no_target": "No target specified",
+  "techextensions.message.resonance_scanner.invalid_target": "Target is not a block",
+  "techextensions.message.resonance_scanner.range": "Scan Range: %1$s blocks",
+  "techextensions.message.resonance_scanner.block_in_range": "%1$s detected within %2$s blocks"
 }

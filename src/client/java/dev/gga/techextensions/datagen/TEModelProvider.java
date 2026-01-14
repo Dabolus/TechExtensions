@@ -33,5 +33,6 @@ public class TEModelProvider extends FabricModelProvider {
         add(TEContent.ELECTRIC_DUCTED_FAN, toGenerated);
         add(TEContent.ELECTRIC_JETPACK, toGenerated);
         add(TEContent.META_TOOL, toHandheld);
+        add(TEContent.RESONANCE_SCANNER, toHandheld);
     }
 }

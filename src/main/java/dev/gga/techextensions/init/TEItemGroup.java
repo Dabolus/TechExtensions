@@ -36,11 +36,13 @@ public class TEItemGroup {
         entries.addAfter(Items.NETHER_BRICK, TEContent.ELECTRIC_DUCTED_FAN);
         addPoweredItem(TEContent.META_TOOL, entries, null, true);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, null, true);
+        addPoweredItem(TEContent.RESONANCE_SCANNER, entries, null, true);
     }
 
     private static void addTools(FabricItemGroupEntries entries) {
         addPoweredItem(TEContent.META_TOOL, entries, Items.BUCKET, false);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, Items.OAK_BOAT, false);
+        addPoweredItem(TEContent.RESONANCE_SCANNER, entries, Items.IRON_SHOVEL, false);
     }
 
     private static void addIngredients(FabricItemGroupEntries entries) {

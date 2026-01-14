@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " T ",
+    "BDB",
+    "PCP"
+  ],
+  "key": {
+    "T": "techreborn:frequency_transmitter",
+    "D": "techreborn:digital_display",
+    "B": "techreborn:lithium_ion_battery",
+    "C": "techreborn:advanced_circuit",
+    "P": "#c:plates/invar"
+  },
+  "result": {
+    "id": "techextensions:resonance_scanner"
+  }
+}

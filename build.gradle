@@ -22,6 +22,8 @@ repositories {
 }
 
 loom {
+	accessWidenerPath = file("src/main/resources/techextensions.accesswidener")
+
 	splitEnvironmentSourceSets()
 
 	mods {
