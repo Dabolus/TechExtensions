@@ -17,10 +17,12 @@ jobs:
       - name: setup jdk
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'microsoft'
+          java-version: "21"
+          distribution: "microsoft"
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
+      - name: run datagen
+        run: ./gradlew runDatagen
       - name: build
         run: ./gradlew build
       - name: capture build artifacts
