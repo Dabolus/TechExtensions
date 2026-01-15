@@ -12,7 +12,7 @@ It introduces new high-tech gadgets and utilities to enhance the gameplay experi
 
 ## Items
 
-Currently, the mod adds three new items:
+Currently, the mod adds four new items:
 
 ### 1. Electric Jetpack
 
@@ -122,6 +122,71 @@ Unlike Tech Reborn machines, the scanner is a handheld item and accepts only up 
 - 2x Invar Plates
 
 ![Resonance Scanner Recipe](screenshots/resonance_scanner_recipe.png)
+
+### 4. Meta-Tool
+
+The **Meta-Tool** is the ultimate multi-purpose tool, a significantly enhanced version of
+[Tech Reborn's Omni-Tool](https://wiki.techreborn.ovh/docs/items/tools/omni_tool).
+
+It combines the functionality of a pickaxe, axe, shovel, sword, shears (and optionally, torch!)
+into a single high-capacity powered device with intelligent mining modes.
+
+#### Features
+
+Ever felt like the **Omni-Tool** was cool, but it felt more in the Advanced tools tier instead of
+in the Industrial tools tier? The **Meta-Tool** is basically the Industrial version of the **Omni-Tool**,
+with vastly improved energy capacity, faster mining speed, higher attack stats, and new intelligent mining modes.
+
+First of all, the **Meta-Tool** includes all the functionalities of the **Omni-Tool**, reported below:
+
+- Functions as a pickaxe, axe, shovel, sword and shears
+- Strips Logs & Flattens Paths when right-clicking on appropriate blocks
+- Automatically places torches from inventory when right-clicking on other blocks
+- Works as a wrench for rotating and dismantling Tech Reborn machines
+
+Unlike the **Omni-Tool**, though, the **Meta-Tool** stores 40M E, mines at the same speed
+as the **Industrial Drill/Chainsaw**, and deals the same damage as the **Nanosaber**.
+
+Additionally, it introduces different mining modes to enhance block breaking
+(which can be cycled through with Sneak + Right-click):
+
+| Mode         | Description                                                    |
+| ------------ | -------------------------------------------------------------- |
+| **Inactive** | Standard single-block mining                                   |
+| **3×3**      | Mines a 3×3 area centered on the targeted block                |
+| **Smart**    | Intelligent mode that adapts to what you're mining (see below) |
+
+##### Smart Mode Behavior
+
+The Smart mode automatically detects what you're mining and applies the best strategy:
+
+- **Ores:** Activates **Vein Mining** — breaks all connected ore blocks of the same type (up to 64 blocks)
+- **Logs/Leaves:** Activates **Tree Capitator** — chops down entire trees (up to 64 logs + 256 leaves), similarly to the Industrial Chainsaw
+- **Other blocks:** Falls back to **3×3 mining**
+
+#### Specifications
+
+| Setting     | Default Value | Description                         |
+| ----------- | ------------- | ----------------------------------- |
+| Capacity    | 40,000,000 E  | Total energy storage                |
+| Mining Cost | 200 E/block   | Energy consumed per block mined     |
+| Hit Cost    | 250 E/hit     | Energy consumed per enemy hit       |
+| Energy Tier | Insane        | Accepts Insane-tier energy transfer |
+
+_Look at the config file for more detailed settings and adjustments._
+
+#### Crafting Recipe
+
+With great power comes great crafting complexity. The Meta-Tool recipe is similar to that of the
+Omni-Tool, but requires top-tier tools:
+
+- 1x Omni-Tool
+- 1x Industrial Drill
+- 1x Industrial Chainsaw
+- 1x Nanosaber
+- 1x Energy Flow Chip
+
+![Meta-Tool Recipe](screenshots/meta_tool_recipe.png)
 
 ## Contributing
 
