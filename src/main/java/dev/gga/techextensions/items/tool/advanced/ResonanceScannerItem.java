@@ -6,10 +6,13 @@ import dev.gga.techextensions.init.TEItemSettings;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Optional;
+import java.util.function.Function;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -24,6 +27,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -66,16 +70,16 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
                 return;
             }
             long currentTick = worldIn.getGameTime();
-            int overclockerUpgrades = getUpgradesCount(stack, TRContent.Upgrades.OVERCLOCKER);
-            if (currentTick - lastDisplayTick < computeScanCooldown(overclockerUpgrades)) {
+            long scanCooldown = getScanCooldown(stack);
+            if (currentTick - lastDisplayTick < scanCooldown) {
                 return;
             }
             lastDisplayTick = currentTick;
             // Compute cost based on items in target stack and overclocker upgrades
-            ItemStack targetStack = getTarget(stack);
-            long scanCost = computeScanCost(targetStack, overclockerUpgrades);
+            long scanCost = getScanCost(stack);
             // Consume energy, regardless of whether player is holding it or not
             tryUseEnergy(stack, scanCost);
+            ItemStack targetStack = getTarget(stack);
             Item item = targetStack.getItem();
             // Ignore non-block items
             if (!isValidTarget(item)) {
@@ -127,8 +131,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        int energyStorageUpgrades = getUpgradesCount(stack, TRContent.Upgrades.ENERGY_STORAGE);
-        return TechExtensionsConfig.resonanceScannerCharge + (long)(energyStorageUpgrades * TechRebornConfig.energyStoragePower);
+        return getEnergyCapacityFromCache(stack);
     }
 
     @Override
@@ -171,6 +174,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
                 super.setChanged();
                 List<ItemStack> items = this.getItems().stream().filter(s -> !s.isEmpty()).toList();
                 stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(items));
+                updateCache(stack, this);
             }
         };
 
@@ -186,22 +190,70 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return container;
     }
 
+    private static void updateCache(ItemStack stack, Container inventory) {
+        int overclockers = 0;
+        int energyStorage = 0;
+        ItemStack targetStack = ItemStack.EMPTY;
+
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack s = inventory.getItem(i);
+            if (s.isEmpty()) continue;
+
+            if (targetStack.isEmpty()) {
+                targetStack = s;
+            }
+
+            if (s.getItem() instanceof UpgradeItem) {
+                if (s.is(TRContent.Upgrades.OVERCLOCKER.item)) overclockers += s.getCount();
+                if (s.is(TRContent.Upgrades.ENERGY_STORAGE.item)) energyStorage += s.getCount();
+            }
+        }
+
+        final long scanCooldown = computeScanCooldown(overclockers);
+        final long scanCost = computeScanCost(targetStack, overclockers);
+        final long energyCapacity = TechExtensionsConfig.resonanceScannerCharge + (long)(energyStorage * TechRebornConfig.energyStoragePower);
+
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+            tag.putLong("cache:scan_cooldown", scanCooldown);
+            tag.putLong("cache:scan_cost", scanCost);
+            tag.putLong("cache:energy_capacity", energyCapacity);
+        });
+    }
+
+    private static int getScanCooldown(ItemStack stack) {
+        return getCachedValue(stack, "cache:scan_cooldown", TechExtensionsConfig.resonanceScannerScanCooldown,
+            tag -> tag.getInt("cache:scan_cooldown"));
+    }
+
+    private static long getScanCost(ItemStack stack) {
+        return getCachedValue(stack, "cache:scan_cost", TechExtensionsConfig.resonanceScannerBaseCost,
+            tag -> tag.getLong("cache:scan_cost"));
+    }
+
+    private static int getEnergyCapacityFromCache(ItemStack stack) {
+        return getCachedValue(stack, "cache:energy_capacity", TechExtensionsConfig.resonanceScannerCharge,
+            tag -> tag.getInt("cache:energy_capacity"));
+    }
+
+    private static <T> T getCachedValue(ItemStack stack, String key, T defaultValue, Function<CompoundTag, Optional<T>> extractor) {
+        if (stack == null) {
+            return defaultValue;
+        }
+        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CompoundTag tag = customData.copyTag();
+        if (tag.contains(key)) {
+            return extractor.apply(tag).orElse(defaultValue);
+        }
+        Container inv = getInventory(stack);
+        updateCache(stack, inv);
+        return extractor.apply(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()).orElse(defaultValue);
+    }
+
     public static ItemStack getTarget(ItemStack stack) {
         ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
         return contents != null
             ? contents.stream().findFirst().orElse(ItemStack.EMPTY)
             : ItemStack.EMPTY;
-    }
-
-    private static int getUpgradesCount(ItemStack stack, TRContent.Upgrades upgradeType) {
-        Container inventory = getInventory(stack);
-        AtomicInteger upgradesCount = new AtomicInteger();
-        inventory.forEach(itemStack -> {
-            if (itemStack.getItem() instanceof UpgradeItem && itemStack.is(upgradeType.item)) {
-                upgradesCount.getAndIncrement();
-            }
-        });
-        return upgradesCount.get();
     }
 
     @Override
