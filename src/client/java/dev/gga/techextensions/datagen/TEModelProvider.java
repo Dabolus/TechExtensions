@@ -1,5 +1,6 @@
 package dev.gga.techextensions.datagen;
 
+import dev.gga.techextensions.client.tint.ResonanceScannerScreenTintSource;
 import dev.gga.techextensions.init.TEContent;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -33,6 +34,7 @@ public class TEModelProvider extends FabricModelProvider {
         add(TEContent.ELECTRIC_DUCTED_FAN, toGenerated);
         add(TEContent.ELECTRIC_JETPACK, toGenerated);
         add(TEContent.META_TOOL, toHandheld);
-        add(TEContent.RESONANCE_SCANNER, toHandheld);
+        add(TEContent.RESONANCE_SCANNER, (info) ->
+            itemModelGenerators.generateItemWithTintedOverlay(info.asItem(), "_screen", new ResonanceScannerScreenTintSource()));
     }
 }

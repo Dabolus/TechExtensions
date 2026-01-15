@@ -15,6 +15,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -65,10 +66,6 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
             return;
         }
         if (entityIn instanceof Player playerIn) {
-            TRItemUtils.checkActive(stack, 1, entityIn);
-            if (!TRItemUtils.isActive(stack)) {
-                return;
-            }
             long currentTick = worldIn.getGameTime();
             long scanCooldown = getScanCooldown(stack);
             if (currentTick - lastDisplayTick < scanCooldown) {
@@ -77,35 +74,65 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
             lastDisplayTick = currentTick;
             // Compute cost based on items in target stack and overclocker upgrades
             long scanCost = getScanCost(stack);
+            TRItemUtils.checkActive(stack, (int) scanCost, entityIn);
+            if (!TRItemUtils.isActive(stack)) {
+                // Scanner not active, remove any existing NBT data (display off)
+                resetDistancePercent(stack);
+                return;
+            }
             // Consume energy, regardless of whether player is holding it or not
             tryUseEnergy(stack, scanCost);
             ItemStack targetStack = getTarget(stack);
             Item item = targetStack.getItem();
             // Ignore non-block items
             if (!isValidTarget(item)) {
+                // Invalid target, remove any existing NBT data (display off)
+                resetDistancePercent(stack);
                 return;
             }
             long effectiveRange = computeEffectiveRange(targetStack);
             BlockPos foundPos = findTargetBlock(worldIn, playerIn, ((BlockItem) item).getBlock(), effectiveRange);
             if (foundPos == null) {
+                // Block not found, remove any existing NBT data (display off)
+                resetDistancePercent(stack);
                 return;
             }
-            // Only display info text if scanner is held in main/off hand
+            // Only display info text and play sound if scanner is held in main/off hand
             if (stack.equals(playerIn.getMainHandItem()) || stack.equals(playerIn.getOffhandItem())) {
                 // Compute the distance to the found block
                 double distance = playerIn.position().distanceTo(Vec3.atCenterOf(foundPos));
-                long estimatedDistance = estimateDistance(distance, effectiveRange);
+                double estimatedDistancePercent = estimateDistancePercent(distance / (double) effectiveRange);
+                // Write the current estimated distance to NBT for screen tinting
+                CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+                    tag.putDouble("estimated_block_distance_percent", estimatedDistancePercent);
+                });
                 // Display message to player
                 playerIn.displayClientMessage(
                     Component.translatable(
                         "techextensions.message.resonance_scanner.block_in_range",
                         Component.literal(item.getName().getString()).withStyle(ChatFormatting.GOLD),
-                        Component.literal(Long.toString(estimatedDistance)).withStyle(ChatFormatting.GOLD)
+                        Component.literal(Long.toString(Math.round(estimatedDistancePercent * effectiveRange))).withStyle(ChatFormatting.GOLD)
                     ).withStyle(ChatFormatting.GRAY),
                     true
                 );
+                // Play sound effect
+                float pitch = 2.0F - (float)(estimatedDistancePercent * 1.5);
+                worldIn.playSound(
+                    null,
+                    playerIn.blockPosition(),
+                    SoundEvents.EXPERIENCE_ORB_PICKUP,
+                    playerIn.getSoundSource(),
+                    0.5F,
+                    pitch
+                );
             }
         }
+    }
+
+    @Override
+    public boolean allowComponentsUpdateAnimation(Player player, InteractionHand hand, ItemStack oldStack, ItemStack newStack) {
+        // Avoid animation when updating NBT data
+        return false;
     }
 
     @Override
@@ -190,6 +217,12 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return container;
     }
 
+    private static void resetDistancePercent(ItemStack stack) {
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+            tag.remove("estimated_block_distance_percent");
+        });
+    }
+
     private static void updateCache(ItemStack stack, Container inventory) {
         int overclockers = 0;
         int energyStorage = 0;
@@ -220,12 +253,12 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         });
     }
 
-    private static int getScanCooldown(ItemStack stack) {
+    public static int getScanCooldown(ItemStack stack) {
         return getCachedValue(stack, "cache:scan_cooldown", TechExtensionsConfig.resonanceScannerScanCooldown,
             tag -> tag.getInt("cache:scan_cooldown"));
     }
 
-    private static long getScanCost(ItemStack stack) {
+    public static long getScanCost(ItemStack stack) {
         return getCachedValue(stack, "cache:scan_cost", TechExtensionsConfig.resonanceScannerBaseCost,
             tag -> tag.getLong("cache:scan_cost"));
     }
@@ -346,13 +379,11 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return null;
     }
 
-    private static long estimateDistance(double exactDistance, long maxRange) {
-        double exactDistancePercent = exactDistance / maxRange;
-        double estimatedDistance = Arrays.stream(FIBONACCI_SEQUENCE)
+    public static double estimateDistancePercent(double exactDistancePercent) {
+        return Arrays.stream(FIBONACCI_SEQUENCE)
             .filter(d -> d >= exactDistancePercent)
             .findFirst()
-            .orElse(1.0) * maxRange;
-        return Math.round(estimatedDistance);
+            .orElse(1.0);
     }
 }
 
