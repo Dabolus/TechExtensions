@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    " WD",
+    " OD",
     " CE",
     "S  "
   ],
@@ -9,7 +9,7 @@
     "D": "techreborn:industrial_drill",
     "C": "techreborn:industrial_chainsaw",
     "S": "techreborn:nanosaber",
-    "W": "techreborn:wrench",
+    "O": "techreborn:omni_tool",
     "E": "techreborn:energy_flow_chip"
   },
   "result": {
