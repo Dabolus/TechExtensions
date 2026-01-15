@@ -15,9 +15,11 @@ import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.item.equipment.EquipmentAsset;
 import net.minecraft.world.item.equipment.EquipmentAssets;
 
+import dev.gga.techextensions.TechExtensions;
+
 
 public class TEArmorMaterials {
-    private static final TagKey<Item> EMPTY = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("techextensions", "empty"));
+    private static final TagKey<Item> EMPTY = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "empty"));
 
     public static final ArmorMaterial ELECTRIC_JETPACK = register("electric_jetpack", Util.make(new EnumMap<>(ArmorType.class), map -> {
         map.put(ArmorType.BOOTS, 0);
@@ -28,7 +30,7 @@ public class TEArmorMaterials {
     }), 10, SoundEvents.ARMOR_EQUIP_TURTLE, 0.0f, 0.0f, 33, EMPTY);
 
     private static ArmorMaterial register(String id, EnumMap<ArmorType, Integer> defense, int enchantability, Holder<SoundEvent> equipSound, float toughness, float knockbackResistance, int durability, TagKey<Item> repairIngredient) {
-        ResourceKey<EquipmentAsset> asset = ResourceKey.create(EquipmentAssets.ROOT_ID, ResourceLocation.fromNamespaceAndPath("techextensions",  id));
+        ResourceKey<EquipmentAsset> asset = ResourceKey.create(EquipmentAssets.ROOT_ID, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID,  id));
         return new ArmorMaterial(durability, defense, enchantability, equipSound, toughness, knockbackResistance, repairIngredient, asset);
     }
 }

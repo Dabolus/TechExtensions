@@ -1,5 +1,6 @@
 package dev.gga.techextensions.client.gui;
 
+import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import reborncore.client.gui.GuiBase;
@@ -19,9 +20,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScannerMenu> {
-  private static final Material UPGRADES_TOP_SPRITE = new Material(ResourceLocation.parse("gui"), ResourceLocation.fromNamespaceAndPath("techextensions", "upgrades_top"));
-  private static final Material UPGRADES_SLOT_SPRITE = new Material(ResourceLocation.parse("gui"), ResourceLocation.fromNamespaceAndPath("techextensions", "upgrades_slot"));
-  private static final Material UPGRADES_BOTTOM_SPRITE = new Material(ResourceLocation.parse("gui"), ResourceLocation.fromNamespaceAndPath("techextensions", "upgrades_bottom"));
+  private static final Material UPGRADES_TOP_SPRITE = new Material(ResourceLocation.parse("gui"), ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_top"));
+  private static final Material UPGRADES_SLOT_SPRITE = new Material(ResourceLocation.parse("gui"), ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_slot"));
+  private static final Material UPGRADES_BOTTOM_SPRITE = new Material(ResourceLocation.parse("gui"), ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_bottom"));
 
   private final Container inventory;
   private final GuiBuilder builder = new GuiBuilder();
