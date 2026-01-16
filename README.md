@@ -156,6 +156,9 @@ Additionally, it introduces different mining modes to enhance block breaking
 | **3×3**      | Mines a 3×3 area centered on the targeted block                |
 | **Smart**    | Intelligent mode that adapts to what you're mining (see below) |
 
+Last but not least, if you have [LambDynamicLights](https://www.curseforge.com/minecraft/mc-mods/lambdynamiclights)
+installed, the **Meta-Tool** will also emit light!
+
 ##### Smart Mode Behavior
 
 The Smart mode automatically detects what you're mining and applies the best strategy:
