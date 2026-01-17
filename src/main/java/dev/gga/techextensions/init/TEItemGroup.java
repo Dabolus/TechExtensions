@@ -19,13 +19,17 @@ import net.minecraft.world.level.ItemLike;
 import reborncore.common.powerSystem.RcEnergyItem;
 
 public class TEItemGroup {
-    private static final ResourceKey<CreativeModeTab> ITEM_GROUP = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "item_group"));
+    private static final ResourceKey<CreativeModeTab> ITEM_GROUP = ResourceKey.create(
+            Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "item_group"));
 
     public static void register() {
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, ITEM_GROUP, FabricItemGroup.builder()
-                .title(Component.translatable("itemGroup.techextensions.item_group"))
-                .icon(() -> new ItemStack(TEContent.META_TOOL))
-                .build());
+        Registry.register(
+                BuiltInRegistries.CREATIVE_MODE_TAB,
+                ITEM_GROUP,
+                FabricItemGroup.builder()
+                        .title(Component.translatable("itemGroup.techextensions.item_group"))
+                        .icon(() -> new ItemStack(TEContent.META_TOOL))
+                        .build());
 
         ItemGroupEvents.modifyEntriesEvent(ITEM_GROUP).register(TEItemGroup::entries);
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(TEItemGroup::addTools);
@@ -49,7 +53,8 @@ public class TEItemGroup {
         entries.addAfter(Items.NETHER_BRICK, TEContent.ELECTRIC_DUCTED_FAN);
     }
 
-    private static void addPoweredItem(Item item, FabricItemGroupEntries entries, ItemLike before, boolean includeUncharged) {
+    private static void addPoweredItem(
+            Item item, FabricItemGroupEntries entries, ItemLike before, boolean includeUncharged) {
         ItemStack uncharged = new ItemStack(item);
         ItemStack charged = new ItemStack(item);
         RcEnergyItem energyItem = (RcEnergyItem) item;
@@ -61,12 +66,10 @@ public class TEItemGroup {
                 entries.accept(uncharged);
             }
             entries.accept(charged);
-        }
-        else {
+        } else {
             if (includeUncharged) {
                 entries.addBefore(before, uncharged, charged);
-            }
-            else {
+            } else {
                 entries.addBefore(before, charged);
             }
         }

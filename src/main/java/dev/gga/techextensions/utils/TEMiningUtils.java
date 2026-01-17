@@ -1,6 +1,8 @@
 package dev.gga.techextensions.utils;
 
 import dev.gga.techextensions.config.TechExtensionsConfig;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -9,9 +11,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import techreborn.utils.ToolsUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class TEMiningUtils {
     public static boolean isValidOre(BlockState state) {
@@ -24,17 +23,26 @@ public final class TEMiningUtils {
     }
 
     private static boolean shouldBreak(Player playerIn, Level worldIn, BlockPos originalPos, BlockPos pos) {
-        if (originalPos.equals(pos)) { return false; }
+        if (originalPos.equals(pos)) {
+            return false;
+        }
         BlockState blockState = worldIn.getBlockState(pos);
-        if (blockState.isAir()) { return false; }
-        if (blockState.liquid()) { return false; }
+        if (blockState.isAir()) {
+            return false;
+        }
+        if (blockState.liquid()) {
+            return false;
+        }
         float blockHardness = blockState.getDestroyProgress(playerIn, worldIn, pos);
-        if (blockHardness == -1.0F) { return false; }
+        if (blockHardness == -1.0F) {
+            return false;
+        }
         float originalHardness = worldIn.getBlockState(originalPos).getDestroySpeed(worldIn, originalPos);
         return !((originalHardness / blockHardness) > 10.0F);
     }
 
-    public static void mineAoe3x3(ItemStack stack, Level worldIn, Player playerIn, BlockPos pos, LivingEntity entityLiving) {
+    public static void mineAoe3x3(
+            ItemStack stack, Level worldIn, Player playerIn, BlockPos pos, LivingEntity entityLiving) {
         for (BlockPos additionalPos : ToolsUtil.getAOEMiningBlocks(worldIn, pos, entityLiving, 1)) {
             if (shouldBreak(playerIn, worldIn, pos, additionalPos)) {
                 ToolsUtil.breakBlock(stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost);
@@ -50,7 +58,9 @@ public final class TEMiningUtils {
 
     private static void recursivelyFindVein(Level world, BlockPos pos, List<BlockPos> foundOres) {
         // Limit the amount of ores to be broken to 64 blocks.
-        if (foundOres.size() >= 64) { return; }
+        if (foundOres.size() >= 64) {
+            return;
+        }
         for (Direction facing : Direction.values()) {
             BlockPos checkPos = pos.relative(facing);
             if (!foundOres.contains(checkPos)) {
@@ -64,4 +74,3 @@ public final class TEMiningUtils {
         }
     }
 }
-

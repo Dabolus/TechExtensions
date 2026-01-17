@@ -9,10 +9,15 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 
 public class TEDataComponentTypes {
-    public static final DataComponentType<Integer> META_TOOL_MODE =
-            DataComponentType.<Integer>builder().persistent(PrimitiveCodec.INT).networkSynchronized(ByteBufCodecs.INT).build();
+    public static final DataComponentType<Integer> META_TOOL_MODE = DataComponentType.<Integer>builder()
+            .persistent(PrimitiveCodec.INT)
+            .networkSynchronized(ByteBufCodecs.INT)
+            .build();
 
-    public static void init(){
-        Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "meta_tool_mode"), META_TOOL_MODE);
+    public static void init() {
+        Registry.register(
+                BuiltInRegistries.DATA_COMPONENT_TYPE,
+                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "meta_tool_mode"),
+                META_TOOL_MODE);
     }
 }

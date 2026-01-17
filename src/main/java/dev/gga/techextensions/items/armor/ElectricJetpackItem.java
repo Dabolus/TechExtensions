@@ -2,24 +2,30 @@ package dev.gga.techextensions.items.armor;
 
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEArmorMaterials;
-import reborncore.api.items.ArmorBlockEntityTicker;
-import reborncore.common.powerSystem.RcEnergyTier;
-
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.phys.Vec3;
+import reborncore.api.items.ArmorBlockEntityTicker;
+import reborncore.common.powerSystem.RcEnergyTier;
 
 public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBlockEntityTicker {
 
     public ElectricJetpackItem(String name) {
-        super(TEArmorMaterials.ELECTRIC_JETPACK, ArmorType.CHESTPLATE, TechExtensionsConfig.electricJetpackCharge, RcEnergyTier.HIGH, name);
+        super(
+                TEArmorMaterials.ELECTRIC_JETPACK,
+                ArmorType.CHESTPLATE,
+                TechExtensionsConfig.electricJetpackCharge,
+                RcEnergyTier.HIGH,
+                name);
     }
 
     // TREnergyArmourItem
     @Override
-    public long getEnergyMaxOutput(ItemStack stack) { return 0; }
+    public long getEnergyMaxOutput(ItemStack stack) {
+        return 0;
+    }
 
     // ArmorBlockEntityTicker
     @Override
@@ -49,8 +55,12 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
                     }
 
                     // Apply horizontal thrust based on movement input
-                    float forwardInput = serverPlayer.getLastClientInput().forward() ? 1.0f : (serverPlayer.getLastClientInput().backward() ? -1.0f : 0.0f);
-                    float strafeInput = serverPlayer.getLastClientInput().left() ? 1.0f : (serverPlayer.getLastClientInput().right() ? -1.0f : 0.0f);
+                    float forwardInput = serverPlayer.getLastClientInput().forward()
+                            ? 1.0f
+                            : (serverPlayer.getLastClientInput().backward() ? -1.0f : 0.0f);
+                    float strafeInput = serverPlayer.getLastClientInput().left()
+                            ? 1.0f
+                            : (serverPlayer.getLastClientInput().right() ? -1.0f : 0.0f);
 
                     if (forwardInput != 0 || strafeInput != 0) {
                         // Calculate movement direction based on player's yaw
@@ -59,12 +69,17 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
                         double cos = Math.cos(yawRad);
 
                         // Forward/backward movement
-                        vx += (-sin * forwardInput + cos * strafeInput) * TechExtensionsConfig.electricJetpackHorizontalThrust;
-                        vz += (cos * forwardInput + sin * strafeInput) * TechExtensionsConfig.electricJetpackHorizontalThrust;
+                        vx += (-sin * forwardInput + cos * strafeInput)
+                                * TechExtensionsConfig.electricJetpackHorizontalThrust;
+                        vz += (cos * forwardInput + sin * strafeInput)
+                                * TechExtensionsConfig.electricJetpackHorizontalThrust;
                     }
 
                     // Sprint boost - applies forward thrust when sprinting while flying
-                    if (serverPlayer.isSprinting() && storedEnergy > TechExtensionsConfig.electricJetpackFlyingCost + TechExtensionsConfig.electricJetpackSprintCost) {
+                    if (serverPlayer.isSprinting()
+                            && storedEnergy
+                                    > TechExtensionsConfig.electricJetpackFlyingCost
+                                            + TechExtensionsConfig.electricJetpackSprintCost) {
                         double yawRad = Math.toRadians(playerEntity.getYRot());
                         double sin = Math.sin(yawRad);
                         double cos = Math.cos(yawRad);
@@ -99,8 +114,8 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
                     // Cap horizontal speed (allow higher speed when sprinting)
                     double maxHorizontalSpeed = isSprinting
-                        ? TechExtensionsConfig.electricJetpackMaxHorizontalSpeed * 1.5
-                        : TechExtensionsConfig.electricJetpackMaxHorizontalSpeed;
+                            ? TechExtensionsConfig.electricJetpackMaxHorizontalSpeed * 1.5
+                            : TechExtensionsConfig.electricJetpackMaxHorizontalSpeed;
                     double horizontalSpeed = Math.sqrt(vx * vx + vz * vz);
                     if (horizontalSpeed > maxHorizontalSpeed) {
                         double scale = maxHorizontalSpeed / horizontalSpeed;

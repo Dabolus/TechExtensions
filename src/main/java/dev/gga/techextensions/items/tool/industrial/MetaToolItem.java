@@ -6,8 +6,9 @@ import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.init.TEToolMaterials;
 import dev.gga.techextensions.utils.TECuttingUtils;
-import dev.gga.techextensions.utils.TEMiningUtils;
 import dev.gga.techextensions.utils.TEItemsUtils;
+import dev.gga.techextensions.utils.TEMiningUtils;
+import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,18 +34,18 @@ import reborncore.common.util.ItemUtils;
 import techreborn.utils.TRItemUtils;
 import techreborn.utils.ToolsUtil;
 
-import java.util.List;
-
 public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     public enum MetaToolMode {
         INACTIVE,
         AOE_3x3,
         SMART, // Vein-mining for ores, tree-capitating for logs/leaves, 3x3 otherwise
     }
+
     private BlockState lastCheckedBlockState;
 
     public MetaToolItem(String name) {
-        super(TEItemSettings.unbreakable(name).tool(TEToolMaterials.META_TOOL, TEContent.BlockTags.META_TOOL_MINEABLE, 3f, 1f, 0.0F));
+        super(TEItemSettings.unbreakable(name)
+                .tool(TEToolMaterials.META_TOOL, TEContent.BlockTags.META_TOOL_MINEABLE, 3f, 1f, 0.0F));
     }
 
     private MetaToolMode getCurrentMode(ItemStack stack) {
@@ -61,7 +62,12 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             TRItemUtils.switchActive(stack, cost, entity);
             stack.set(TEDataComponentTypes.META_TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                serverPlayerEntity.displayClientMessage(Component.translatable("techextensions.message.setTo").withStyle(ChatFormatting.GRAY).append(" ").append(Component.literal("3*3").withStyle(ChatFormatting.GOLD)), true);
+                serverPlayerEntity.displayClientMessage(
+                        Component.translatable("techextensions.message.setTo")
+                                .withStyle(ChatFormatting.GRAY)
+                                .append(" ")
+                                .append(Component.literal("3*3").withStyle(ChatFormatting.GOLD)),
+                        true);
             }
         } else {
             // Cycle through modes
@@ -81,7 +87,12 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     case SMART -> modeText = "Smart";
                     default -> modeText = "Unknown";
                 }
-                serverPlayerEntity.displayClientMessage(Component.translatable("techextensions.message.setTo").withStyle(ChatFormatting.GRAY).append(" ").append(Component.literal(modeText).withStyle(ChatFormatting.GOLD)), true);
+                serverPlayerEntity.displayClientMessage(
+                        Component.translatable("techextensions.message.setTo")
+                                .withStyle(ChatFormatting.GRAY)
+                                .append(" ")
+                                .append(Component.literal(modeText).withStyle(ChatFormatting.GOLD)),
+                        true);
             }
         }
     }
@@ -89,8 +100,10 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // MiningToolItem
     @Override
     public boolean isCorrectToolForDrops(ItemStack stack, BlockState state) {
-        return Items.NETHERITE_AXE.isCorrectToolForDrops(stack, state) || Items.NETHERITE_SWORD.isCorrectToolForDrops(stack, state)
-                || Items.NETHERITE_PICKAXE.isCorrectToolForDrops(stack, state) || Items.NETHERITE_SHOVEL.isCorrectToolForDrops(stack, state)
+        return Items.NETHERITE_AXE.isCorrectToolForDrops(stack, state)
+                || Items.NETHERITE_SWORD.isCorrectToolForDrops(stack, state)
+                || Items.NETHERITE_PICKAXE.isCorrectToolForDrops(stack, state)
+                || Items.NETHERITE_SHOVEL.isCorrectToolForDrops(stack, state)
                 || Items.SHEARS.isCorrectToolForDrops(stack, state);
     }
 
@@ -103,9 +116,9 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
         return toolComponent != null ? toolComponent.defaultMiningSpeed() : 1.0F;
     }
 
-
     @Override
-    public boolean mineBlock(ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
+    public boolean mineBlock(
+            ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
         if (!(entityLiving instanceof Player playerIn)) {
             tryUseEnergy(stack, TechExtensionsConfig.metaToolCost);
             return true;
@@ -124,18 +137,21 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     List<BlockPos> ores = TEMiningUtils.findVein(worldIn, pos);
                     ores.remove(pos);
                     ores.stream()
-                        .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost))
-                        .forEach(pos1 -> ToolsUtil.breakBlock(stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost));
+                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost))
+                            .forEach(pos1 -> ToolsUtil.breakBlock(
+                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost));
                 }
                 // Then, check if we can tree-capitate
-                else if (lastCheckedBlockState == null || TECuttingUtils.isValidTreeCapitateStartBlock(lastCheckedBlockState)) {
+                else if (lastCheckedBlockState == null
+                        || TECuttingUtils.isValidTreeCapitateStartBlock(lastCheckedBlockState)) {
                     TECuttingUtils.FindWoodResult findWoodResult = TECuttingUtils.findWood(worldIn, pos);
                     List<BlockPos> wood = findWoodResult.wood();
                     List<BlockPos> leaves = findWoodResult.leaves();
                     wood.remove(pos);
                     wood.stream()
-                        .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost))
-                        .forEach(pos1 -> ToolsUtil.breakBlock(stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost));
+                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost))
+                            .forEach(pos1 -> ToolsUtil.breakBlock(
+                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost));
                     leaves.remove(pos);
                     leaves.forEach(pos1 -> ToolsUtil.breakBlock(stack, worldIn, pos1, entityLiving, 0));
                 }
@@ -151,7 +167,8 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
 
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost) && target.level() instanceof ServerLevel serverWorld) {
+        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost)
+                && target.level() instanceof ServerLevel serverWorld) {
             target.hurtServer(serverWorld, serverWorld.damageSources().playerAttack((Player) attacker), 8F);
         }
     }
@@ -176,15 +193,23 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
-        if (player == null || player.isShiftKeyDown()) { return InteractionResult.PASS; }
+        if (player == null || player.isShiftKeyDown()) {
+            return InteractionResult.PASS;
+        }
         InteractionResult tryUse = Items.NETHERITE_AXE.useOn(context);
-        if (tryUse != InteractionResult.PASS) { return tryUse; }
+        if (tryUse != InteractionResult.PASS) {
+            return tryUse;
+        }
 
         tryUse = Items.SHEARS.useOn(context);
-        if (tryUse != InteractionResult.PASS) { return tryUse; }
+        if (tryUse != InteractionResult.PASS) {
+            return tryUse;
+        }
 
         tryUse = Items.NETHERITE_SHOVEL.useOn(context);
-        if (tryUse != InteractionResult.PASS) { return tryUse; }
+        if (tryUse != InteractionResult.PASS) {
+            return tryUse;
+        }
 
         return TEItemsUtils.placeTorch(context);
     }
@@ -222,7 +247,8 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
 
     // IToolHandler
     @Override
-    public boolean handleTool(ItemStack stack, BlockPos pos, Level world, Player player, Direction side, boolean damage) {
+    public boolean handleTool(
+            ItemStack stack, BlockPos pos, Level world, Player player, Direction side, boolean damage) {
         if (!player.level().isClientSide() && this.getStoredEnergy(stack) >= 5.0) {
             this.tryUseEnergy(stack, 5);
             return true;

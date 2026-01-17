@@ -16,12 +16,14 @@ public class TEInitUtils {
         ModRegistry.registerIdent(item, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            String expect = Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+            String expect =
+                    Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
             String actual = item.getDescriptionId();
 
             if (!expect.equals(actual)) {
                 // This happens when the item settings registry key does not match key used to register the item
-                throw new IllegalStateException("Item translation key mismatch: expected " + expect + ", got " + actual);
+                throw new IllegalStateException(
+                        "Item translation key mismatch: expected " + expect + ", got " + actual);
             }
         }
 
@@ -32,12 +34,14 @@ public class TEInitUtils {
         ModRegistry.registerIdent(block, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            String expect = Util.makeDescriptionId("block", ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+            String expect =
+                    Util.makeDescriptionId("block", ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
             String actual = block.getDescriptionId();
 
             if (!expect.equals(actual)) {
                 // This happens when the block settings registry key does not match key used to register the block
-                throw new IllegalStateException("Block translation key mismatch: expected " + expect + ", got " + actual);
+                throw new IllegalStateException(
+                        "Block translation key mismatch: expected " + expect + ", got " + actual);
             }
         }
 
@@ -46,12 +50,15 @@ public class TEInitUtils {
 
     public static SoundEvent setup(String name) {
         ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name);
-        return Registry.register(BuiltInRegistries.SOUND_EVENT, identifier, SoundEvent.createVariableRangeEvent(identifier));
+        return Registry.register(
+                BuiltInRegistries.SOUND_EVENT, identifier, SoundEvent.createVariableRangeEvent(identifier));
     }
 
     public static boolean isDatagenRunning() {
         return System.getProperty("fabric-api.datagen") != null;
     }
 
-    private TEInitUtils() {/* No instantiation. */}
+    private TEInitUtils() {
+        /* No instantiation. */
+    }
 }

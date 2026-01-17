@@ -22,13 +22,12 @@ public class TEContent {
 
     public static MenuType<ResonanceScannerMenu> RESONANCE_SCANNER_MENU;
 
-    public final static class BlockTags {
-        public static final TagKey<Block> META_TOOL_MINEABLE = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "mineable/meta_tool"));
+    public static final class BlockTags {
+        public static final TagKey<Block> META_TOOL_MINEABLE = TagKey.create(
+                Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "mineable/meta_tool"));
 
-        private BlockTags() {
-        }
+        private BlockTags() {}
     }
-
 
     public static void register() {
         ModRegistry.register();

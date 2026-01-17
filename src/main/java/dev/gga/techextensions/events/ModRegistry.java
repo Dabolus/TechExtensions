@@ -1,13 +1,13 @@
 package dev.gga.techextensions.events;
 
 import dev.gga.techextensions.TechExtensions;
-import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
-import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEInitUtils;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.items.armor.ElectricJetpackItem;
+import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.items.tool.industrial.MetaToolItem;
+import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import java.util.HashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -33,26 +33,33 @@ public class ModRegistry {
         Registry.register(BuiltInRegistries.ITEM, name, item);
     }
 
-    public static void registerItem(Item item){
+    public static void registerItem(Item item) {
         Validate.isTrue(objIdentMap.containsKey(item));
         registerItem(item, objIdentMap.get(item));
     }
 
     private static void registerItems() {
-        registerItem(TEContent.ELECTRIC_DUCTED_FAN = TEInitUtils.setup(new Item(TEItemSettings.item("electric_ducted_fan")), "electric_ducted_fan"));
-        registerItem(TEContent.ELECTRIC_JETPACK = TEInitUtils.setup(new ElectricJetpackItem("electric_jetpack"), "electric_jetpack"));
+        registerItem(
+                TEContent.ELECTRIC_DUCTED_FAN =
+                        TEInitUtils.setup(new Item(TEItemSettings.item("electric_ducted_fan")), "electric_ducted_fan"));
+        registerItem(
+                TEContent.ELECTRIC_JETPACK =
+                        TEInitUtils.setup(new ElectricJetpackItem("electric_jetpack"), "electric_jetpack"));
         registerItem(TEContent.META_TOOL = TEInitUtils.setup(new MetaToolItem("meta_tool"), "meta_tool"));
-        registerItem(TEContent.RESONANCE_SCANNER = TEInitUtils.setup(new ResonanceScannerItem("resonance_scanner"), "resonance_scanner"));
+        registerItem(
+                TEContent.RESONANCE_SCANNER =
+                        TEInitUtils.setup(new ResonanceScannerItem("resonance_scanner"), "resonance_scanner"));
 
         TechExtensions.LOGGER.debug("TechExtension's Items Loaded");
     }
 
     private static void registerMenus() {
-        registerMenu(TEContent.RESONANCE_SCANNER_MENU = new MenuType<>(ResonanceScannerMenu::new, FeatureFlags.VANILLA_SET), ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));
+        registerMenu(
+                TEContent.RESONANCE_SCANNER_MENU = new MenuType<>(ResonanceScannerMenu::new, FeatureFlags.VANILLA_SET),
+                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));
     }
 
-
-    public static void registerIdent(Object object, ResourceLocation identifier){
+    public static void registerIdent(Object object, ResourceLocation identifier) {
         objIdentMap.put(object, identifier);
     }
 }

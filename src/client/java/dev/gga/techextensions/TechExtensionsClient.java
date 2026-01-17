@@ -10,10 +10,12 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.resources.ResourceLocation;
 
 public class TechExtensionsClient implements ClientModInitializer {
-	@Override
-	public void onInitializeClient() {
-		TETooltipHandler.setup();
-		MenuScreens.register(TEContent.RESONANCE_SCANNER_MENU, GuiResonanceScanner::new);
-		ItemTintSources.ID_MAPPER.put(ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner_screen_color"), ResonanceScannerScreenTintSource.MAP_CODEC);
-	}
+    @Override
+    public void onInitializeClient() {
+        TETooltipHandler.setup();
+        MenuScreens.register(TEContent.RESONANCE_SCANNER_MENU, GuiResonanceScanner::new);
+        ItemTintSources.ID_MAPPER.put(
+                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner_screen_color"),
+                ResonanceScannerScreenTintSource.MAP_CODEC);
+    }
 }
