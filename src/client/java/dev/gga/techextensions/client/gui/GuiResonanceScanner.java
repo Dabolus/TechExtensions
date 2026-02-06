@@ -118,7 +118,7 @@ public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScanne
                         "techextensions.message.resonance_scanner.range",
                         Component.literal(Long.toString(effectiveRange)).withStyle(ChatFormatting.DARK_GREEN)),
                 56,
-                0xFF000000,
+                0xFF555555,
                 layer);
     }
 

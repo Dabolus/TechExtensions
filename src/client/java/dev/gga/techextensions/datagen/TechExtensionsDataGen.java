@@ -10,6 +10,7 @@ public class TechExtensionsDataGen implements DataGeneratorEntrypoint {
 
         pack.addProvider(TEItemTagProvider::new);
         pack.addProvider(TEBlockTagProvider::new);
+        pack.addProvider(TEBlockLootTableProvider::new);
         pack.addProvider(TEModelProvider::new);
     }
 }

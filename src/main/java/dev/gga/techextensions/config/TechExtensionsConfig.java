@@ -138,4 +138,33 @@ public class TechExtensionsConfig {
             key = "resonanceScannerScanCooldown",
             comment = "Cooldown between scans for Resonance Scanner (ticks)")
     public static int resonanceScannerScanCooldown = 80;
+
+    // Electric Ducted Fan (Block) configurations
+    @Config(
+            config = "machines",
+            category = "power",
+            key = "electricDuctedFanMaxEnergy",
+            comment = "Maximum energy storage for Electric Ducted Fan (EU)")
+    public static int electricDuctedFanMaxEnergy = 32_768;
+
+    @Config(
+            config = "machines",
+            category = "power",
+            key = "electricDuctedFanMaxInput",
+            comment = "Maximum energy input rate for Electric Ducted Fan (EU/t)")
+    public static int electricDuctedFanMaxInput = 16_384;
+
+    @Config(
+            config = "machines",
+            category = "power",
+            key = "electricDuctedFanMinEnergyCost",
+            comment = "Minimum energy cost per operation for Electric Ducted Fan (EU)")
+    public static int electricDuctedFanMinEnergyCost = 4;
+
+    @Config(
+            config = "machines",
+            category = "power",
+            key = "electricDuctedFanMaxEnergyCost",
+            comment = "Maximum energy cost per operation for Electric Ducted Fan (EU)")
+    public static int electricDuctedFanMaxEnergyCost = 16_384;
 }

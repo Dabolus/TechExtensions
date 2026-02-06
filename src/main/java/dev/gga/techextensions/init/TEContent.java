@@ -1,6 +1,7 @@
 package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
+import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
 import dev.gga.techextensions.events.ModRegistry;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import net.minecraft.core.registries.Registries;
@@ -15,7 +16,10 @@ import org.slf4j.MarkerFactory;
 public class TEContent {
     public static final Marker DATAGEN = MarkerFactory.getMarker("datagen");
 
-    public static Item ELECTRIC_DUCTED_FAN;
+    // Blocks
+    public static Block ELECTRIC_DUCTED_FAN = new ElectricDuctedFanBlock(12, 4, 12, "electric_ducted_fan");
+
+    // Items
     public static Item ELECTRIC_JETPACK;
     public static Item META_TOOL;
     public static Item RESONANCE_SCANNER;

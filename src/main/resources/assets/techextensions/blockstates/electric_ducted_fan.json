@@ -1,0 +1,212 @@
+{
+  "variants": {
+    "active=false,facing=down,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1",
+      "x": 180
+    },
+    "active=false,facing=down,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2",
+      "x": 180
+    },
+    "active=false,facing=down,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3",
+      "x": 180
+    },
+    "active=false,facing=down,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4",
+      "x": 180
+    },
+    "active=false,facing=up,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1"
+    },
+    "active=false,facing=up,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2"
+    },
+    "active=false,facing=up,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3"
+    },
+    "active=false,facing=up,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4"
+    },
+    "active=false,facing=north,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1",
+      "x": 90
+    },
+    "active=false,facing=north,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2",
+      "x": 90
+    },
+    "active=false,facing=north,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3",
+      "x": 90
+    },
+    "active=false,facing=north,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4",
+      "x": 90
+    },
+    "active=false,facing=south,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1",
+      "x": 90,
+      "y": 180
+    },
+    "active=false,facing=south,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2",
+      "x": 90,
+      "y": 180
+    },
+    "active=false,facing=south,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3",
+      "x": 90,
+      "y": 180
+    },
+    "active=false,facing=south,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4",
+      "x": 90,
+      "y": 180
+    },
+    "active=false,facing=west,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1",
+      "x": 90,
+      "y": 270
+    },
+    "active=false,facing=west,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2",
+      "x": 90,
+      "y": 270
+    },
+    "active=false,facing=west,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3",
+      "x": 90,
+      "y": 270
+    },
+    "active=false,facing=west,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4",
+      "x": 90,
+      "y": 270
+    },
+    "active=false,facing=east,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1",
+      "x": 90,
+      "y": 90
+    },
+    "active=false,facing=east,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2",
+      "x": 90,
+      "y": 90
+    },
+    "active=false,facing=east,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3",
+      "x": 90,
+      "y": 90
+    },
+    "active=false,facing=east,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4",
+      "x": 90,
+      "y": 90
+    },
+    "active=true,facing=down,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1_on",
+      "x": 180
+    },
+    "active=true,facing=down,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2_on",
+      "x": 180
+    },
+    "active=true,facing=down,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3_on",
+      "x": 180
+    },
+    "active=true,facing=down,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4_on",
+      "x": 180
+    },
+    "active=true,facing=up,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1_on"
+    },
+    "active=true,facing=up,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2_on"
+    },
+    "active=true,facing=up,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3_on"
+    },
+    "active=true,facing=up,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4_on"
+    },
+    "active=true,facing=north,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1_on",
+      "x": 90
+    },
+    "active=true,facing=north,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2_on",
+      "x": 90
+    },
+    "active=true,facing=north,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3_on",
+      "x": 90
+    },
+    "active=true,facing=north,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4_on",
+      "x": 90
+    },
+    "active=true,facing=south,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1_on",
+      "x": 90,
+      "y": 180
+    },
+    "active=true,facing=south,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2_on",
+      "x": 90,
+      "y": 180
+    },
+    "active=true,facing=south,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3_on",
+      "x": 90,
+      "y": 180
+    },
+    "active=true,facing=south,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4_on",
+      "x": 90,
+      "y": 180
+    },
+    "active=true,facing=west,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1_on",
+      "x": 90,
+      "y": 270
+    },
+    "active=true,facing=west,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2_on",
+      "x": 90,
+      "y": 270
+    },
+    "active=true,facing=west,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3_on",
+      "x": 90,
+      "y": 270
+    },
+    "active=true,facing=west,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4_on",
+      "x": 90,
+      "y": 270
+    },
+    "active=true,facing=east,fans=1": {
+      "model": "techextensions:block/electric_ducted_fan_1_on",
+      "x": 90,
+      "y": 90
+    },
+    "active=true,facing=east,fans=2": {
+      "model": "techextensions:block/electric_ducted_fan_2_on",
+      "x": 90,
+      "y": 90
+    },
+    "active=true,facing=east,fans=3": {
+      "model": "techextensions:block/electric_ducted_fan_3_on",
+      "x": 90,
+      "y": 90
+    },
+    "active=true,facing=east,fans=4": {
+      "model": "techextensions:block/electric_ducted_fan_4_on",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

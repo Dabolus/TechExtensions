@@ -1,0 +1,41 @@
+{
+  "textures": {
+    "front": "techextensions:block/electric_ducted_fan_front",
+    "side": "techextensions:block/electric_ducted_fan_side",
+    "particle": "techextensions:block/electric_ducted_fan_side"
+  },
+  "elements": [
+    {
+      "from": [2, 0, 2],
+      "to": [14, 4, 14],
+      "faces": {
+        "north": { "uv": [2, 12, 14, 16], "texture": "#side" },
+        "east": { "uv": [2, 12, 14, 16], "texture": "#side" },
+        "south": { "uv": [2, 12, 14, 16], "texture": "#side" },
+        "west": { "uv": [2, 12, 14, 16], "texture": "#side" },
+        "down": { "uv": [2, 2, 14, 14], "texture": "#front" }
+      }
+    },
+    {
+      "from": [2, 4, 2],
+      "to": [14, 8, 14],
+      "faces": {
+        "north": { "uv": [2, 8, 14, 12], "texture": "#side" },
+        "east": { "uv": [2, 8, 14, 12], "texture": "#side" },
+        "south": { "uv": [2, 8, 14, 12], "texture": "#side" },
+        "west": { "uv": [2, 8, 14, 12], "texture": "#side" }
+      }
+    },
+    {
+      "from": [2, 8, 2],
+      "to": [14, 12, 14],
+      "faces": {
+        "north": { "uv": [2, 4, 14, 8], "texture": "#side" },
+        "east": { "uv": [2, 4, 14, 8], "texture": "#side" },
+        "south": { "uv": [2, 4, 14, 8], "texture": "#side" },
+        "west": { "uv": [2, 4, 14, 8], "texture": "#side" },
+        "up": { "uv": [2, 2, 14, 14], "texture": "#front" }
+      }
+    }
+  ]
+}
