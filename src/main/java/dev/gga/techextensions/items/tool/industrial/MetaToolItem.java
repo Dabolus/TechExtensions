@@ -49,10 +49,10 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     }
 
     private MetaToolMode getCurrentMode(ItemStack stack) {
-        if (!TRItemUtils.isActive(stack) || stack.get(TEDataComponentTypes.META_TOOL_MODE) == null) {
+        if (!TRItemUtils.isActive(stack) || stack.get(TEDataComponentTypes.TOOL_MODE) == null) {
             return MetaToolMode.INACTIVE;
         }
-        int currentModeOrdinal = stack.get(TEDataComponentTypes.META_TOOL_MODE);
+        int currentModeOrdinal = stack.get(TEDataComponentTypes.TOOL_MODE);
         return MetaToolMode.values()[currentModeOrdinal];
     }
 
@@ -60,7 +60,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
         TRItemUtils.checkActive(stack, cost, entity);
         if (!TRItemUtils.isActive(stack)) {
             TRItemUtils.switchActive(stack, cost, entity);
-            stack.set(TEDataComponentTypes.META_TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
+            stack.set(TEDataComponentTypes.TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
                 serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.setTo")
@@ -74,7 +74,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             MetaToolMode[] metaToolModes = MetaToolMode.values();
             int currentModeOrdinal = getCurrentMode(stack).ordinal();
             int nextMode = (currentModeOrdinal + 1) % metaToolModes.length;
-            stack.set(TEDataComponentTypes.META_TOOL_MODE, nextMode);
+            stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
             // If we cycled back to INACTIVE, turn off the tool
             if (nextMode == MetaToolMode.INACTIVE.ordinal()) {
                 TRItemUtils.switchActive(stack, cost, entity);

@@ -138,10 +138,10 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
     }
 
     private ShrinkRayMode getCurrentMode(ItemStack stack) {
-        if (stack.get(TEDataComponentTypes.SHRINK_RAY_MODE) == null) {
+        if (stack.get(TEDataComponentTypes.TOOL_MODE) == null) {
             return ShrinkRayMode.SHRINK;
         }
-        int currentModeOrdinal = stack.get(TEDataComponentTypes.SHRINK_RAY_MODE);
+        int currentModeOrdinal = stack.get(TEDataComponentTypes.TOOL_MODE);
         return ShrinkRayMode.values()[currentModeOrdinal];
     }
 
@@ -150,7 +150,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
         ShrinkRayMode[] shrinkRayModes = ShrinkRayMode.values();
         int currentModeOrdinal = getCurrentMode(stack).ordinal();
         int nextMode = (currentModeOrdinal + 1) % shrinkRayModes.length;
-        stack.set(TEDataComponentTypes.SHRINK_RAY_MODE, nextMode);
+        stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
         if (entity instanceof ServerPlayer serverPlayerEntity) {
             String modeText;
             switch (shrinkRayModes[nextMode]) {
