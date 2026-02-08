@@ -43,6 +43,7 @@ public class TEItemGroup {
         // Powered items
         addPoweredItem(TEContent.META_TOOL, entries, null, true);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, null, true);
+        addPoweredItem(TEContent.SHRINK_RAY, entries, null, true);
         addPoweredItem(TEContent.RESONANCE_SCANNER, entries, null, true);
     }
 
@@ -53,6 +54,7 @@ public class TEItemGroup {
     private static void addTools(FabricItemGroupEntries entries) {
         addPoweredItem(TEContent.META_TOOL, entries, Items.BUCKET, false);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, Items.OAK_BOAT, false);
+        addPoweredItem(TEContent.SHRINK_RAY, entries, Items.IRON_SHOVEL, false);
         addPoweredItem(TEContent.RESONANCE_SCANNER, entries, Items.IRON_SHOVEL, false);
     }
 

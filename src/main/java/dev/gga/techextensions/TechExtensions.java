@@ -2,6 +2,7 @@ package dev.gga.techextensions;
 
 import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.init.TEContent;
+import dev.gga.techextensions.particle.TEParticleTypes;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,5 +19,6 @@ public class TechExtensions implements ModInitializer {
     public void onInitialize() {
         TEContent.register();
         TEDataComponentTypes.init();
+        TEParticleTypes.init();
     }
 }

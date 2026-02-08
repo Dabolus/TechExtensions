@@ -167,4 +167,10 @@ public class TechExtensionsConfig {
             key = "electricDuctedFanMaxEnergyCost",
             comment = "Maximum energy cost per operation for Electric Ducted Fan (EU)")
     public static int electricDuctedFanMaxEnergyCost = 16_384;
+
+    @Config(config = "items", category = "power", key = "shrinkRayCharge", comment = "Energy Capacity for Shrink Ray")
+    public static int shrinkRayCharge = 1_000_000;
+
+    @Config(config = "items", category = "power", key = "shrinkRayCost", comment = "Energy Cost for Shrink Ray")
+    public static int shrinkRayCost = 200;
 }

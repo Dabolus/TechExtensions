@@ -22,6 +22,7 @@ public class TEContent {
     // Items
     public static Item ELECTRIC_JETPACK;
     public static Item META_TOOL;
+    public static Item SHRINK_RAY;
     public static Item RESONANCE_SCANNER;
 
     public static MenuType<ResonanceScannerMenu> RESONANCE_SCANNER_MENU;

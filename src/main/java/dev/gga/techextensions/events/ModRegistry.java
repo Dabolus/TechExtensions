@@ -7,6 +7,7 @@ import dev.gga.techextensions.init.TEInitUtils;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.items.armor.ElectricJetpackItem;
 import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
+import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
 import dev.gga.techextensions.items.tool.industrial.MetaToolItem;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import java.util.HashMap;
@@ -69,6 +70,7 @@ public class ModRegistry {
                 TEContent.ELECTRIC_JETPACK =
                         TEInitUtils.setup(new ElectricJetpackItem("electric_jetpack"), "electric_jetpack"));
         registerItem(TEContent.META_TOOL = TEInitUtils.setup(new MetaToolItem("meta_tool"), "meta_tool"));
+        registerItem(TEContent.SHRINK_RAY = TEInitUtils.setup(new ShrinkRayItem("shrink_ray"), "shrink_ray"));
         registerItem(
                 TEContent.RESONANCE_SCANNER =
                         TEInitUtils.setup(new ResonanceScannerItem("resonance_scanner"), "resonance_scanner"));

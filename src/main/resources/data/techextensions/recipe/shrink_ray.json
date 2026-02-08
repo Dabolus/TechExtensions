@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CDB",
+    "  P"
+  ],
+  "key": {
+    "B": "minecraft:beacon",
+    "C": "techreborn:fusion_coil",
+    "D": "techreborn:data_storage_chip",
+    "P": "techreborn:tungstensteel_plate"
+  },
+  "result": {
+    "id": "techextensions:shrink_ray"
+  }
+}

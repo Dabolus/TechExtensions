@@ -3,9 +3,12 @@ package dev.gga.techextensions;
 import dev.gga.techextensions.client.TEClientGuiType;
 import dev.gga.techextensions.client.TETooltipHandler;
 import dev.gga.techextensions.client.gui.GuiResonanceScanner;
+import dev.gga.techextensions.client.particle.ShrinkRayParticle;
 import dev.gga.techextensions.client.tint.ResonanceScannerScreenTintSource;
 import dev.gga.techextensions.init.TEContent;
+import dev.gga.techextensions.particle.TEParticleTypes;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
 import net.minecraft.client.color.item.ItemTintSources;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -22,11 +25,16 @@ public class TechExtensionsClient implements ClientModInitializer {
                 ResonanceScannerScreenTintSource.MAP_CODEC);
         BlockRenderLayerMap.putBlock(TEContent.ELECTRIC_DUCTED_FAN, ChunkSectionLayer.CUTOUT);
         registerMachineGuis();
+        registerParticles();
     }
 
     @SuppressWarnings("unused")
     private void registerMachineGuis() {
         // Forces TEClientGuiType static initialization which registers the screens
         var _unused = TEClientGuiType.ELECTRIC_DUCTED_FAN;
+    }
+
+    private void registerParticles() {
+        ParticleFactoryRegistry.getInstance().register(TEParticleTypes.SHRINK_RAY, ShrinkRayParticle.Provider::new);
     }
 }
