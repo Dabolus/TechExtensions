@@ -152,13 +152,12 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
         int nextMode = (currentModeOrdinal + 1) % shrinkRayModes.length;
         stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
         if (entity instanceof ServerPlayer serverPlayerEntity) {
-            String modeText;
-            switch (shrinkRayModes[nextMode]) {
-                case SHRINK -> modeText = "Shrink";
-                case ENLARGE -> modeText = "Enlarge";
-                case RESTORE -> modeText = "Restore";
-                default -> modeText = "Unknown";
-            }
+            String modeText =
+                    switch (shrinkRayModes[nextMode]) {
+                        case SHRINK -> "Shrink";
+                        case ENLARGE -> "Enlarge";
+                        case RESTORE -> "Restore";
+                    };
             serverPlayerEntity.displayClientMessage(
                     Component.translatable("techextensions.message.setTo")
                             .withStyle(ChatFormatting.GRAY)

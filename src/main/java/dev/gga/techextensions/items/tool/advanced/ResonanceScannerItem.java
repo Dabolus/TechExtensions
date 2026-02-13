@@ -3,14 +3,12 @@ package dev.gga.techextensions.items.tool.advanced;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
+import dev.gga.techextensions.utils.TECacheUtils;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -257,45 +255,33 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
     }
 
     public static int getScanCooldown(ItemStack stack) {
-        return getCachedValue(
+        return TECacheUtils.getCachedValue(
                 stack,
                 "cache:scan_cooldown",
                 TechExtensionsConfig.resonanceScannerScanCooldown,
-                tag -> tag.getInt("cache:scan_cooldown"));
+                tag -> tag.getInt("cache:scan_cooldown"),
+                ResonanceScannerItem::getInventory,
+                ResonanceScannerItem::updateCache);
     }
 
     public static long getScanCost(ItemStack stack) {
-        return getCachedValue(
+        return TECacheUtils.getCachedValue(
                 stack,
                 "cache:scan_cost",
                 TechExtensionsConfig.resonanceScannerBaseCost,
-                tag -> tag.getLong("cache:scan_cost"));
+                tag -> tag.getLong("cache:scan_cost"),
+                ResonanceScannerItem::getInventory,
+                ResonanceScannerItem::updateCache);
     }
 
     private static int getEnergyCapacityFromCache(ItemStack stack) {
-        return getCachedValue(
+        return TECacheUtils.getCachedValue(
                 stack,
                 "cache:energy_capacity",
                 TechExtensionsConfig.resonanceScannerCharge,
-                tag -> tag.getInt("cache:energy_capacity"));
-    }
-
-    private static <T> T getCachedValue(
-            ItemStack stack, String key, T defaultValue, Function<CompoundTag, Optional<T>> extractor) {
-        if (stack == null) {
-            return defaultValue;
-        }
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains(key)) {
-            return extractor.apply(tag).orElse(defaultValue);
-        }
-        Container inv = getInventory(stack);
-        updateCache(stack, inv);
-        return extractor
-                .apply(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
-                        .copyTag())
-                .orElse(defaultValue);
+                tag -> tag.getInt("cache:energy_capacity"),
+                ResonanceScannerItem::getInventory,
+                ResonanceScannerItem::updateCache);
     }
 
     public static ItemStack getTarget(ItemStack stack) {
