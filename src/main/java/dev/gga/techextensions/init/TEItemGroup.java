@@ -45,6 +45,7 @@ public class TEItemGroup {
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, null, true);
         addPoweredItem(TEContent.SHRINK_RAY, entries, null, true);
         addPoweredItem(TEContent.RESONANCE_SCANNER, entries, null, true);
+        addPoweredItem(TEContent.VACUUM_GUN, entries, null, true);
     }
 
     private static void addFunctionalBlocks(FabricItemGroupEntries entries) {
@@ -56,6 +57,7 @@ public class TEItemGroup {
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, Items.OAK_BOAT, false);
         addPoweredItem(TEContent.SHRINK_RAY, entries, Items.IRON_SHOVEL, false);
         addPoweredItem(TEContent.RESONANCE_SCANNER, entries, Items.IRON_SHOVEL, false);
+        addPoweredItem(TEContent.VACUUM_GUN, entries, Items.IRON_SHOVEL, false);
     }
 
     private static void addPoweredItem(

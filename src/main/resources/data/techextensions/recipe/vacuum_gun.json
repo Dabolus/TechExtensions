@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "HDC",
+    "  P"
+  ],
+  "key": {
+    "C": "techreborn:advanced_circuit",
+    "D": "minecraft:dispenser",
+    "H": "minecraft:hopper",
+    "P": "#c:plates/steel"
+  },
+  "result": {
+    "id": "techextensions:vacuum_gun"
+  }
+}

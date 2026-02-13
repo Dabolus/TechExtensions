@@ -173,4 +173,28 @@ public class TechExtensionsConfig {
 
     @Config(config = "items", category = "power", key = "shrinkRayCost", comment = "Energy Cost for Shrink Ray")
     public static int shrinkRayCost = 200;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "vacuumGunCharge",
+            comment = "Energy Capacity for Vacuum Gun (EU)")
+    public static int vacuumGunCharge = 200_000;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "vacuumGunCostPerAction",
+            comment = "Energy Cost per vacuum/blow action for Vacuum Gun (EU)")
+    public static long vacuumGunCostPerAction = 50;
+
+    @Config(config = "items", category = "power", key = "vacuumGunRange", comment = "Range of the Vacuum Gun (blocks)")
+    public static double vacuumGunRange = 12;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "vacuumGunCooldown",
+            comment = "Cooldown between vacuum/blow actions (ticks)")
+    public static int vacuumGunCooldown = 8;
 }

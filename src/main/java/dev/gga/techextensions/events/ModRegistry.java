@@ -8,8 +8,10 @@ import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.items.armor.ElectricJetpackItem;
 import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
+import dev.gga.techextensions.items.tool.advanced.VacuumGunItem;
 import dev.gga.techextensions.items.tool.industrial.MetaToolItem;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
+import dev.gga.techextensions.menu.VacuumGunMenu;
 import java.util.HashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -74,6 +76,7 @@ public class ModRegistry {
         registerItem(
                 TEContent.RESONANCE_SCANNER =
                         TEInitUtils.setup(new ResonanceScannerItem("resonance_scanner"), "resonance_scanner"));
+        registerItem(TEContent.VACUUM_GUN = TEInitUtils.setup(new VacuumGunItem("vacuum_gun"), "vacuum_gun"));
 
         TechExtensions.LOGGER.debug("TechExtension's Items Loaded");
     }
@@ -86,6 +89,9 @@ public class ModRegistry {
         registerMenu(
                 TEContent.RESONANCE_SCANNER_MENU = new MenuType<>(ResonanceScannerMenu::new, FeatureFlags.VANILLA_SET),
                 ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));
+        registerMenu(
+                TEContent.VACUUM_GUN_MENU = new MenuType<>(VacuumGunMenu::new, FeatureFlags.VANILLA_SET),
+                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "vacuum_gun"));
     }
 
     public static void registerIdent(Object object, ResourceLocation identifier) {

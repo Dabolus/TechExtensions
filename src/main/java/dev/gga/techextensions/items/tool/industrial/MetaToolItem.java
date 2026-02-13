@@ -80,13 +80,12 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                 TRItemUtils.switchActive(stack, cost, entity);
             }
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                String modeText;
-                switch (metaToolModes[nextMode]) {
-                    case INACTIVE -> modeText = "Inactive";
-                    case AOE_3x3 -> modeText = "3*3";
-                    case SMART -> modeText = "Smart";
-                    default -> modeText = "Unknown";
-                }
+                String modeText =
+                        switch (metaToolModes[nextMode]) {
+                            case INACTIVE -> "Inactive";
+                            case AOE_3x3 -> "3*3";
+                            case SMART -> "Smart";
+                        };
                 serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.setTo")
                                 .withStyle(ChatFormatting.GRAY)

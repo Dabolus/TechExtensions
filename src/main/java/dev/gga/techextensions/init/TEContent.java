@@ -4,6 +4,7 @@ import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
 import dev.gga.techextensions.events.ModRegistry;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
+import dev.gga.techextensions.menu.VacuumGunMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -24,8 +25,10 @@ public class TEContent {
     public static Item META_TOOL;
     public static Item SHRINK_RAY;
     public static Item RESONANCE_SCANNER;
+    public static Item VACUUM_GUN;
 
     public static MenuType<ResonanceScannerMenu> RESONANCE_SCANNER_MENU;
+    public static MenuType<VacuumGunMenu> VACUUM_GUN_MENU;
 
     public static final class BlockTags {
         public static final TagKey<Block> META_TOOL_MINEABLE = TagKey.create(

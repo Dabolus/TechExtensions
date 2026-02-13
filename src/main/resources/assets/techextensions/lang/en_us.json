@@ -6,6 +6,7 @@
   "item.techextensions.meta_tool": "Meta-Tool",
   "item.techextensions.shrink_ray": "Shrink Ray",
   "item.techextensions.resonance_scanner": "Resonance Scanner",
+  "item.techextensions.vacuum_gun": "Vacuum Gun",
   "techextensions.tooltip.meta_tool_motto": "Everything you ever want,\neverything you ever need.",
   "techextensions.message.setTo": "Set to",
   "techextensions.message.resonance_scanner.no_target": "No target specified",
@@ -14,5 +15,6 @@
   "techextensions.message.resonance_scanner.block_in_range": "%1$s detected within %2$s blocks",
   "techextensions.message.electric_ducted_fan.inactive": "Fan is inactive",
   "techextensions.message.electric_ducted_fan.reach": "Reach: %1$s blocks",
-  "techextensions.message.electric_ducted_fan.push_strength": "Push Strength: %1$s"
+  "techextensions.message.electric_ducted_fan.push_strength": "Push Strength: %1$s",
+  "techextensions.message.vacuum_gun.mode": "Mode: %1$s"
 }

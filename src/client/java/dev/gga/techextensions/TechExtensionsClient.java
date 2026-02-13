@@ -3,6 +3,7 @@ package dev.gga.techextensions;
 import dev.gga.techextensions.client.TEClientGuiType;
 import dev.gga.techextensions.client.TETooltipHandler;
 import dev.gga.techextensions.client.gui.GuiResonanceScanner;
+import dev.gga.techextensions.client.gui.GuiVacuumGun;
 import dev.gga.techextensions.client.particle.ShrinkRayParticle;
 import dev.gga.techextensions.client.tint.ResonanceScannerScreenTintSource;
 import dev.gga.techextensions.init.TEContent;
@@ -20,6 +21,7 @@ public class TechExtensionsClient implements ClientModInitializer {
     public void onInitializeClient() {
         TETooltipHandler.setup();
         MenuScreens.register(TEContent.RESONANCE_SCANNER_MENU, GuiResonanceScanner::new);
+        MenuScreens.register(TEContent.VACUUM_GUN_MENU, GuiVacuumGun::new);
         ItemTintSources.ID_MAPPER.put(
                 ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner_screen_color"),
                 ResonanceScannerScreenTintSource.MAP_CODEC);
