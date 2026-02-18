@@ -63,10 +63,11 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             stack.set(TEDataComponentTypes.TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
                 serverPlayerEntity.displayClientMessage(
-                        Component.translatable("techextensions.message.setTo")
+                        Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
-                                .append(Component.literal("3*3").withStyle(ChatFormatting.GOLD)),
+                                .append(Component.translatable("techextensions.message.meta_tool.mode_aoe_3x3")
+                                        .withStyle(ChatFormatting.GOLD)),
                         true);
             }
         } else {
@@ -80,17 +81,18 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                 TRItemUtils.switchActive(stack, cost, entity);
             }
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                String modeText =
+                String modeTranslationKey =
                         switch (metaToolModes[nextMode]) {
-                            case INACTIVE -> "Inactive";
-                            case AOE_3x3 -> "3*3";
-                            case SMART -> "Smart";
+                            case INACTIVE -> "techextensions.message.meta_tool.mode_inactive";
+                            case AOE_3x3 -> "techextensions.message.meta_tool.mode_aoe_3x3";
+                            case SMART -> "techextensions.message.meta_tool.mode_smart";
                         };
                 serverPlayerEntity.displayClientMessage(
-                        Component.translatable("techextensions.message.setTo")
+                        Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
-                                .append(Component.literal(modeText).withStyle(ChatFormatting.GOLD)),
+                                .append(Component.translatable(modeTranslationKey)
+                                        .withStyle(ChatFormatting.GOLD)),
                         true);
             }
         }

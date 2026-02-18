@@ -8,7 +8,7 @@
   "item.techextensions.resonance_scanner": "Resonance Scanner",
   "item.techextensions.vacuum_gun": "Vacuum Gun",
   "techextensions.tooltip.meta_tool_motto": "Everything you ever want,\neverything you ever need.",
-  "techextensions.message.setTo": "Set to",
+  "techextensions.message.set_to": "Set to",
   "techextensions.message.resonance_scanner.no_target": "No target specified",
   "techextensions.message.resonance_scanner.invalid_target": "Target is not a block",
   "techextensions.message.resonance_scanner.range": "Scan Range: %1$s blocks",
@@ -16,5 +16,13 @@
   "techextensions.message.electric_ducted_fan.inactive": "Fan is inactive",
   "techextensions.message.electric_ducted_fan.reach": "Reach: %1$s blocks",
   "techextensions.message.electric_ducted_fan.push_strength": "Push Strength: %1$s",
-  "techextensions.message.vacuum_gun.mode": "Mode: %1$s"
+  "techextensions.message.meta_tool.mode_inactive": "Inactive",
+  "techextensions.message.meta_tool.mode_aoe_3x3": "3*3",
+  "techextensions.message.meta_tool.mode_smart": "Smart",
+  "techextensions.message.shrink_ray.mode_shrink": "Shrink",
+  "techextensions.message.shrink_ray.mode_enlarge": "Enlarge",
+  "techextensions.message.shrink_ray.mode_restore": "Restore",
+  "techextensions.message.vacuum_gun.mode_vacuum": "Vacuum",
+  "techextensions.message.vacuum_gun.mode_blow": "Blow",
+  "techextensions.message.vacuum_gun.mode_inspect": "Inspect"
 }

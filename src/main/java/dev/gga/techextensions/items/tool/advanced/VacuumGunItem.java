@@ -69,17 +69,17 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         int nextMode = (getCurrentMode(stack).ordinal() + 1) % modes.length;
         stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
         if (entity instanceof ServerPlayer serverPlayer) {
-            String modeText =
+            String modeTranslationKey =
                     switch (modes[nextMode]) {
-                        case VACUUM -> "Vacuum";
-                        case BLOW -> "Blow";
-                        case INSPECT -> "Inspect";
+                        case VACUUM -> "techextensions.message.vacuum_gun.mode_vacuum";
+                        case BLOW -> "techextensions.message.vacuum_gun.mode_blow";
+                        case INSPECT -> "techextensions.message.vacuum_gun.mode_inspect";
                     };
             serverPlayer.displayClientMessage(
-                    Component.translatable("techextensions.message.setTo")
+                    Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
-                            .append(Component.literal(modeText).withStyle(ChatFormatting.GOLD)),
+                            .append(Component.translatable(modeTranslationKey).withStyle(ChatFormatting.GOLD)),
                     true);
         }
     }
