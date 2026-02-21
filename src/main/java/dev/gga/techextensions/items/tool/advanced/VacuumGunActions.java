@@ -37,6 +37,7 @@ import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.BeehiveBlock;
@@ -120,6 +121,31 @@ final class VacuumGunActions {
 
     private static boolean vacuumMob(
             ServerLevel world, Player player, ItemStack gunStack, LivingEntity living, Vec3 eyePos) {
+        // First, try to strip equipped items one at a time
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            ItemStack equipped = living.getItemBySlot(slot);
+            if (equipped.isEmpty()) continue;
+
+            ItemStack stripped = equipped.copy();
+            living.setItemSlot(slot, ItemStack.EMPTY);
+
+            Vec3 mobPos = living.position().add(0, living.getBbHeight() / 2, 0);
+            List<Vec3> trail = List.of(mobPos, eyePos);
+            world.playSound(
+                    null,
+                    living.blockPosition(),
+                    SoundEvents.ARMOR_EQUIP_GENERIC.value(),
+                    SoundSource.PLAYERS,
+                    1.0F,
+                    1.0F);
+            ItemAnimationManager.schedule(world, trail, stripped, () -> {
+                insertOrDrop(player, gunStack, stripped);
+                world.playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+            });
+            return true;
+        }
+
+        // Second, if no equipped items, vacuum the mob itself as a spawn egg (if possible)
         Vec3 mobPos = living.position().add(0, living.getBbHeight() / 2, 0);
         List<Vec3> trail = List.of(mobPos, eyePos);
         SpawnEggItem egg = SpawnEggItem.byId(living.getType());
@@ -274,16 +300,19 @@ final class VacuumGunActions {
         if (item instanceof FlintAndSteelItem) {
             return () -> blowFlintAndSteel(world, player, takenItem, tr);
         }
+        // Pre-resolve entity along the parabolic trajectory before the animation starts
+        // (entity is captured now so it won't be missed if it moves during flight)
+        LivingEntity trajectoryTarget = findEntityAlongPath(world, player, tr.path());
         if (item instanceof ShearsItem) {
-            return () -> blowShears(world, player, takenItem, tr);
+            return () -> blowShears(world, player, takenItem, tr, trajectoryTarget);
         }
         if (item instanceof BlockItem blockItem) {
             return () -> blowBlock(world, player, takenItem, tr, blockItem);
         }
         if (takenItem.has(DataComponents.EQUIPPABLE)) {
-            return () -> blowEquippable(world, player, takenItem, tr);
+            return () -> blowEquippable(world, player, takenItem, tr, trajectoryTarget);
         }
-        return () -> blowDefault(world, takenItem, tr);
+        return () -> blowDefault(world, player, takenItem, tr, trajectoryTarget);
     }
 
     // Individual blow handlers
@@ -347,7 +376,7 @@ final class VacuumGunActions {
         if (grew) {
             world.levelEvent(1505, target, 15);
         } else {
-            player.drop(takenItem.copy(), false);
+            dropItemAt(world, Vec3.atCenterOf(target), takenItem);
         }
     }
 
@@ -377,7 +406,12 @@ final class VacuumGunActions {
         dropIfNotEmpty(world, Vec3.atCenterOf(adjacent), flintItem);
     }
 
-    private static void blowShears(ServerLevel world, Player player, ItemStack shearsItem, TrajectoryResult tr) {
+    private static void blowShears(
+            ServerLevel world,
+            Player player,
+            ItemStack shearsItem,
+            TrajectoryResult tr,
+            @Nullable LivingEntity preResolvedTarget) {
         BlockPos hitBlock = tr.hitBlock();
         BlockPos adjacent = tr.adjacentPos();
         BlockState hitState = world.getBlockState(hitBlock);
@@ -421,19 +455,13 @@ final class VacuumGunActions {
             }
         }
 
-        // Try shearing entities near the target
-        if (!used) {
-            AABB searchBox = new AABB(adjacent).inflate(1.0);
-            List<LivingEntity> entities =
-                    world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && !e.isSpectator());
-            for (LivingEntity entity : entities) {
-                if (entity instanceof Shearable shearable && shearable.readyForShearing()) {
-                    shearable.shear(world, SoundSource.BLOCKS, shearsItem);
-                    shearsItem.hurtAndBreak(1, world, player instanceof ServerPlayer sp ? sp : null, item -> {});
-                    world.gameEvent(player, GameEvent.SHEAR, entity.blockPosition());
-                    used = true;
-                    break;
-                }
+        // Try shearing the pre-resolved entity target
+        if (!used && preResolvedTarget != null && preResolvedTarget.isAlive()) {
+            if (preResolvedTarget instanceof Shearable shearable && shearable.readyForShearing()) {
+                shearable.shear(world, SoundSource.BLOCKS, shearsItem);
+                shearsItem.hurtAndBreak(1, world, player instanceof ServerPlayer sp ? sp : null, item -> {});
+                world.gameEvent(player, GameEvent.SHEAR, preResolvedTarget.blockPosition());
+                used = true;
             }
         }
 
@@ -473,39 +501,47 @@ final class VacuumGunActions {
                 new DirectionalPlaceContext(world, target, hitFace.getOpposite(), placeStack, hitFace);
         InteractionResult result = blockItem.place(ctx);
         if (!result.consumesAction()) {
-            player.drop(takenItem.copy(), false);
+            dropItemAt(world, Vec3.atCenterOf(target), takenItem);
         }
     }
 
-    private static void blowEquippable(ServerLevel world, Player player, ItemStack takenItem, TrajectoryResult tr) {
-        BlockPos target = tr.adjacentPos();
-        AABB searchBox = new AABB(target).inflate(1.0);
-        List<LivingEntity> entities =
-                world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && !e.isSpectator());
-        boolean equipped = false;
-        for (LivingEntity entity : entities) {
-            for (EquipmentSlot equipSlot : EquipmentSlot.values()) {
-                if (entity.getItemBySlot(equipSlot).isEmpty() && entity.canEquipWithDispenser(takenItem)) {
-                    entity.setItemSlot(equipSlot, takenItem.copy());
+    private static void blowEquippable(
+            ServerLevel world, Player player, ItemStack takenItem, TrajectoryResult tr, @Nullable LivingEntity target) {
+        if (target != null && target.isAlive()) {
+            Equippable equippable = takenItem.get(DataComponents.EQUIPPABLE);
+            if (equippable != null) {
+                EquipmentSlot slot = equippable.slot();
+                if (target.getItemBySlot(slot).isEmpty()) {
+                    target.setItemSlot(slot, takenItem.copy());
                     world.playSound(
                             null,
-                            entity.blockPosition(),
+                            target.blockPosition(),
                             SoundEvents.ARMOR_EQUIP_GENERIC.value(),
                             SoundSource.BLOCKS,
                             1.0F,
                             1.0F);
-                    equipped = true;
-                    break;
+                    return;
                 }
             }
-            if (equipped) break;
         }
-        if (!equipped) {
-            player.drop(takenItem.copy(), false);
-        }
+        dropItemAt(world, tr.hitLocation(), takenItem);
     }
 
-    private static void blowDefault(ServerLevel world, ItemStack takenItem, TrajectoryResult tr) {
+    private static void blowDefault(
+            ServerLevel world, Player player, ItemStack takenItem, TrajectoryResult tr, @Nullable LivingEntity target) {
+        // Try to hand the item to the targeted entity: mainhand → offhand → drop
+        if (target != null && target.isAlive()) {
+            if (target.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()) {
+                target.setItemSlot(EquipmentSlot.MAINHAND, takenItem.copy());
+                world.playSound(null, target.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 1.0F, 1.0F);
+                return;
+            }
+            if (target.getItemBySlot(EquipmentSlot.OFFHAND).isEmpty()) {
+                target.setItemSlot(EquipmentSlot.OFFHAND, takenItem.copy());
+                world.playSound(null, target.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 1.0F, 1.0F);
+                return;
+            }
+        }
         Vec3 hitLoc = tr.hitLocation();
         dropItemAt(world, hitLoc, takenItem);
         world.playSound(
@@ -550,6 +586,22 @@ final class VacuumGunActions {
         return new TrajectoryResult(lastPos, lastPos.above(), Direction.UP, pos, vel, path);
     }
 
+    /**
+     * Finds the nearest `LivingEntity` along a parabolic trajectory path.
+     * Used by blow actions that target entities (equippable, shears, etc.).
+     */
+    @Nullable
+    private static LivingEntity findEntityAlongPath(ServerLevel world, Player player, List<Vec3> path) {
+        for (Vec3 point : path) {
+            AABB searchBox =
+                    new AABB(point.x - 1.0, point.y - 1.0, point.z - 1.0, point.x + 1.0, point.y + 1.0, point.z + 1.0);
+            List<LivingEntity> mobs =
+                    world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && e != player);
+            if (!mobs.isEmpty()) return mobs.getFirst();
+        }
+        return null;
+    }
+
     @Nullable
     static Entity findEntityAlongRay(ServerLevel world, Player player, Vec3 start, Vec3 dir, double maxDist) {
         int steps = (int) Math.ceil(maxDist / 0.5);
@@ -563,7 +615,7 @@ final class VacuumGunActions {
             if (!items.isEmpty()) return items.getFirst();
 
             List<LivingEntity> mobs =
-                    world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && !(e instanceof Player));
+                    world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && e != player);
             if (!mobs.isEmpty()) return mobs.getFirst();
         }
         return null;
