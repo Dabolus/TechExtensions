@@ -13,7 +13,7 @@ on:
         default: stable
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -33,17 +33,15 @@ jobs:
         with:
           context: changelog
           workflow_id: release.yml
-      - name: build and publish
-        run: ./gradlew runDatagen build publishMods
+      - name: run datagen
+        run: ./gradlew runDatagen
+      - name: build
+        run: ./gradlew build
+      - name: publish
+        run: ./gradlew publishMods
         env:
           RELEASE_CHANNEL: ${{ github.event.inputs.channel }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHANGELOG: ${{ steps.changelog.outputs.changelog }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Artifacts
-          path: build/libs/
