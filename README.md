@@ -12,7 +12,7 @@ It introduces new high-tech gadgets and utilities to enhance the gameplay experi
 
 ## Items
 
-Currently, the mod adds four new items:
+Currently, the mod adds six new items:
 
 ### 1. Electric Jetpack
 
@@ -57,9 +57,42 @@ _Look at the config file for more detailed settings and adjustments._
 
 ### 2. Electric Ducted Fan
 
-The **Electric Ducted Fan** is a high-tech crafting component used primarily in the construction of the Electric Jetpack. It combines lightweight carbon materials with titanium for durability and an electronic circuit for precise motor control.
+The **Electric Ducted Fan** is a versatile high-tech component that serves dual purposes: as a crafting ingredient
+for the Electric Jetpack, and as a **placeable block** that pushes entities with a powerful air stream.
 
-Currently, it is only used as a crafting ingredient for the Electric Jetpack (2 required per jetpack).
+It combines lightweight carbon materials with titanium for durability and an electronic circuit for precise motor control.
+
+#### Block Placement & Stacking
+
+When placed in the world, the Electric Ducted Fan becomes a powered machine that pushes any entities in front of it.
+Fans can be placed facing **any of the 6 directions** (up, down, north, south, east, west) and up to
+**4 fans can be stacked** on a single block, compounding their effect.
+
+| Stacked Fans | Multiplier | Reach (min-max) | Push Strength (min-max) |
+| ------------ | ---------- | --------------- | ----------------------- |
+| 1            | 1.00×      | ~1-21 blocks    | ~0.05-1.00              |
+| 2            | 1.52×      | ~2-32 blocks    | ~0.08-1.52              |
+| 3            | 2.04×      | ~2-43 blocks    | ~0.10-2.04              |
+| 4            | 2.56×      | ~3-54 blocks    | ~0.13-2.56              |
+
+#### Power Scaling
+
+The fan's effectiveness scales **linearly** with the energy it consumes each tick.
+The more energy stored, the stronger and farther the push. When pointing upward,
+the fan also resets fall distance for entities, preventing fall damage.
+
+Energy is accepted from **any side except the front face** (the blowing direction).
+
+#### Specifications
+
+| Setting         | Default Value | Description                                    |
+| --------------- | ------------- | ---------------------------------------------- |
+| Max Energy      | 32,768 E      | Internal energy buffer                         |
+| Max Input       | 16,384 E/t    | Maximum energy input rate per tick             |
+| Min Energy Cost | 4 E/t         | Minimum energy consumed per tick (to activate) |
+| Max Energy Cost | 16,384 E/t    | Maximum energy consumed per tick (full power)  |
+
+_Look at the config file for more detailed settings and adjustments._
 
 #### Crafting Recipe
 
@@ -95,7 +128,8 @@ The scanner's effectiveness scales with the number of target blocks in the inven
 
 #### Upgrades
 
-Unlike Tech Reborn machines, the scanner is a handheld item and accepts only up to **2 Upgrades**:
+Unlike Tech Reborn machines, the scanner is a handheld item and accepts only up to **2 Upgrades**.
+Right now, it only supports the following upgrade types:
 
 | Upgrade            | Effect                                                                       |
 | ------------------ | ---------------------------------------------------------------------------- |
@@ -190,6 +224,157 @@ Omni-Tool, but requires top-tier tools:
 - 1x Energy Flow Chip
 
 ![Meta-Tool Recipe](screenshots/meta_tool_recipe.png)
+
+### 5. Shrink Ray
+
+The **Shrink Ray** is an Insane-tier energy weapon that can alter the size of any living entity.
+Point it at a mob (or even yourself!) to shrink, enlarge, or restore them to their original size.
+
+#### How to Use
+
+1. **Aim:** Point at any living entity within range (8× your entity interaction range).
+2. **Fire:** Right-click to fire. The ray will hit the closest entity along your line of sight.
+3. **Self-Target:** Aim at your own feet to target yourself.
+4. **Switch Mode:** Sneak + Right-click to cycle between Shrink, Enlarge, and Restore modes.
+
+#### Modes
+
+| Mode        | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| **Shrink**  | Reduces the target's scale (min: 1/16× base size)         |
+| **Enlarge** | Increases the target's scale (max: 16× base size)         |
+| **Restore** | Instantly returns the target to their original base scale |
+
+#### Scaling Behavior
+
+The Shrink Ray uses a **bell-curve (Gaussian) scaling model**, to put it simple, it means that
+the time and cost required to change an entity's size grow exponentially as the size difference
+increases. If you want to turn an entity (or yourself) into a tiny 1/16× mini-version, or a towering
+16× giant, prepare for a significant energy investment and a longer transformation time.
+On the other hand, small adjustments will be quicker and more energy-efficient.
+
+#### Attribute Modifiers
+
+When an entity's scale changes, a comprehensive set of attributes are adjusted proportionally,
+giving size changes a different set of tradeoffs.
+
+A bigger entity will have:
+
+- More attack damage and knockback, but slower attack speed
+- Faster block breaking and longer interaction range, but less luck (harder to find rare drops)
+- Higher jump strength and less fall damage, but heavier gravity
+- Faster movement/flying speed and higher step height (you are giant, after all)
+- More resistance to knockback
+- More health, but it will be harder to heal due to hunger status effect
+
+Conversely, a smaller entity will have:
+
+- Less attack damage and knockback, but faster attack speed
+- Slower block breaking and shorter interaction range, but more luck (easier to find rare drops)
+- Weaker jump strength and more fall damage, but lighter gravity
+- Slower movement/flying speed and lower step height
+- More vulnerable to knockback
+- Less health, but easier to heal due to saturation status effect
+
+The bigger/smaller you are, the more extreme these tradeoffs become, creating
+interesting strategic choices when using the Shrink Ray in combat or exploration.
+
+#### Specifications
+
+| Setting  | Default Value | Description              |
+| -------- | ------------- | ------------------------ |
+| Capacity | 1,000,000 E   | Total energy storage     |
+| Cost     | 200 E/shot    | Energy consumed per shot |
+
+_Look at the config file for more detailed settings and adjustments._
+
+#### Crafting Recipe
+
+- 1x Fusion Coil
+- 1x Data Storage Chip
+- 1x Beacon
+- 1x Tungstensteel Plate
+
+![Shrink Ray Recipe](screenshots/shrink_ray_recipe.png)
+
+### 6. Vacuum Gun
+
+The **Vacuum Gun** is a multipurpose utility tool that can suck in blocks, fluids, items, and mobs
+from a distance and launch them back out. It features a built-in 5-slot dispenser-like inventory,
+2 upgrade slots, and intelligent interactions depending on what you suck in or launch
+(again, similarly to a dispenser, but adapted for a long-range handheld tool).
+
+#### How to Use
+
+1. **Vacuum:** Right-click to vacuum the targeted block, fluid, item, or mob into the gun's internal inventory.
+2. **Blow:** Switch to Blow mode and right-click to launch the first item in the inventory toward where you're looking.
+3. **Inspect:** Switch to Inspect mode and right-click to open the gun's inventory GUI for manual management.
+4. **Switch Mode:** Sneak + Right-click to cycle between Vacuum, Blow, and Inspect modes.
+
+#### Vacuum Mode
+
+The Vacuum mode uses raycasting to target whatever the player is looking at within range.
+Targets are prioritized in this order:
+
+| Priority | Target              | Behavior                                                                                                                                                                                                                                 |
+| -------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | **Living Entities** | First strips equipped items one at a time. Once bare, converts to a spawn egg (preserving all NBT data and custom names) and stores in inventory. If no spawn egg exists for the mob type, it pulls the entity toward the player instead |
+| 2        | **Items**           | Picks up the item entity and stores it in inventory                                                                                                                                                                                      |
+| 3        | **Fluids**          | Collects source fluid blocks into a bucket (requires an empty bucket in the gun's inventory)                                                                                                                                             |
+| 4        | **Blocks**          | Breaks the block and stores all drops in inventory (respects bedrock and unbreakable blocks)                                                                                                                                             |
+
+#### Blow Mode
+
+The Blow mode launches the first non-empty item from the gun's inventory with a **physics-based arc trajectory**
+(affected by gravity and drag). Depending on the item type, special interactions occur when the item lands:
+
+| Item Type         | Landing Behavior                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| **Projectiles**   | Launched as actual projectiles (arrows, snowballs, etc.) with proper velocity and ownership |
+| **TNT / Nuke**    | Primes and spawns at the landing location (supports Tech Reborn Nukes if enabled)           |
+| **Spawn Eggs**    | Spawns the entity at the landing location, restoring all saved NBT data if available        |
+| **Bone Meal**     | Applies growth effect (crops or water plants) at the target block                           |
+| **Buckets**       | Filled buckets place their fluid; empty buckets collect source blocks at the target         |
+| **Flint & Steel** | Lights TNT, campfires, or places fire at the landing location                               |
+| **Shears**        | Shears sheeps, carves pumpkins, harvests honey from beehives, or stops plant growth         |
+| **Blocks**        | Placed at the landing location (adjacent to the hit surface)                                |
+| **Equippable**    | Equips on the nearest entity at the landing location (armor on mobs, in the correct slot)   |
+| **Other items**   | Given to the nearest entity (mainhand → offhand), or dropped if no entity or hands are full |
+
+#### Inspect Mode
+
+Opens the Vacuum Gun's inventory GUI, allowing you to manually add, remove, or rearrange items
+in the 5 inventory slots and 2 upgrade slots.
+
+##### Upgrades
+
+Similarly to the Resonance Scanner, the Vacuum Gun accepts only up to **2 Upgrades**.
+Right now, it only supports the following upgrade types:
+
+| Upgrade            | Effect                                                                         |
+| ------------------ | ------------------------------------------------------------------------------ |
+| **Overclocker**    | Reduces cooldown between actions (faster fire rate), but increases energy cost |
+| **Energy Storage** | Increases internal battery capacity                                            |
+
+#### Specifications
+
+| Setting  | Default Value | Description                                               |
+| -------- | ------------- | --------------------------------------------------------- |
+| Capacity | 200,000 E     | Total energy storage (upgradeable)                        |
+| Cost     | 50 E/action   | Energy consumed per vacuum or blow action                 |
+| Range    | 12 blocks     | Maximum vacuum range                                      |
+| Cooldown | 8 ticks       | Time between actions (0.4 seconds, reducible w/ upgrades) |
+
+_Look at the config file for more detailed settings and adjustments._
+
+#### Crafting Recipe
+
+- 1x Hopper
+- 1x Dispenser
+- 1x Advanced Circuit
+- 1x Steel Plate
+
+![Vacuum Gun Recipe](screenshots/vacuum_gun_recipe.png)
 
 ## Contributing
 
