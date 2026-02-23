@@ -293,7 +293,7 @@ _Look at the config file for more detailed settings and adjustments._
 - 1x Fusion Coil
 - 1x Data Storage Chip
 - 1x Beacon
-- 1x Tungstensteel Plate
+- 1x Iridium Alloy Plate
 
 ![Shrink Ray Recipe](screenshots/shrink_ray_recipe.png)
 

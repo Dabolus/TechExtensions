@@ -8,7 +8,7 @@
     "B": "minecraft:beacon",
     "C": "techreborn:fusion_coil",
     "D": "techreborn:data_storage_chip",
-    "P": "techreborn:tungstensteel_plate"
+    "P": "techreborn:iridium_alloy_plate"
   },
   "result": {
     "id": "techextensions:shrink_ray"
