@@ -5,6 +5,7 @@ plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 	id 'com.diffplug.spotless' version "${spotless_version}"
+	id 'me.modmuss50.mod-publish-plugin' version "${publish_plugin_version}"
 }
 
 version = project.mod_version
@@ -114,4 +115,38 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+publishMods {
+    file = remapJar.archiveFile
+    version = project.mod_version
+    changelog = providers.environmentVariable("CHANGELOG").orElse("No changelog provided")
+    type = providers.environmentVariable("RELEASE_CHANNEL").orElse("stable").map { value ->
+        switch (value) {
+            case "alpha": return ALPHA
+            case "beta": return BETA
+            default: return STABLE
+        }
+    }
+    modLoaders.add("fabric")
+
+    curseforge {
+        projectId = "1430902"
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        minecraftVersions.add("1.21.10")
+        requires("fabric-api", "techreborn")
+        optional("roughly-enough-items", "lambdynamiclights")
+    }
+    modrinth {
+        projectId = "So3gzRK5"
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add("1.21.10")
+        requires("fabric-api", "techreborn")
+        optional("rei", "lambdynamiclights")
+    }
+    github {
+        repository = "Dabolus/TechExtensions"
+        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        commitish = "main"
+    }
 }

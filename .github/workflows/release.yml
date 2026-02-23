@@ -1,0 +1,47 @@
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel
+        required: true
+        type: choice
+        options:
+          - stable
+          - beta
+          - alpha
+        default: stable
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "microsoft"
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: changelog
+        uses: FabricMC/fabric-action-scripts@v2
+        id: changelog
+        with:
+          context: changelog
+          workflow_id: release.yml
+      - name: build and publish
+        run: ./gradlew build publish publishMods --stacktrace -x test
+        env:
+          RELEASE_CHANNEL: ${{ github.event.inputs.channel }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifacts
+          path: build/libs/
