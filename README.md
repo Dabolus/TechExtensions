@@ -264,7 +264,7 @@ A bigger entity will have:
 - Higher jump strength and less fall damage, but heavier gravity
 - Faster movement/flying speed and higher step height (you are giant, after all)
 - More resistance to knockback
-- More health, but it will be harder to heal due to hunger status effect
+- More health, but it will be harder to heal due to a persistent hunger status effect (stronger the bigger you are)
 
 Conversely, a smaller entity will have:
 
@@ -273,10 +273,15 @@ Conversely, a smaller entity will have:
 - Weaker jump strength and more fall damage, but lighter gravity
 - Slower movement/flying speed and lower step height
 - More vulnerable to knockback
-- Less health, but easier to heal due to saturation status effect
+- Less health, but easier to heal due to a persistent saturation status effect (stronger the smaller you are)
 
 The bigger/smaller you are, the more extreme these tradeoffs become, creating
 interesting strategic choices when using the Shrink Ray in combat or exploration.
+
+> **Note:** The saturation/hunger effects persist for as long as the entity's scale differs
+> from its base scale and are automatically removed when the entity is restored to normal size.
+> The effect level scales logarithmically with the size ratio (level I at ~2× change,
+> level II at ~4×, level III at ~8×, etc.).
 
 #### Specifications
 

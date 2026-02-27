@@ -20,9 +20,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
@@ -85,6 +82,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
     private static final AttributeModifierInfo SCALE_MODIFIER_INFO =
             new AttributeModifierInfo(Attributes.SCALE, "scale", 1.0D);
+    public static final ResourceLocation SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId;
 
     private static final List<AttributeModifierInfo> ATTRIBUTE_MODIFIER_INFO = List.of(
             new AttributeModifierInfo(Attributes.ATTACK_DAMAGE, "attack_damage", 0.8D),
@@ -391,26 +389,6 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                     }
                 }
                 target.refreshDimensions();
-                // Give saturation if target is shrunk, hunger if enlarged, remove both if restored
-                Holder<MobEffect> newEffect = null;
-                if (task.targetScale < baseScale) {
-                    newEffect = MobEffects.SATURATION;
-                    target.removeEffect(MobEffects.HUNGER);
-                } else if (task.targetScale > baseScale) {
-                    newEffect = MobEffects.HUNGER;
-                    target.removeEffect(MobEffects.SATURATION);
-                } else {
-                    target.removeEffect(MobEffects.SATURATION);
-                    target.removeEffect(MobEffects.HUNGER);
-                }
-                // Apply the new effect, if any
-                if (newEffect != null) {
-                    double absMultiplier =
-                            task.targetScale > baseScale ? task.targetScale / baseScale : baseScale / task.targetScale;
-                    int effectDuration = (int) Math.round(absMultiplier * 750.0D);
-                    int effectLevel = (int) Math.round(absMultiplier * 0.22D); //
-                    target.addEffect(new MobEffectInstance(newEffect, effectDuration, effectLevel, false, false, true));
-                }
                 it.remove();
             }
         }
