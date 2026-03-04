@@ -21,6 +21,7 @@ public class TEContent {
     public static Block ELECTRIC_DUCTED_FAN = new ElectricDuctedFanBlock(12, 4, 12, "electric_ducted_fan");
 
     // Items
+    public static Item CYBER_SHIELD;
     public static Item ELECTRIC_JETPACK;
     public static Item META_TOOL;
     public static Item SHRINK_RAY;

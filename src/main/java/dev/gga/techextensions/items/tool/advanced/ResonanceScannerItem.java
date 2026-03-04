@@ -179,7 +179,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
 
     @Override
     public void onUseTick(Level world, LivingEntity entity, ItemStack stack, int i) {
-        TRItemUtils.checkActive(stack, 1, entity);
+        TRItemUtils.checkActive(stack, (int) getScanCost(stack), entity);
     }
 
     // IUpgradeable

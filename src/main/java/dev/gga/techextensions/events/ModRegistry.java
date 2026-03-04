@@ -6,6 +6,7 @@ import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEInitUtils;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.items.armor.ElectricJetpackItem;
+import dev.gga.techextensions.items.tool.advanced.CyberShieldItem;
 import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
 import dev.gga.techextensions.items.tool.advanced.VacuumGunItem;
@@ -68,6 +69,7 @@ public class ModRegistry {
                 "electric_ducted_fan"));
 
         // Regular items
+        registerItem(TEContent.CYBER_SHIELD = TEInitUtils.setup(new CyberShieldItem("cyber_shield"), "cyber_shield"));
         registerItem(
                 TEContent.ELECTRIC_JETPACK =
                         TEInitUtils.setup(new ElectricJetpackItem("electric_jetpack"), "electric_jetpack"));

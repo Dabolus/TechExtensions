@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ESE",
+    "PCP",
+    " P "
+  ],
+  "key": {
+    "E": "techreborn:energy_crystal",
+    "S": "minecraft:shield",
+    "C": "techreborn:advanced_circuit",
+    "P": "techreborn:carbon_plate"
+  },
+  "result": {
+    "id": "techextensions:cyber_shield"
+  }
+}

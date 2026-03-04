@@ -3,6 +3,55 @@ package dev.gga.techextensions.config;
 import reborncore.common.config.Config;
 
 public class TechExtensionsConfig {
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldCharge",
+            comment = "Energy Capacity for Cyber Shield (EU)")
+    public static int cyberShieldCharge = 2_000_000;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldStandardCostPerTick",
+            comment = "Energy Cost per tick while blocking with Cyber Shield in Standard Mode (EU/t)")
+    public static long cyberShieldStandardCostPerTick = 100;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldPermaParryCostPerTick",
+            comment = "Energy Cost per tick while blocking with Cyber Shield in Perma-Parry Mode (EU/t)")
+    public static long cyberShieldPermaParryCostPerTick = 500;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldPerfectParryWindow",
+            comment = "Perfect parry window in ticks after the shield becomes active (default: 5, i.e. 0.25s)")
+    public static int cyberShieldPerfectParryWindow = 5;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldPerfectParryDamage",
+            comment = "Damage dealt to the attacker on a perfect parry (hearts)")
+    public static float cyberShieldPerfectParryDamage = 2.0F;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldPerfectParryKnockback",
+            comment = "Knockback strength applied to the attacker on a perfect parry")
+    public static float cyberShieldPerfectParryKnockback = 1.2F;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "cyberShieldPerfectParryCost",
+            comment = "Energy Cost for a successful perfect parry (EU)")
+    public static long cyberShieldPerfectParryCost = 5000;
+
     @Config(config = "items", category = "power", key = "metaToolCharge", comment = "Energy Capacity for Meta-Tool")
     public static int metaToolCharge = 40_000_000;
 

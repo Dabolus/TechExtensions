@@ -11,7 +11,7 @@ It introduces new high-tech gadgets and utilities to enhance the gameplay experi
 
 ## Items
 
-Currently, the mod adds six new items:
+Currently, the mod adds seven new items:
 
 ### 1. Electric Jetpack
 
@@ -379,6 +379,73 @@ _Look at the config file for more detailed settings and adjustments._
 - 1x Steel Plate
 
 ![Vacuum Gun Recipe](screenshots/vacuum_gun_recipe.png)
+
+### 7. Cyber Shield
+
+The **Cyber Shield** is a High-tier energy-powered shield that replaces traditional durability
+with an internal energy buffer. It features two distinct blocking modes and a **perfect parry**
+mechanic that rewards precise timing with devastating counterattacks.
+
+#### How to Use
+
+1. **Block:** Right-click to raise the shield and block incoming damage.
+2. **Switch Mode:** Sneak + Right-click to cycle between Standard and Perma-Parry modes.
+3. **Perfect Parry:** Block just before an attack lands to trigger a counterattack (see below).
+
+#### Modes
+
+| Mode            | Blocking Angle | Parry Behavior                         | Block Cost |
+| --------------- | -------------- | -------------------------------------- | ---------- |
+| **Standard**    | 120°           | Timing-based (within the parry window) | 100 E/tick |
+| **Perma-Parry** | 40°            | Every blocked hit is a parry           | 500 E/tick |
+
+#### Perfect Parry
+
+A perfect parry triggers when damage is successfully blocked within a short window
+after raising the shield (Standard mode) or on every block (Perma-Parry mode).
+
+| Attack Type     | Parry Effect                                                             |
+| --------------- | ------------------------------------------------------------------------ |
+| **Melee**       | Deals thorns damage and knocks back the attacker                         |
+| **Projectiles** | Deflects the projectile back toward its source (arrows, fireballs, etc.) |
+
+You will know when you successfully perform a perfect parry because a specific
+sound will play and some particles will spawn.
+
+#### Energy & Protection
+
+The shield operates on a binary protection model:
+
+- **Charged** (energy > 0): 90% damage reduction within the blocking angle
+- **Discharged** (energy = 0): 10% damage reduction (emergency protection)
+
+_Note: energy is drained in bulk when the player stops blocking to avoid glitches_
+_with the blocking animation. Even if you won't see the energy drain while blocking,_
+_the shield will still automatically stop blocking when there isn't enough energy_
+_remaining for the next tick (so no way to cheat, sorry!)._
+
+#### Specifications
+
+| Setting                 | Default Value | Description                                             |
+| ----------------------- | ------------- | ------------------------------------------------------- |
+| Capacity                | 2,000,000 E   | Total energy storage                                    |
+| Block Cost              | 100 E/tick    | Energy consumed per tick while blocking (Standard)      |
+| Perma-Parry Cost        | 500 E/tick    | Energy consumed per tick while blocking (Perma-Parry)   |
+| Perfect Parry Window    | 5 ticks       | Timing window for perfect parry (0.25 seconds)          |
+| Perfect Parry Damage    | 2.0 hearts    | Thorns damage dealt to melee attackers on perfect parry |
+| Perfect Parry Knockback | 1.2           | Knockback strength applied on perfect parry             |
+| Perfect Parry Cost      | 5,000 E       | Energy consumed per successful perfect parry            |
+
+_Look at the config file for more detailed settings and adjustments._
+
+#### Crafting Recipe
+
+- 1x Shield
+- 2x Energy Crystals
+- 1x Advanced Circuit
+- 3x Carbon Plates
+
+![Cyber Shield Recipe](screenshots/cyber_shield_recipe.png)
 
 ## Contributing
 

@@ -35,12 +35,14 @@ public class TEItemGroup {
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS)
                 .register(TEItemGroup::addFunctionalBlocks);
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(TEItemGroup::addTools);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.COMBAT).register(TEItemGroup::addCombat);
     }
 
     private static void entries(FabricItemGroupEntries entries) {
         // Machines
         entries.accept(TEContent.ELECTRIC_DUCTED_FAN);
         // Powered items
+        addPoweredItem(TEContent.CYBER_SHIELD, entries, null, true);
         addPoweredItem(TEContent.META_TOOL, entries, null, true);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, null, true);
         addPoweredItem(TEContent.SHRINK_RAY, entries, null, true);
@@ -58,6 +60,10 @@ public class TEItemGroup {
         addPoweredItem(TEContent.SHRINK_RAY, entries, Items.IRON_SHOVEL, false);
         addPoweredItem(TEContent.RESONANCE_SCANNER, entries, Items.IRON_SHOVEL, false);
         addPoweredItem(TEContent.VACUUM_GUN, entries, Items.IRON_SHOVEL, false);
+    }
+
+    private static void addCombat(FabricItemGroupEntries entries) {
+        addPoweredItem(TEContent.CYBER_SHIELD, entries, Items.SHIELD, true);
     }
 
     private static void addPoweredItem(

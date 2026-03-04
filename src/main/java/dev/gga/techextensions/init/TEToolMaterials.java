@@ -4,6 +4,8 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ToolMaterial;
 
 public class TEToolMaterials {
+    public static final ToolMaterial CYBER_SHIELD = ToolMaterial.DIAMOND;
+
     // Same as Netherite, but as fast as an Industrial tool, with the damage of a Nanosaber, and the enchantability of a
     // Golden tool.
     public static final ToolMaterial META_TOOL = new ToolMaterial(
