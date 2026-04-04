@@ -226,6 +226,44 @@ public class TechExtensionsConfig {
     @Config(
             config = "items",
             category = "power",
+            key = "bubbleGunCharge",
+            comment = "Energy Capacity for Bubble Gun (EU)")
+    public static int bubbleGunCharge = 400_000;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "bubbleGunEnergyCostPerTick",
+            comment = "Energy Cost per tick while shooting with Bubble Gun (EU/t)")
+    public static long bubbleGunEnergyCostPerTick = 10;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "bubbleGunWaterCapacity",
+            comment = "Internal water tank capacity for Bubble Gun (mB)")
+    public static long bubbleGunWaterCapacity = 16_000;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "bubbleGunWaterCostPerTick",
+            comment = "Water consumed per tick while shooting with Bubble Gun (mB/t)")
+    public static long bubbleGunWaterCostPerTick = 5;
+
+    @Config(config = "items", category = "power", key = "bubbleGunRange", comment = "Range of the Bubble Gun (blocks)")
+    public static double bubbleGunRange = 12;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "bubbleGunCleanDuration",
+            comment = "Ticks of continuous targeting required to clean a block with Bubble Gun")
+    public static int bubbleGunCleanDuration = 20;
+
+    @Config(
+            config = "items",
+            category = "power",
             key = "vacuumGunCharge",
             comment = "Energy Capacity for Vacuum Gun (EU)")
     public static int vacuumGunCharge = 200_000;

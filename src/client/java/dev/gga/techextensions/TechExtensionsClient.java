@@ -2,6 +2,7 @@ package dev.gga.techextensions;
 
 import dev.gga.techextensions.client.TEClientGuiType;
 import dev.gga.techextensions.client.TETooltipHandler;
+import dev.gga.techextensions.client.gui.GuiBubbleGun;
 import dev.gga.techextensions.client.gui.GuiResonanceScanner;
 import dev.gga.techextensions.client.gui.GuiVacuumGun;
 import dev.gga.techextensions.client.particle.ShrinkRayParticle;
@@ -20,6 +21,7 @@ public class TechExtensionsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         TETooltipHandler.setup();
+        MenuScreens.register(TEContent.BUBBLE_GUN_MENU, GuiBubbleGun::new);
         MenuScreens.register(TEContent.RESONANCE_SCANNER_MENU, GuiResonanceScanner::new);
         MenuScreens.register(TEContent.VACUUM_GUN_MENU, GuiVacuumGun::new);
         ItemTintSources.ID_MAPPER.put(

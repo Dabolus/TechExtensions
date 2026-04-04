@@ -6,11 +6,14 @@ import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEInitUtils;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.items.armor.ElectricJetpackItem;
+import dev.gga.techextensions.items.tool.advanced.BubbleGunItem;
 import dev.gga.techextensions.items.tool.advanced.CyberShieldItem;
 import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
+import dev.gga.techextensions.items.tool.advanced.SoapItem;
 import dev.gga.techextensions.items.tool.advanced.VacuumGunItem;
 import dev.gga.techextensions.items.tool.industrial.MetaToolItem;
+import dev.gga.techextensions.menu.BubbleGunMenu;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import dev.gga.techextensions.menu.VacuumGunMenu;
 import java.util.HashMap;
@@ -69,12 +72,14 @@ public class ModRegistry {
                 "electric_ducted_fan"));
 
         // Regular items
+        registerItem(TEContent.BUBBLE_GUN = TEInitUtils.setup(new BubbleGunItem("bubble_gun"), "bubble_gun"));
         registerItem(TEContent.CYBER_SHIELD = TEInitUtils.setup(new CyberShieldItem("cyber_shield"), "cyber_shield"));
         registerItem(
                 TEContent.ELECTRIC_JETPACK =
                         TEInitUtils.setup(new ElectricJetpackItem("electric_jetpack"), "electric_jetpack"));
         registerItem(TEContent.META_TOOL = TEInitUtils.setup(new MetaToolItem("meta_tool"), "meta_tool"));
         registerItem(TEContent.SHRINK_RAY = TEInitUtils.setup(new ShrinkRayItem("shrink_ray"), "shrink_ray"));
+        registerItem(TEContent.SOAP = TEInitUtils.setup(new SoapItem("soap"), "soap"));
         registerItem(
                 TEContent.RESONANCE_SCANNER =
                         TEInitUtils.setup(new ResonanceScannerItem("resonance_scanner"), "resonance_scanner"));
@@ -88,6 +93,9 @@ public class ModRegistry {
     }
 
     private static void registerMenus() {
+        registerMenu(
+                TEContent.BUBBLE_GUN_MENU = new MenuType<>(BubbleGunMenu::new, FeatureFlags.VANILLA_SET),
+                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_gun"));
         registerMenu(
                 TEContent.RESONANCE_SCANNER_MENU = new MenuType<>(ResonanceScannerMenu::new, FeatureFlags.VANILLA_SET),
                 ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));

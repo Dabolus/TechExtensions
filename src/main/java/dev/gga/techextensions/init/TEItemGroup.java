@@ -41,7 +41,10 @@ public class TEItemGroup {
     private static void entries(FabricItemGroupEntries entries) {
         // Machines
         entries.accept(TEContent.ELECTRIC_DUCTED_FAN);
+        // Non-powered items
+        entries.accept(TEContent.SOAP);
         // Powered items
+        addPoweredItem(TEContent.BUBBLE_GUN, entries, null, true);
         addPoweredItem(TEContent.CYBER_SHIELD, entries, null, true);
         addPoweredItem(TEContent.META_TOOL, entries, null, true);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, null, true);
@@ -55,6 +58,8 @@ public class TEItemGroup {
     }
 
     private static void addTools(FabricItemGroupEntries entries) {
+        entries.addAfter(Items.IRON_SHOVEL, TEContent.SOAP);
+        addPoweredItem(TEContent.BUBBLE_GUN, entries, Items.IRON_SHOVEL, false);
         addPoweredItem(TEContent.META_TOOL, entries, Items.BUCKET, false);
         addPoweredItem(TEContent.ELECTRIC_JETPACK, entries, Items.OAK_BOAT, false);
         addPoweredItem(TEContent.SHRINK_RAY, entries, Items.IRON_SHOVEL, false);

@@ -1,0 +1,38 @@
+{
+  "type": "techreborn:blast_furnace",
+  "heat": 1000,
+  "ingredients": [
+    {
+      "count": 1,
+      "ingredient": {
+        "fabric:type": "fabric:components",
+        "base": "techreborn:cell",
+        "components": {
+          "techreborn:fluid": "techreborn:oil"
+        }
+      }
+    },
+    {
+      "count": 1,
+      "ingredient": {
+        "fabric:type": "fabric:components",
+        "base": "techreborn:cell",
+        "components": {
+          "techreborn:fluid": "techreborn:sodium"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "count": 1,
+      "id": "techextensions:soap"
+    },
+    {
+      "count": 2,
+      "id": "techreborn:cell"
+    }
+  ],
+  "power": 128,
+  "time": 800
+}
