@@ -3,28 +3,25 @@ package dev.gga.techextensions.client.gui;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.items.tool.advanced.VacuumGunItem;
 import dev.gga.techextensions.menu.VacuumGunMenu;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import reborncore.client.gui.GuiBase;
 import reborncore.client.gui.GuiBuilder;
 import reborncore.client.gui.GuiSprites;
 
 public class GuiVacuumGun extends AbstractContainerScreen<VacuumGunMenu> {
-    private static final Material UPGRADES_TOP_SPRITE = new Material(
-            ResourceLocation.parse("gui"),
-            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_top"));
-    private static final Material UPGRADES_SLOT_SPRITE = new Material(
-            ResourceLocation.parse("gui"),
-            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_slot"));
-    private static final Material UPGRADES_BOTTOM_SPRITE = new Material(
-            ResourceLocation.parse("gui"),
-            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_bottom"));
+    private static final SpriteId UPGRADES_TOP_SPRITE = new SpriteId(
+            Identifier.parse("gui"), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_top"));
+    private static final SpriteId UPGRADES_SLOT_SPRITE = new SpriteId(
+            Identifier.parse("gui"), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_slot"));
+    private static final SpriteId UPGRADES_BOTTOM_SPRITE = new SpriteId(
+            Identifier.parse("gui"), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_bottom"));
 
-    private final GuiBuilder builder = new GuiBuilder();
+    private final GuiBuilder builder = GuiBuilder.INSTANCE;
 
     public GuiVacuumGun(VacuumGunMenu menu, Inventory inventory, Component component) {
         super(menu, inventory, component);
@@ -37,13 +34,13 @@ public class GuiVacuumGun extends AbstractContainerScreen<VacuumGunMenu> {
     }
 
     @Override
-    public void render(GuiGraphics drawContext, int mouseX, int mouseY, float partialTicks) {
-        super.render(drawContext, mouseX, mouseY, partialTicks);
-        this.renderTooltip(drawContext, mouseX, mouseY);
+    public void extractRenderState(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(drawContext, mouseX, mouseY, partialTicks);
+        this.extractTooltip(drawContext, mouseX, mouseY);
     }
 
     @Override
-    protected void renderBg(GuiGraphics drawContext, float partialTicks, int mouseX, int mouseY) {
+    public void extractContents(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float partialTicks) {
         GuiBase.Layer layer = GuiBase.Layer.BACKGROUND;
         builder.drawDefaultBackground(drawContext, this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
 
@@ -79,7 +76,7 @@ public class GuiVacuumGun extends AbstractContainerScreen<VacuumGunMenu> {
         }
     }
 
-    public void drawSlot(GuiGraphics drawContext, int x, int y, GuiBase.Layer layer) {
+    public void drawSlot(GuiGraphicsExtractor drawContext, int x, int y, GuiBase.Layer layer) {
         if (layer == GuiBase.Layer.BACKGROUND) {
             x += this.leftPos;
             y += this.topPos;

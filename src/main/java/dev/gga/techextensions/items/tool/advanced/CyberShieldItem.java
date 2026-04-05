@@ -24,10 +24,10 @@ import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
@@ -63,6 +63,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
      * @param blockingAngle horizontal blocking angle in degrees
      * @param damageReductionFactor 0.0 (no protection) to 1.0 (full protection)
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static BlocksAttacks createBlocksAttacks(float blockingAngle, float damageReductionFactor) {
         return new BlocksAttacks(
                 0.25F,
@@ -70,7 +71,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
                 List.of(new BlocksAttacks.DamageReduction(
                         blockingAngle, Optional.empty(), 0.0F, damageReductionFactor)),
                 new BlocksAttacks.ItemDamageFunction(3.0F, 1.0F, 1.0F),
-                Optional.of(DamageTypeTags.BYPASSES_SHIELD),
+                (Optional) Optional.of(DamageTypeTags.BYPASSES_SHIELD),
                 Optional.of(SoundEvents.SHIELD_BLOCK),
                 Optional.of(SoundEvents.SHIELD_BREAK));
     }
@@ -312,7 +313,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
                         case STANDARD -> "techextensions.message.cyber_shield.mode_standard";
                         case PERMA_PARRY -> "techextensions.message.cyber_shield.mode_perma_parry";
                     };
-            serverPlayer.displayClientMessage(
+            serverPlayer.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")

@@ -19,7 +19,7 @@ import dev.gga.techextensions.menu.VacuumGunMenu;
 import java.util.HashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.Block;
 import org.apache.commons.lang3.Validate;
 
 public class ModRegistry {
-    private static final HashMap<Object, ResourceLocation> objIdentMap = new HashMap<>();
+    private static final HashMap<Object, Identifier> objIdentMap = new HashMap<>();
 
     public static void register() {
         registerBlocks();
@@ -37,11 +37,11 @@ public class ModRegistry {
         registerMenus();
     }
 
-    public static void registerMenu(MenuType<?> menu, ResourceLocation name) {
+    public static void registerMenu(MenuType<?> menu, Identifier name) {
         Registry.register(BuiltInRegistries.MENU, name, menu);
     }
 
-    public static void registerBlock(Block block, ResourceLocation name) {
+    public static void registerBlock(Block block, Identifier name) {
         Registry.register(BuiltInRegistries.BLOCK, name, block);
     }
 
@@ -50,7 +50,7 @@ public class ModRegistry {
         registerBlock(block, objIdentMap.get(block));
     }
 
-    public static void registerItem(Item item, ResourceLocation name) {
+    public static void registerItem(Item item, Identifier name) {
         Registry.register(BuiltInRegistries.ITEM, name, item);
     }
 
@@ -95,16 +95,16 @@ public class ModRegistry {
     private static void registerMenus() {
         registerMenu(
                 TEContent.BUBBLE_GUN_MENU = new MenuType<>(BubbleGunMenu::new, FeatureFlags.VANILLA_SET),
-                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_gun"));
+                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_gun"));
         registerMenu(
                 TEContent.RESONANCE_SCANNER_MENU = new MenuType<>(ResonanceScannerMenu::new, FeatureFlags.VANILLA_SET),
-                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));
+                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));
         registerMenu(
                 TEContent.VACUUM_GUN_MENU = new MenuType<>(VacuumGunMenu::new, FeatureFlags.VANILLA_SET),
-                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "vacuum_gun"));
+                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "vacuum_gun"));
     }
 
-    public static void registerIdent(Object object, ResourceLocation identifier) {
+    public static void registerIdent(Object object, Identifier identifier) {
         objIdentMap.put(object, identifier);
     }
 }

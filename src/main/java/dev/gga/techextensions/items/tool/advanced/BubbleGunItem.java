@@ -45,7 +45,7 @@ import reborncore.common.powerSystem.RcEnergyTier;
 import reborncore.common.util.ItemUtils;
 import techreborn.config.TechRebornConfig;
 import techreborn.init.TRContent;
-import techreborn.items.DynamicCellItem;
+import techreborn.items.CellItem;
 import techreborn.items.UpgradeItem;
 
 /**
@@ -108,7 +108,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                         case INSPECT -> "techextensions.message.bubble_gun.mode_inspect";
                         case SHOOT -> "techextensions.message.bubble_gun.mode_shoot";
                     };
-            serverPlayer.displayClientMessage(
+            serverPlayer.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
@@ -223,7 +223,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
             }
             if (getWaterAmount(stack) < TechExtensionsConfig.bubbleGunWaterCostPerTick) {
                 if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.displayClientMessage(
+                    serverPlayer.sendSystemMessage(
                             Component.translatable("techextensions.message.bubble_gun.no_water")
                                     .withStyle(ChatFormatting.RED),
                             true);
@@ -234,7 +234,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
             ItemStack soapStack = inv.getItem(SOAP_SLOT);
             if (soapStack.isEmpty() || !(soapStack.getItem() instanceof SoapItem)) {
                 if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.displayClientMessage(
+                    serverPlayer.sendSystemMessage(
                             Component.translatable("techextensions.message.bubble_gun.no_soap")
                                     .withStyle(ChatFormatting.RED),
                             true);
@@ -391,7 +391,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 if (currentWater + MB_PER_CELL <= maxWater) {
                     // Drain one cell
                     ItemStack outputSlot = inv.getItem(CELL_OUTPUT_SLOT);
-                    ItemStack emptyCell = DynamicCellItem.getEmptyCell(1);
+                    ItemStack emptyCell = ((CellItem) TRContent.CELL).getEmpty();
 
                     // Check if output slot can accept an empty cell
                     if (outputSlot.isEmpty()) {

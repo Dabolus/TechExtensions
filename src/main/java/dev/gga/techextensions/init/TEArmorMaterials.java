@@ -2,14 +2,14 @@ package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
 import java.util.EnumMap;
-import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
@@ -18,7 +18,7 @@ import net.minecraft.world.item.equipment.EquipmentAssets;
 
 public class TEArmorMaterials {
     private static final TagKey<Item> EMPTY =
-            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "empty"));
+            TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "empty"));
 
     public static final ArmorMaterial ELECTRIC_JETPACK = register(
             "electric_jetpack",
@@ -45,8 +45,8 @@ public class TEArmorMaterials {
             float knockbackResistance,
             int durability,
             TagKey<Item> repairIngredient) {
-        ResourceKey<EquipmentAsset> asset = ResourceKey.create(
-                EquipmentAssets.ROOT_ID, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, id));
+        ResourceKey<EquipmentAsset> asset =
+                ResourceKey.create(EquipmentAssets.ROOT_ID, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, id));
         return new ArmorMaterial(
                 durability,
                 defense,

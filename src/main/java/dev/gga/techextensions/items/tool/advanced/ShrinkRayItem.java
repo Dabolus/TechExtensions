@@ -14,7 +14,7 @@ import java.util.WeakHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -55,7 +55,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
     private static class AttributeModifierInfo {
         Holder<Attribute> attribute;
-        ResourceLocation modifierId;
+        Identifier modifierId;
         double multiplyDelta;
         AttributeModifier.Operation operation;
 
@@ -65,7 +65,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 double multiplyDelta,
                 AttributeModifier.Operation operation) {
             this.attribute = attribute;
-            this.modifierId = ResourceLocation.fromNamespaceAndPath(
+            this.modifierId = Identifier.fromNamespaceAndPath(
                     TechExtensions.MOD_ID, "shrink_ray_" + modifierName + "_adjustment");
             this.multiplyDelta = multiplyDelta;
             this.operation = operation;
@@ -82,7 +82,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
     private static final AttributeModifierInfo SCALE_MODIFIER_INFO =
             new AttributeModifierInfo(Attributes.SCALE, "scale", 1.0D);
-    public static final ResourceLocation SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId;
+    public static final Identifier SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId;
 
     private static final List<AttributeModifierInfo> ATTRIBUTE_MODIFIER_INFO = List.of(
             new AttributeModifierInfo(Attributes.ATTACK_DAMAGE, "attack_damage", 0.8D),
@@ -156,7 +156,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                         case ENLARGE -> "techextensions.message.shrink_ray.mode_enlarge";
                         case RESTORE -> "techextensions.message.shrink_ray.mode_restore";
                     };
-            serverPlayerEntity.displayClientMessage(
+            serverPlayerEntity.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")

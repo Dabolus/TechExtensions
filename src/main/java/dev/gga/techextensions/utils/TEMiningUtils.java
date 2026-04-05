@@ -15,7 +15,9 @@ import techreborn.utils.ToolsUtil;
 public final class TEMiningUtils {
     public static boolean isValidOre(BlockState state) {
         // Consider it an ore if it has a tag that starts with ores/
-        return state.getTags().anyMatch(tag -> tag.location().getPath().startsWith("ores/"));
+        return state.typeHolder()
+                .tags()
+                .anyMatch(tag -> tag.location().getPath().startsWith("ores/"));
     }
 
     public static boolean isValidVeinMineStartBlock(BlockState state) {

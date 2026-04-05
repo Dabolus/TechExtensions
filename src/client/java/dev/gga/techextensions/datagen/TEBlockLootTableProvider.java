@@ -3,9 +3,9 @@ package dev.gga.techextensions.datagen;
 import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
 import dev.gga.techextensions.init.TEContent;
 import java.util.concurrent.CompletableFuture;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider;
-import net.minecraft.advancements.critereon.StatePropertiesPredicate;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider;
+import net.minecraft.advancements.criterion.StatePropertiesPredicate;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -15,9 +15,9 @@ import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
-public class TEBlockLootTableProvider extends FabricBlockLootTableProvider {
+public class TEBlockLootTableProvider extends FabricBlockLootSubProvider {
     public TEBlockLootTableProvider(
-            FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
+            FabricPackOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
         super(dataOutput, registryLookup);
     }
 

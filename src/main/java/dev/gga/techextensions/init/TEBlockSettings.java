@@ -2,8 +2,8 @@ package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -24,7 +24,7 @@ public class TEBlockSettings {
 
     private static ResourceKey<Block> key(String name) {
         return ResourceKey.create(
-                BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+                BuiltInRegistries.BLOCK.key(), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
     }
 
     private TEBlockSettings() {}

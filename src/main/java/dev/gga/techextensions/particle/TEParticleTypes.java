@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class TEParticleTypes {
     public static final SimpleParticleType SHRINK_RAY = FabricParticleTypes.simple();
@@ -13,7 +13,7 @@ public class TEParticleTypes {
     public static void init() {
         Registry.register(
                 BuiltInRegistries.PARTICLE_TYPE,
-                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "shrink_ray_particle"),
+                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "shrink_ray_particle"),
                 SHRINK_RAY);
     }
 }

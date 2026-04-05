@@ -75,7 +75,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
                         case BLOW -> "techextensions.message.vacuum_gun.mode_blow";
                         case INSPECT -> "techextensions.message.vacuum_gun.mode_inspect";
                     };
-            serverPlayer.displayClientMessage(
+            serverPlayer.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")

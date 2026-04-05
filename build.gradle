@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'java-library'
 	id 'idea'
-	id 'fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 	id 'com.diffplug.spotless' version "${spotless_version}"
 	id 'me.modmuss50.mod-publish-plugin' version "${publish_plugin_version}"
@@ -24,7 +24,10 @@ base {
 }
 
 repositories {
-	maven { url = uri("https://maven.shedaniel.me") }
+	maven {
+    name = "Jared's maven"
+    url = "https://maven.blamejared.com/"
+  }
 	maven {
 		name = "Gegy"
 		url = uri("https://maven.gegy.dev")
@@ -54,19 +57,18 @@ fabricApi {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	modImplementation "TechReborn:TechReborn-${project.tech_reborn_version}"
+	implementation "TechReborn:TechReborn-${project.tech_reborn_version}"
 
 	// We provide LambDynamicLights configuration, even if we don't directly depend on it
-	modLocalRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:4.8.7+1.21.10"
+	localRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:4.10.0+26.1"
 
 	// To easily check and debug recipes in-game
-	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:21.9.812"
+	localRuntime "mezz.jei:jei-${project.minecraft_version}-fabric:29.3.0.22"
 }
 
 processResources {
@@ -78,7 +80,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
 }
 
 java {
@@ -87,8 +89,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {
@@ -118,7 +120,7 @@ publishing {
 }
 
 publishMods {
-    file = remapJar.archiveFile
+    file = jar.archiveFile
     version = project.mod_version
     changelog = providers.environmentVariable("CHANGELOG").orElse("No changelog provided")
     type = providers.environmentVariable("RELEASE_CHANNEL").orElse("stable").map { value ->
@@ -133,16 +135,16 @@ publishMods {
     curseforge {
         projectId = "1430902"
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-        minecraftVersions.add("1.21.10")
+        minecraftVersions.add("26.1.1")
         requires("fabric-api", "techreborn")
-        optional("roughly-enough-items", "lambdynamiclights")
+        optional("jei", "lambdynamiclights")
     }
     modrinth {
         projectId = "So3gzRK5"
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-        minecraftVersions.add("1.21.10")
+        minecraftVersions.add("26.1.1")
         requires("fabric-api", "techreborn")
-        optional("rei", "lambdynamiclights")
+        optional("jei", "lambdynamiclights")
     }
     github {
         repository = "Dabolus/TechExtensions"

@@ -62,7 +62,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             TRItemUtils.switchActive(stack, cost, entity);
             stack.set(TEDataComponentTypes.TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                serverPlayerEntity.displayClientMessage(
+                serverPlayerEntity.sendSystemMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -87,7 +87,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                             case AOE_3x3 -> "techextensions.message.meta_tool.mode_aoe_3x3";
                             case SMART -> "techextensions.message.meta_tool.mode_smart";
                         };
-                serverPlayerEntity.displayClientMessage(
+                serverPlayerEntity.sendSystemMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")

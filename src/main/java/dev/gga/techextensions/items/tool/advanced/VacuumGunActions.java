@@ -4,8 +4,10 @@ import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.utils.ItemAnimationManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -148,9 +150,9 @@ final class VacuumGunActions {
         // Second, if no equipped items, vacuum the mob itself as a spawn egg (if possible)
         Vec3 mobPos = living.position().add(0, living.getBbHeight() / 2, 0);
         List<Vec3> trail = List.of(mobPos, eyePos);
-        SpawnEggItem egg = SpawnEggItem.byId(living.getType());
-        if (egg != null) {
-            ItemStack eggStack = new ItemStack(egg);
+        Optional<Holder<Item>> eggHolder = SpawnEggItem.byId(living.getType());
+        if (eggHolder.isPresent()) {
+            ItemStack eggStack = new ItemStack(eggHolder.get());
             TagValueOutput output =
                     TagValueOutput.createWithContext(ProblemReporter.DISCARDING, world.registryAccess());
             living.saveWithoutId(output);
@@ -186,7 +188,7 @@ final class VacuumGunActions {
                     SoundEvents.ITEM_PICKUP,
                     SoundSource.PLAYERS,
                     0.2F,
-                    ((world.random.nextFloat() - world.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+                    ((world.getRandom().nextFloat() - world.getRandom().nextFloat()) * 0.7F + 1.0F) * 2.0F);
         });
         return true;
     }

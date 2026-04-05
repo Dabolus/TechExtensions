@@ -5,11 +5,11 @@ import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
@@ -19,18 +19,15 @@ import reborncore.client.gui.GuiBuilder;
 import reborncore.client.gui.GuiSprites;
 
 public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScannerMenu> {
-    private static final Material UPGRADES_TOP_SPRITE = new Material(
-            ResourceLocation.parse("gui"),
-            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_top"));
-    private static final Material UPGRADES_SLOT_SPRITE = new Material(
-            ResourceLocation.parse("gui"),
-            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_slot"));
-    private static final Material UPGRADES_BOTTOM_SPRITE = new Material(
-            ResourceLocation.parse("gui"),
-            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_bottom"));
+    private static final SpriteId UPGRADES_TOP_SPRITE = new SpriteId(
+            Identifier.parse("gui"), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_top"));
+    private static final SpriteId UPGRADES_SLOT_SPRITE = new SpriteId(
+            Identifier.parse("gui"), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_slot"));
+    private static final SpriteId UPGRADES_BOTTOM_SPRITE = new SpriteId(
+            Identifier.parse("gui"), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "upgrades_bottom"));
 
     private final Container inventory;
-    private final GuiBuilder builder = new GuiBuilder();
+    private final GuiBuilder builder = GuiBuilder.INSTANCE;
 
     public GuiResonanceScanner(ResonanceScannerMenu menu, Inventory inventory, Component component) {
         super(menu, inventory, component);
@@ -44,13 +41,13 @@ public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScanne
     }
 
     @Override
-    public void render(GuiGraphics drawContext, int mouseX, int mouseY, float partialTicks) {
-        super.render(drawContext, mouseX, mouseY, partialTicks);
-        this.renderTooltip(drawContext, mouseX, mouseY);
+    public void extractRenderState(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(drawContext, mouseX, mouseY, partialTicks);
+        this.extractTooltip(drawContext, mouseX, mouseY);
     }
 
     @Override
-    protected void renderBg(GuiGraphics drawContext, float partialTicks, int mouseX, int mouseY) {
+    public void extractContents(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float partialTicks) {
         GuiBase.Layer layer = GuiBase.Layer.BACKGROUND;
         builder.drawDefaultBackground(drawContext, this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
 
@@ -84,8 +81,8 @@ public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScanne
     }
 
     @Override
-    protected void renderLabels(GuiGraphics drawContext, int mouseX, int mouseY) {
-        super.renderLabels(drawContext, mouseX, mouseY);
+    protected void extractLabels(GuiGraphicsExtractor drawContext, int mouseX, int mouseY) {
+        super.extractLabels(drawContext, mouseX, mouseY);
         GuiBase.Layer layer = GuiBase.Layer.FOREGROUND;
         ItemStack itemStack = inventory.getItem(0);
         ItemStack targetStack = ResonanceScannerItem.getTarget(itemStack);
@@ -122,7 +119,7 @@ public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScanne
                 layer);
     }
 
-    public void drawSlot(GuiGraphics drawContext, int x, int y, GuiBase.Layer layer) {
+    public void drawSlot(GuiGraphicsExtractor drawContext, int x, int y, GuiBase.Layer layer) {
         if (layer == GuiBase.Layer.BACKGROUND) {
             x += this.leftPos;
             y += this.topPos;
@@ -130,17 +127,19 @@ public class GuiResonanceScanner extends AbstractContainerScreen<ResonanceScanne
         builder.drawSlot(drawContext, x - 1, y - 1);
     }
 
-    public void drawCenteredText(GuiGraphics drawContext, Component text, int y, int colour, GuiBase.Layer layer) {
+    public void drawCenteredText(
+            GuiGraphicsExtractor drawContext, Component text, int y, int colour, GuiBase.Layer layer) {
         drawText(drawContext, text, (imageWidth / 2 - getFont().width(text) / 2), y, colour, layer);
     }
 
-    public void drawText(GuiGraphics drawContext, Component text, int x, int y, int colour, GuiBase.Layer layer) {
+    public void drawText(
+            GuiGraphicsExtractor drawContext, Component text, int x, int y, int colour, GuiBase.Layer layer) {
         int factorX = 0;
         int factorY = 0;
         if (layer == GuiBase.Layer.BACKGROUND) {
             factorX = this.leftPos;
             factorY = this.topPos;
         }
-        drawContext.drawString(Minecraft.getInstance().font, text, x + factorX, y + factorY, colour, false);
+        drawContext.text(Minecraft.getInstance().font, text, x + factorX, y + factorY, colour, false);
     }
 }

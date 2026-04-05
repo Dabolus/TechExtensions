@@ -6,7 +6,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class TEDataComponentTypes {
     public static final DataComponentType<Integer> TOOL_MODE = DataComponentType.<Integer>builder()
@@ -17,7 +17,7 @@ public class TEDataComponentTypes {
     public static void init() {
         Registry.register(
                 BuiltInRegistries.DATA_COMPONENT_TYPE,
-                ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "tool_mode"),
+                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "tool_mode"),
                 TOOL_MODE);
     }
 }

@@ -3,21 +3,21 @@ package dev.gga.techextensions.init;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.events.ModRegistry;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class TEInitUtils {
     public static <I extends Item> I setup(I item, String name) {
-        ModRegistry.registerIdent(item, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+        ModRegistry.registerIdent(item, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             String expect =
-                    Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+                    Util.makeDescriptionId("item", Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
             String actual = item.getDescriptionId();
 
             if (!expect.equals(actual)) {
@@ -31,11 +31,11 @@ public class TEInitUtils {
     }
 
     public static <B extends Block> B setup(B block, String name) {
-        ModRegistry.registerIdent(block, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+        ModRegistry.registerIdent(block, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             String expect =
-                    Util.makeDescriptionId("block", ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+                    Util.makeDescriptionId("block", Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
             String actual = block.getDescriptionId();
 
             if (!expect.equals(actual)) {
@@ -49,7 +49,7 @@ public class TEInitUtils {
     }
 
     public static SoundEvent setup(String name) {
-        ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, name);
+        Identifier identifier = Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name);
         return Registry.register(
                 BuiltInRegistries.SOUND_EVENT, identifier, SoundEvent.createVariableRangeEvent(identifier));
     }

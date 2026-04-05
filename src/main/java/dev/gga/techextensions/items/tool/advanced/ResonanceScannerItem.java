@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -61,7 +62,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         if (worldIn.isClientSide()) {
             return;
         }
-        if (entityIn instanceof Player playerIn) {
+        if (entityIn instanceof ServerPlayer playerIn) {
             long currentTick = worldIn.getGameTime();
             long scanCooldown = getScanCooldown(stack);
             if (currentTick - lastDisplayTick < scanCooldown) {
@@ -103,10 +104,11 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
                     tag.putDouble("estimated_block_distance_percent", estimatedDistancePercent);
                 });
                 // Display message to player
-                playerIn.displayClientMessage(
+                playerIn.sendSystemMessage(
                         Component.translatable(
                                         "techextensions.message.resonance_scanner.block_in_range",
-                                        Component.literal(item.getName().getString())
+                                        Component.literal(item.getName(targetStack)
+                                                        .getString())
                                                 .withStyle(ChatFormatting.GOLD),
                                         Component.literal(Long.toString(
                                                         Math.round(estimatedDistancePercent * effectiveRange)))
@@ -286,7 +288,9 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
 
     public static ItemStack getTarget(ItemStack stack) {
         ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
-        return contents != null ? contents.stream().findFirst().orElse(ItemStack.EMPTY) : ItemStack.EMPTY;
+        return contents != null
+                ? contents.nonEmptyItemCopyStream().findFirst().orElse(ItemStack.EMPTY)
+                : ItemStack.EMPTY;
     }
 
     @Override
