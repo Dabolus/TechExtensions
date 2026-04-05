@@ -100,15 +100,6 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
 
     // MiningToolItem
     @Override
-    public boolean isCorrectToolForDrops(ItemStack stack, BlockState state) {
-        return Items.NETHERITE_AXE.isCorrectToolForDrops(stack, state)
-                || Items.NETHERITE_SWORD.isCorrectToolForDrops(stack, state)
-                || Items.NETHERITE_PICKAXE.isCorrectToolForDrops(stack, state)
-                || Items.NETHERITE_SHOVEL.isCorrectToolForDrops(stack, state)
-                || Items.SHEARS.isCorrectToolForDrops(stack, state);
-    }
-
-    @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost) {
             return TEToolMaterials.META_TOOL.speed();

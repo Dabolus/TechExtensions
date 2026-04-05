@@ -15,7 +15,12 @@ public class TEBlockTagProvider extends FabricTagsProvider.BlockTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        valueLookupBuilder(TEContent.BlockTags.META_TOOL_MINEABLE).addOptionalTag(BlockTags.MINEABLE_WITH_AXE);
+        valueLookupBuilder(TEContent.BlockTags.META_TOOL_MINEABLE)
+                .addOptionalTag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .addOptionalTag(BlockTags.MINEABLE_WITH_AXE)
+                .addOptionalTag(BlockTags.MINEABLE_WITH_SHOVEL)
+                .addOptionalTag(BlockTags.SWORD_EFFICIENT)
+                .addOptionalTag(BlockTags.LEAVES);
 
         // Make Electric Ducted Fan mineable with pickaxe
         valueLookupBuilder(BlockTags.MINEABLE_WITH_PICKAXE).add((Block) TEContent.ELECTRIC_DUCTED_FAN);
