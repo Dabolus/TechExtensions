@@ -91,6 +91,8 @@ public class GuiBubbleGun extends AbstractContainerScreen<BubbleGunMenu> {
         for (int col = 0; col < 9; col++) {
             this.drawSlot(drawContext, 8 + col * 18, 142, layer);
         }
+
+        super.extractContents(drawContext, mouseX, mouseY, partialTicks);
     }
 
     @Override

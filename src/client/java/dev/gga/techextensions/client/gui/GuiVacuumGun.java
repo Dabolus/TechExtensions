@@ -74,6 +74,8 @@ public class GuiVacuumGun extends AbstractContainerScreen<VacuumGunMenu> {
         for (int col = 0; col < 9; col++) {
             this.drawSlot(drawContext, 8 + col * 18, 142, layer);
         }
+
+        super.extractContents(drawContext, mouseX, mouseY, partialTicks);
     }
 
     public void drawSlot(GuiGraphicsExtractor drawContext, int x, int y, GuiBase.Layer layer) {
