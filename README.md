@@ -4,7 +4,7 @@
 [Tech Reborn](https://www.curseforge.com/minecraft/mc-mods/techreborn) mod.
 It introduces new high-tech gadgets and utilities to enhance the gameplay experience.
 
-- **Supported Minecraft Version:** 26.1.1, 1.21.10
+- **Supported Minecraft Version:** 26.1(.x), 1.21.10
 - **Dependencies:**
   - [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
   - [Tech Reborn](https://www.curseforge.com/minecraft/mc-mods/techreborn)

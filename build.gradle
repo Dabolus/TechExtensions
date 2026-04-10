@@ -65,10 +65,10 @@ dependencies {
 	implementation "TechReborn:TechReborn-${project.tech_reborn_version}"
 
 	// We provide LambDynamicLights configuration, even if we don't directly depend on it
-	localRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:4.10.0+26.1"
+	localRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:4.10.1+26.1.1"
 
 	// To easily check and debug recipes in-game
-	localRuntime "mezz.jei:jei-${project.minecraft_version}-fabric:29.3.0.22"
+	localRuntime "mezz.jei:jei-${project.minecraft_version}-fabric:29.5.0.24"
 }
 
 processResources {
@@ -135,14 +135,18 @@ publishMods {
     curseforge {
         projectId = "1430902"
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        minecraftVersions.add("26.1.2")
         minecraftVersions.add("26.1.1")
+        minecraftVersions.add("26.1")
         requires("fabric-api", "techreborn")
         optional("jei", "lambdynamiclights")
     }
     modrinth {
         projectId = "So3gzRK5"
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add("26.1.2")
         minecraftVersions.add("26.1.1")
+        minecraftVersions.add("26.1")
         requires("fabric-api", "techreborn")
         optional("jei", "lambdynamiclights")
     }
