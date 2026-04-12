@@ -16,7 +16,6 @@ import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * A simple durability-based item that cleans oxidized copper, waxed copper,
@@ -36,9 +35,8 @@ public class SoapItem extends Item {
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        BlockState state = level.getBlockState(pos);
 
-        if (!TECleaningUtils.isCleanable(state)) {
+        if (!TECleaningUtils.isCleanable(level, pos)) {
             return InteractionResult.PASS;
         }
 
@@ -50,6 +48,11 @@ public class SoapItem extends Item {
 
         if (context.getPlayer() != null) {
             context.getPlayer().startUsingItem(context.getHand());
+
+            // Play a wet/soapy sound when starting to clean
+            if (!level.isClientSide()) {
+                level.playSound(null, pos, SoundEvents.SPONGE_ABSORB, SoundSource.PLAYERS, 0.7F, 1.4F);
+            }
         }
         return InteractionResult.CONSUME;
     }
@@ -87,10 +90,7 @@ public class SoapItem extends Item {
         if (usedTicks >= CLEAN_THRESHOLD_TICKS) {
             BlockPos targetPos = getTargetPos(stack);
             if (targetPos != null) {
-                BlockState currentState = level.getBlockState(targetPos);
-                BlockState cleanedState = TECleaningUtils.getCleanedState(currentState);
-                if (cleanedState != null) {
-                    level.setBlockAndUpdate(targetPos, cleanedState);
+                if (TECleaningUtils.cleanBlock(level, targetPos)) {
                     level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
 
                     // Damage the soap

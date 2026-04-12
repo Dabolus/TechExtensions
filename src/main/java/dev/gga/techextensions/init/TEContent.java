@@ -2,6 +2,7 @@ package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
+import dev.gga.techextensions.entity.BubbleTrapEntity;
 import dev.gga.techextensions.events.ModRegistry;
 import dev.gga.techextensions.menu.BubbleGunMenu;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
@@ -9,6 +10,7 @@ import dev.gga.techextensions.menu.VacuumGunMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -34,6 +36,9 @@ public class TEContent {
     public static MenuType<BubbleGunMenu> BUBBLE_GUN_MENU;
     public static MenuType<ResonanceScannerMenu> RESONANCE_SCANNER_MENU;
     public static MenuType<VacuumGunMenu> VACUUM_GUN_MENU;
+
+    // Entity types
+    public static EntityType<BubbleTrapEntity> BUBBLE_TRAP_ENTITY;
 
     public static final class BlockTags {
         public static final TagKey<Block> META_TOOL_MINEABLE = TagKey.create(

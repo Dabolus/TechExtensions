@@ -163,4 +163,8 @@ public class BubbleGunMenu extends AbstractContainerMenu {
     public boolean stillValid(Player player) {
         return player.getMainHandItem() == gunStack || player.getOffhandItem() == gunStack;
     }
+
+    public Container getGunInventory() {
+        return inventory;
+    }
 }

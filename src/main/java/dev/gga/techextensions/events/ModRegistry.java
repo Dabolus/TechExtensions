@@ -1,6 +1,7 @@
 package dev.gga.techextensions.events;
 
 import dev.gga.techextensions.TechExtensions;
+import dev.gga.techextensions.entity.BubbleTrapEntity;
 import dev.gga.techextensions.init.TEBlockEntities;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEInitUtils;
@@ -19,7 +20,11 @@ import dev.gga.techextensions.menu.VacuumGunMenu;
 import java.util.HashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
@@ -35,6 +40,7 @@ public class ModRegistry {
         registerItems();
         registerBlockEntities();
         registerMenus();
+        registerEntityTypes();
     }
 
     public static void registerMenu(MenuType<?> menu, Identifier name) {
@@ -102,6 +108,19 @@ public class ModRegistry {
         registerMenu(
                 TEContent.VACUUM_GUN_MENU = new MenuType<>(VacuumGunMenu::new, FeatureFlags.VANILLA_SET),
                 Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "vacuum_gun"));
+    }
+
+    private static void registerEntityTypes() {
+        Identifier id = Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_trap");
+        ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
+        TEContent.BUBBLE_TRAP_ENTITY = Registry.register(
+                BuiltInRegistries.ENTITY_TYPE,
+                id,
+                EntityType.Builder.<BubbleTrapEntity>of(BubbleTrapEntity::new, MobCategory.MISC)
+                        .sized(1.0F, 1.0F)
+                        .clientTrackingRange(10)
+                        .updateInterval(1)
+                        .build(key));
     }
 
     public static void registerIdent(Object object, Identifier identifier) {

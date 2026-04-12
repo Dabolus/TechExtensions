@@ -1,74 +1,33 @@
 package dev.gga.techextensions.utils;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.HoneycombItem;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
 /**
  * Shared cleaning logic used by both {@code SoapItem} and {@code BubbleGunItem}.
  *
- * Handles three categories:
+ * Handles four categories:
  * - Oxidized copper: reverts one oxidation level via `WeatheringCopper.getPrevious(Block)`
- * - Waxed copper: removes wax, yielding the un-waxed equivalent
+ * - Waxed blocks: removes wax using vanilla's `HoneycombItem.WAX_OFF_BY_BLOCK`
+ * - Waxed signs: removes wax from sign block entities
  * - Mossy blocks: removes moss (mossy cobblestone → cobblestone, etc.)
  */
 public final class TECleaningUtils {
-
-    // Waxed → Un-waxed mapping (reverse of HoneycombItem.WAXABLES)
-    private static final Map<Block, Block> WAX_OFF_MAP;
 
     // Mossy → Clean mapping
     private static final Map<Block, Block> MOSSY_MAP;
 
     static {
-        // Build waxed → un-waxed map
-        // These are the same pairings defined in HoneycombItem.WAXABLES but reversed
-        Map<Block, Block> wax = new IdentityHashMap<>();
-        wax.put(Blocks.WAXED_COPPER_BLOCK, Blocks.COPPER_BLOCK);
-        wax.put(Blocks.WAXED_EXPOSED_COPPER, Blocks.EXPOSED_COPPER);
-        wax.put(Blocks.WAXED_WEATHERED_COPPER, Blocks.WEATHERED_COPPER);
-        wax.put(Blocks.WAXED_OXIDIZED_COPPER, Blocks.OXIDIZED_COPPER);
-        wax.put(Blocks.WAXED_CUT_COPPER, Blocks.CUT_COPPER);
-        wax.put(Blocks.WAXED_EXPOSED_CUT_COPPER, Blocks.EXPOSED_CUT_COPPER);
-        wax.put(Blocks.WAXED_WEATHERED_CUT_COPPER, Blocks.WEATHERED_CUT_COPPER);
-        wax.put(Blocks.WAXED_OXIDIZED_CUT_COPPER, Blocks.OXIDIZED_CUT_COPPER);
-        wax.put(Blocks.WAXED_CUT_COPPER_STAIRS, Blocks.CUT_COPPER_STAIRS);
-        wax.put(Blocks.WAXED_EXPOSED_CUT_COPPER_STAIRS, Blocks.EXPOSED_CUT_COPPER_STAIRS);
-        wax.put(Blocks.WAXED_WEATHERED_CUT_COPPER_STAIRS, Blocks.WEATHERED_CUT_COPPER_STAIRS);
-        wax.put(Blocks.WAXED_OXIDIZED_CUT_COPPER_STAIRS, Blocks.OXIDIZED_CUT_COPPER_STAIRS);
-        wax.put(Blocks.WAXED_CUT_COPPER_SLAB, Blocks.CUT_COPPER_SLAB);
-        wax.put(Blocks.WAXED_EXPOSED_CUT_COPPER_SLAB, Blocks.EXPOSED_CUT_COPPER_SLAB);
-        wax.put(Blocks.WAXED_WEATHERED_CUT_COPPER_SLAB, Blocks.WEATHERED_CUT_COPPER_SLAB);
-        wax.put(Blocks.WAXED_OXIDIZED_CUT_COPPER_SLAB, Blocks.OXIDIZED_CUT_COPPER_SLAB);
-        wax.put(Blocks.WAXED_COPPER_DOOR, Blocks.COPPER_DOOR);
-        wax.put(Blocks.WAXED_EXPOSED_COPPER_DOOR, Blocks.EXPOSED_COPPER_DOOR);
-        wax.put(Blocks.WAXED_WEATHERED_COPPER_DOOR, Blocks.WEATHERED_COPPER_DOOR);
-        wax.put(Blocks.WAXED_OXIDIZED_COPPER_DOOR, Blocks.OXIDIZED_COPPER_DOOR);
-        wax.put(Blocks.WAXED_COPPER_TRAPDOOR, Blocks.COPPER_TRAPDOOR);
-        wax.put(Blocks.WAXED_EXPOSED_COPPER_TRAPDOOR, Blocks.EXPOSED_COPPER_TRAPDOOR);
-        wax.put(Blocks.WAXED_WEATHERED_COPPER_TRAPDOOR, Blocks.WEATHERED_COPPER_TRAPDOOR);
-        wax.put(Blocks.WAXED_OXIDIZED_COPPER_TRAPDOOR, Blocks.OXIDIZED_COPPER_TRAPDOOR);
-        wax.put(Blocks.WAXED_COPPER_GRATE, Blocks.COPPER_GRATE);
-        wax.put(Blocks.WAXED_EXPOSED_COPPER_GRATE, Blocks.EXPOSED_COPPER_GRATE);
-        wax.put(Blocks.WAXED_WEATHERED_COPPER_GRATE, Blocks.WEATHERED_COPPER_GRATE);
-        wax.put(Blocks.WAXED_OXIDIZED_COPPER_GRATE, Blocks.OXIDIZED_COPPER_GRATE);
-        wax.put(Blocks.WAXED_COPPER_BULB, Blocks.COPPER_BULB);
-        wax.put(Blocks.WAXED_EXPOSED_COPPER_BULB, Blocks.EXPOSED_COPPER_BULB);
-        wax.put(Blocks.WAXED_WEATHERED_COPPER_BULB, Blocks.WEATHERED_COPPER_BULB);
-        wax.put(Blocks.WAXED_OXIDIZED_COPPER_BULB, Blocks.OXIDIZED_COPPER_BULB);
-        wax.put(Blocks.WAXED_CHISELED_COPPER, Blocks.CHISELED_COPPER);
-        wax.put(Blocks.WAXED_EXPOSED_CHISELED_COPPER, Blocks.EXPOSED_CHISELED_COPPER);
-        wax.put(Blocks.WAXED_WEATHERED_CHISELED_COPPER, Blocks.WEATHERED_CHISELED_COPPER);
-        wax.put(Blocks.WAXED_OXIDIZED_CHISELED_COPPER, Blocks.OXIDIZED_CHISELED_COPPER);
-        WAX_OFF_MAP = ImmutableMap.copyOf(wax);
-
-        // Build mossy → clean map
         MOSSY_MAP = ImmutableMap.<Block, Block>builder()
                 .put(Blocks.MOSSY_COBBLESTONE, Blocks.COBBLESTONE)
                 .put(Blocks.MOSSY_COBBLESTONE_STAIRS, Blocks.COBBLESTONE_STAIRS)
@@ -85,6 +44,7 @@ public final class TECleaningUtils {
 
     /**
      * Returns {@code true} if the given block state can be cleaned by soap / bubble gun.
+     * For signs, use {@link #isWaxedSign(Level, BlockPos)} instead.
      */
     public static boolean isCleanable(BlockState state) {
         Block block = state.getBlock();
@@ -92,8 +52,8 @@ public final class TECleaningUtils {
         if (WeatheringCopper.getPrevious(block).isPresent()) {
             return true;
         }
-        // Waxed copper
-        if (WAX_OFF_MAP.containsKey(block)) {
+        // Waxed blocks (vanilla map covers all waxed copper variants)
+        if (HoneycombItem.WAX_OFF_BY_BLOCK.get().containsKey(block)) {
             return true;
         }
         // Mossy blocks
@@ -101,18 +61,62 @@ public final class TECleaningUtils {
     }
 
     /**
+     * Returns {@code true} if the block at the given position is a waxed sign.
+     */
+    public static boolean isWaxedSign(Level level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
+            return sign.isWaxed();
+        }
+        return false;
+    }
+
+    /**
+     * Returns {@code true} if the given block state can be cleaned, or
+     * is a waxed sign at the given position.
+     */
+    public static boolean isCleanable(Level level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return isCleanable(state) || isWaxedSign(level, pos);
+    }
+
+    /**
+     * Cleans the block at the given position. For waxed signs, removes the wax
+     * from the block entity. For other blocks, replaces the block state.
+     *
+     * @return {@code true} if the block was cleaned
+     */
+    public static boolean cleanBlock(Level level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+
+        // Try cleaning the block state (waxed copper, oxidized copper, mossy)
+        BlockState cleaned = getCleanedState(state);
+        if (cleaned != null) {
+            level.setBlockAndUpdate(pos, cleaned);
+            return true;
+        }
+
+        // Try removing wax from signs
+        if (level.getBlockEntity(pos) instanceof SignBlockEntity sign && sign.isWaxed()) {
+            sign.setWaxed(false);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Returns the cleaned variant of the given block state, preserving all
      * block-state properties (facing, half, waterlogged, etc.).
      *
-     * <p>Priority: waxed copper → oxidized copper → mossy.
+     * <p>Priority: waxed blocks → oxidized copper → mossy.
      *
      * @return the cleaned state, or {@code null} if the block is not cleanable
      */
     public static BlockState getCleanedState(BlockState state) {
         Block block = state.getBlock();
 
-        // 1. Waxed copper → un-waxed equivalent
-        Block unwaxed = WAX_OFF_MAP.get(block);
+        // 1. Waxed blocks → un-waxed equivalent (uses vanilla's complete map)
+        Block unwaxed = HoneycombItem.WAX_OFF_BY_BLOCK.get().get(block);
         if (unwaxed != null) {
             return copyProperties(state, unwaxed);
         }

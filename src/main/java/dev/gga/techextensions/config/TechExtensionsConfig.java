@@ -264,6 +264,27 @@ public class TechExtensionsConfig {
     @Config(
             config = "items",
             category = "power",
+            key = "bubbleGunTrapDuration",
+            comment = "Ticks of continuous targeting required to trap a living entity in a bubble")
+    public static int bubbleGunTrapDuration = 40;
+
+    @Config(
+            config = "items",
+            category = "power",
+            key = "bubbleGunBubbleFloatDuration",
+            comment = "Ticks the trapped entity floats upward inside the bubble before it pops")
+    public static int bubbleGunBubbleFloatDuration = 60;
+
+    @Config(
+            config = "items",
+            category = "physics",
+            key = "bubbleGunBubbleFloatSpeed",
+            comment = "Upward speed of the bubble while floating (blocks/tick)")
+    public static double bubbleGunBubbleFloatSpeed = 0.15;
+
+    @Config(
+            config = "items",
+            category = "power",
             key = "vacuumGunCharge",
             comment = "Energy Capacity for Vacuum Gun (EU)")
     public static int vacuumGunCharge = 200_000;
