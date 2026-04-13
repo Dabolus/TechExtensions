@@ -5,11 +5,11 @@ import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.particle.TEParticleTypes;
+import dev.gga.techextensions.utils.TEAimingUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.WeakHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -32,7 +32,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import reborncore.common.powerSystem.RcEnergyItem;
@@ -215,35 +214,16 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
         final Vec3 look = player.getViewVector(1.0F);
         final Vec3 start = getBeamStartPosition(player, look, hand);
         final Vec3 end = start.add(look.scale(range));
-        final AABB searchBox =
-                player.getBoundingBox().expandTowards(look.scale(range)).inflate(1.0D);
 
-        Entity closestEntity = null;
-        double closestDistSq = Double.MAX_VALUE;
-
-        for (Entity entity : world.getEntities(player, searchBox, e -> e.isAlive() && !e.isSpectator())) {
-            final AABB entityBB = entity.getBoundingBox().inflate(entity.getPickRadius() + 0.5D);
-            final Optional<Vec3> intersection = entityBB.clip(start, end);
-            if (intersection.isPresent()) {
-                final double distSq = start.distanceToSqr(intersection.get());
-                if (distSq < closestDistSq) {
-                    closestDistSq = distSq;
-                    closestEntity = entity;
-                }
-            }
-        }
-
-        // Also check if the player is shooting at their own feet.
-        // We use the lower part of the body so the box is below the eye position,
-        // since AABB.clip returns empty when the ray starts inside the box.
-        final AABB feetBB = getFeetAABB(player);
-        final Optional<Vec3> selfHit = feetBB.clip(start, end);
-        if (selfHit.isPresent()) {
-            final double selfDistSq = start.distanceToSqr(selfHit.get());
-            if (closestEntity == null || selfDistSq < closestDistSq) {
-                closestEntity = player;
-            }
-        }
+        TEAimingUtils.EntityHit entityHit = TEAimingUtils.traceEntity(
+                world,
+                player,
+                start,
+                end,
+                TEAimingUtils.ALIVE_NON_SPECTATOR,
+                0.5D,
+                TEAimingUtils.buildFeetAABB(player));
+        Entity closestEntity = entityHit != null ? entityHit.entity() : null;
 
         // Beam particle trail
         final Vec3 beamEnd;
@@ -296,18 +276,6 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 .add(viewVector.scale(forwardOffset)) // Move forward from the eyes
                 .add(rightVector.scale(sideOffset * playerHandSide)) // Move to the right or left depending on the hand
                 .add(downVector.scale(verticalOffset)); // Move slightly down
-    }
-
-    private static AABB getFeetAABB(Player player) {
-        final double playerHalfBBWidth = player.getBbWidth() * 0.5D;
-        final double playerFeetHalfBBHeight = player.getBbHeight() * 0.25D;
-        return new AABB(
-                player.getX() - playerHalfBBWidth,
-                player.getY() - playerFeetHalfBBHeight,
-                player.getZ() - playerHalfBBWidth,
-                player.getX() + playerHalfBBWidth,
-                player.getY() + playerFeetHalfBBHeight,
-                player.getZ() + playerHalfBBWidth);
     }
 
     // Item

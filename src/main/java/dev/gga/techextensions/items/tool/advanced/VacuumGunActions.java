@@ -2,6 +2,7 @@ package dev.gga.techextensions.items.tool.advanced;
 
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.utils.ItemAnimationManager;
+import dev.gga.techextensions.utils.TEAimingUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -100,9 +101,18 @@ final class VacuumGunActions {
         BlockHitResult fluidHit = world.clip(new ClipContext(
                 eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, CollisionContext.empty()));
 
-        double effectiveRange =
-                blockHit.getType() != HitResult.Type.MISS ? eyePos.distanceTo(blockHit.getLocation()) : range;
-        Entity hitEntity = findEntityAlongRay(world, player, eyePos, lookDir, effectiveRange);
+        Vec3 entityEnd = blockHit.getType() != HitResult.Type.MISS ? blockHit.getLocation() : endPos;
+        TEAimingUtils.EntityHit entityHit = TEAimingUtils.traceEntity(
+                world,
+                player,
+                eyePos,
+                entityEnd,
+                e -> e.isAlive()
+                        && !e.isSpectator()
+                        && ((e instanceof ItemEntity ie && !ie.hasPickUpDelay()) || (e instanceof LivingEntity)),
+                1.0D,
+                null);
+        Entity hitEntity = entityHit != null ? entityHit.entity() : null;
 
         if (hitEntity instanceof LivingEntity living) {
             return vacuumMob(world, player, gunStack, living, eyePos);
@@ -597,25 +607,6 @@ final class VacuumGunActions {
         for (Vec3 point : path) {
             AABB searchBox =
                     new AABB(point.x - 1.0, point.y - 1.0, point.z - 1.0, point.x + 1.0, point.y + 1.0, point.z + 1.0);
-            List<LivingEntity> mobs =
-                    world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && e != player);
-            if (!mobs.isEmpty()) return mobs.getFirst();
-        }
-        return null;
-    }
-
-    @Nullable
-    static Entity findEntityAlongRay(ServerLevel world, Player player, Vec3 start, Vec3 dir, double maxDist) {
-        int steps = (int) Math.ceil(maxDist / 0.5);
-        for (int i = 0; i <= steps; i++) {
-            Vec3 point = start.add(dir.scale(i * 0.5));
-            AABB searchBox =
-                    new AABB(point.x - 1.0, point.y - 1.0, point.z - 1.0, point.x + 1.0, point.y + 1.0, point.z + 1.0);
-
-            List<ItemEntity> items =
-                    world.getEntitiesOfClass(ItemEntity.class, searchBox, e -> e.isAlive() && !e.hasPickUpDelay());
-            if (!items.isEmpty()) return items.getFirst();
-
             List<LivingEntity> mobs =
                     world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && e != player);
             if (!mobs.isEmpty()) return mobs.getFirst();

@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
 /**
- * Shared cleaning logic used by both {@code SoapItem} and {@code BubbleGunItem}.
+ * Shared cleaning logic used by both `SoapItem` and `BubbleGunItem`.
  *
  * Handles four categories:
  * - Oxidized copper: reverts one oxidation level via `WeatheringCopper.getPrevious(Block)`
@@ -43,7 +43,7 @@ public final class TECleaningUtils {
     private TECleaningUtils() {}
 
     /**
-     * Returns {@code true} if the given block state can be cleaned by soap / bubble gun.
+     * Returns `true` if the given block state can be cleaned by soap / bubble gun.
      * For signs, use {@link #isWaxedSign(Level, BlockPos)} instead.
      */
     public static boolean isCleanable(BlockState state) {
@@ -61,7 +61,7 @@ public final class TECleaningUtils {
     }
 
     /**
-     * Returns {@code true} if the block at the given position is a waxed sign.
+     * Returns `true` if the block at the given position is a waxed sign.
      */
     public static boolean isWaxedSign(Level level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
@@ -71,7 +71,7 @@ public final class TECleaningUtils {
     }
 
     /**
-     * Returns {@code true} if the given block state can be cleaned, or
+     * Returns `true` if the given block state can be cleaned, or
      * is a waxed sign at the given position.
      */
     public static boolean isCleanable(Level level, BlockPos pos) {
@@ -83,7 +83,7 @@ public final class TECleaningUtils {
      * Cleans the block at the given position. For waxed signs, removes the wax
      * from the block entity. For other blocks, replaces the block state.
      *
-     * @return {@code true} if the block was cleaned
+     * @return `true` if the block was cleaned
      */
     public static boolean cleanBlock(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
@@ -108,9 +108,7 @@ public final class TECleaningUtils {
      * Returns the cleaned variant of the given block state, preserving all
      * block-state properties (facing, half, waterlogged, etc.).
      *
-     * <p>Priority: waxed blocks → oxidized copper → mossy.
-     *
-     * @return the cleaned state, or {@code null} if the block is not cleanable
+     * @return the cleaned state, or `null` if the block is not cleanable
      */
     public static BlockState getCleanedState(BlockState state) {
         Block block = state.getBlock();

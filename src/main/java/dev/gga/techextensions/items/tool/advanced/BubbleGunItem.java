@@ -5,9 +5,9 @@ import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.menu.BubbleGunMenu;
+import dev.gga.techextensions.utils.TEAimingUtils;
 import dev.gga.techextensions.utils.TECacheUtils;
 import dev.gga.techextensions.utils.TECleaningUtils;
-import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
@@ -31,7 +31,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -44,9 +43,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import reborncore.api.blockentity.IUpgrade;
 import reborncore.api.blockentity.IUpgradeable;
@@ -59,14 +56,6 @@ import techreborn.items.UpgradeItem;
 
 /**
  * A powered gun that shoots a stream of bubbles to clean blocks at a distance.
- *
- * <p>Features:
- * <ul>
- *   <li>Internal water tank (filled via cell slots in GUI or right-clicking water sources)</li>
- *   <li>Soap slot (consumes durability during cleaning)</li>
- *   <li>Two modes: INSPECT (opens GUI) and SHOOT (fires bubble stream)</li>
- *   <li>Upgradable with Overclocker and Energy Storage upgrades</li>
- * </ul>
  */
 public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
     public enum BubbleGunMode {
@@ -335,43 +324,26 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         // Raytrace to find targeted block or entity
         Vec3 endPos = eyePos.add(lookVec.scale(range));
 
-        // Entity raytrace — find closest living entity along line of sight
-        AABB searchBox =
-                player.getBoundingBox().expandTowards(lookVec.scale(range)).inflate(1.0D);
-        LivingEntity closestEntity = null;
-        double closestDistSq = Double.MAX_VALUE;
-
-        for (Entity candidate : level.getEntities(player, searchBox, e -> e.isAlive() && !e.isSpectator())) {
-            if (!(candidate instanceof LivingEntity living)) continue;
-            // Skip entities already trapped in a bubble
-            if (candidate.entityTags().contains("techextensions:bubble_trapped")) continue;
-            AABB entityBB = candidate.getBoundingBox().inflate(candidate.getPickRadius() + 0.3D);
-            Optional<Vec3> intersection = entityBB.clip(eyePos, endPos);
-            if (intersection.isPresent()) {
-                double distSq = eyePos.distanceToSqr(intersection.get());
-                if (distSq < closestDistSq) {
-                    closestDistSq = distSq;
-                    closestEntity = living;
-                }
-            }
-        }
+        // Entity raytrace — find closest living entity along line of sight.
+        // Entities always take priority over blocks when hit.
+        TEAimingUtils.EntityHit entityHit = TEAimingUtils.traceEntity(
+                level,
+                player,
+                eyePos,
+                endPos,
+                e -> e instanceof LivingEntity
+                        && e.isAlive()
+                        && !e.isSpectator()
+                        && !e.entityTags().contains("techextensions:bubble_trapped"),
+                0.3D,
+                null);
+        LivingEntity closestEntity = entityHit != null ? (LivingEntity) entityHit.entity() : null;
 
         // Block raytrace
-        BlockHitResult hitResult =
-                level.clip(new ClipContext(eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+        BlockHitResult hitResult = TEAimingUtils.traceBlock(
+                level, player, eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE);
 
-        // Determine if entity or block is closer
-        boolean entityCloser = false;
         if (closestEntity != null) {
-            if (hitResult.getType() == HitResult.Type.MISS) {
-                entityCloser = true;
-            } else {
-                double blockDistSq = eyePos.distanceToSqr(hitResult.getLocation());
-                entityCloser = closestDistSq < blockDistSq;
-            }
-        }
-
-        if (entityCloser) {
             // Reset block cleaning state since we're targeting an entity
             resetCleaningState(stack);
 
@@ -419,7 +391,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 // Reset progress
                 resetTrappingState(stack);
             }
-        } else if (hitResult.getType() == HitResult.Type.BLOCK) {
+        } else if (hitResult != null) {
             // Reset entity trapping state since we're targeting a block
             resetTrappingState(stack);
 
@@ -626,7 +598,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
     // --- Inventory management ---
 
     /**
-     * Returns a container backed by the stack's {@code DataComponents.CONTAINER} data.
+     * Returns a container backed by the stack's `DataComponents.CONTAINER` data.
      */
     public static Container getInventory(ItemStack stack) {
         SimpleContainer container = new SimpleContainer(TOTAL_SLOTS) {
