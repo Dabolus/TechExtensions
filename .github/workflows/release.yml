@@ -30,6 +30,7 @@ jobs:
       - name: changelog
         uses: FabricMC/fabric-action-scripts@v2
         id: changelog
+        continue-on-error: true
         with:
           context: changelog
           workflow_id: release.yml
@@ -44,4 +45,4 @@ jobs:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog || 'Initial release' }}
