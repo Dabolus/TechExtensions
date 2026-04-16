@@ -1,5 +1,4 @@
 {
-  "texture_size": [42, 20],
   "textures": {
     "layer0": "techextensions:item/cyber_shield",
     "particle": "block/iron_block"

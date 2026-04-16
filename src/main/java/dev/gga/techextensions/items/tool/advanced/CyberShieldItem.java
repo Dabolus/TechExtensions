@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -60,18 +62,21 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
     /**
      * Creates a `BlocksAttacks` component with the given parameters.
      *
+     * @param provider registry lookup to resolve damage type tags
      * @param blockingAngle horizontal blocking angle in degrees
      * @param damageReductionFactor 0.0 (no protection) to 1.0 (full protection)
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static BlocksAttacks createBlocksAttacks(float blockingAngle, float damageReductionFactor) {
+    private static BlocksAttacks createBlocksAttacks(
+            HolderGetter.Provider provider, float blockingAngle, float damageReductionFactor) {
+        HolderSet.Named<net.minecraft.world.damagesource.DamageType> bypassedBy =
+                provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD);
         return new BlocksAttacks(
                 0.25F,
                 1.0F,
                 List.of(new BlocksAttacks.DamageReduction(
                         blockingAngle, Optional.empty(), 0.0F, damageReductionFactor)),
                 new BlocksAttacks.ItemDamageFunction(3.0F, 1.0F, 1.0F),
-                (Optional) Optional.of(DamageTypeTags.BYPASSES_SHIELD),
+                Optional.of(bypassedBy),
                 Optional.of(SoundEvents.SHIELD_BLOCK),
                 Optional.of(SoundEvents.SHIELD_BREAK));
     }
@@ -98,9 +103,9 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
     public CyberShieldItem(String name) {
         super(TEItemSettings.unbreakable(name)
                 .equippableUnswappable(EquipmentSlot.OFFHAND)
-                .component(
+                .delayedComponent(
                         DataComponents.BLOCKS_ATTACKS,
-                        createBlocksAttacks(STANDARD_BLOCKING_ANGLE, CHARGED_DAMAGE_REDUCTION)));
+                        provider -> createBlocksAttacks(provider, STANDARD_BLOCKING_ANGLE, CHARGED_DAMAGE_REDUCTION)));
     }
 
     @Override
@@ -202,7 +207,8 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
             return;
         }
 
-        stack.set(DataComponents.BLOCKS_ATTACKS, createBlocksAttacks(targetAngle, targetFactor));
+        stack.set(
+                DataComponents.BLOCKS_ATTACKS, createBlocksAttacks(world.registryAccess(), targetAngle, targetFactor));
     }
 
     /**
