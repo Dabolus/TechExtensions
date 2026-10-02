@@ -37,5 +37,5 @@
 		"techreborn": ">=6.1.0",
 		"reborncore": ">=6.1.0"
 	},
-	"accessWidener": "techextensions.accesswidener"
+	"accessWidener": "techextensions.classtweaker"
 }
