@@ -316,11 +316,10 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
         stack.set(TEDataComponentTypes.TOOL_MODE, next.ordinal());
 
         if (player instanceof ServerPlayer serverPlayer) {
-            String modeTranslationKey =
-                    switch (next) {
-                        case STANDARD -> "techextensions.message.cyber_shield.mode_standard";
-                        case PERMA_PARRY -> "techextensions.message.cyber_shield.mode_perma_parry";
-                    };
+            String modeTranslationKey = switch (next) {
+                case STANDARD -> "techextensions.message.cyber_shield.mode_standard";
+                case PERMA_PARRY -> "techextensions.message.cyber_shield.mode_perma_parry";
+            };
             serverPlayer.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)

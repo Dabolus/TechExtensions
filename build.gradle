@@ -136,6 +136,8 @@ publishMods {
         projectId = "1430902"
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
         minecraftVersions.add("26.2")
+        client = true
+        server = true
         requires("fabric-api", "techreborn")
         optional("jei", "lambdynamiclights")
     }

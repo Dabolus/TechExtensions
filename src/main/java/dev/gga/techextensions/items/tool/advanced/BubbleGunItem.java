@@ -101,11 +101,10 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         int nextMode = (getCurrentMode(stack).ordinal() + 1) % modes.length;
         stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
         if (entity instanceof ServerPlayer serverPlayer) {
-            String modeTranslationKey =
-                    switch (modes[nextMode]) {
-                        case INSPECT -> "techextensions.message.bubble_gun.mode_inspect";
-                        case SHOOT -> "techextensions.message.bubble_gun.mode_shoot";
-                    };
+            String modeTranslationKey = switch (modes[nextMode]) {
+                case INSPECT -> "techextensions.message.bubble_gun.mode_inspect";
+                case SHOOT -> "techextensions.message.bubble_gun.mode_shoot";
+            };
             serverPlayer.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)

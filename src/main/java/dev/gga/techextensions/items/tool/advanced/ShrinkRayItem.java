@@ -149,12 +149,11 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
         int nextMode = (currentModeOrdinal + 1) % shrinkRayModes.length;
         stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
         if (entity instanceof ServerPlayer serverPlayerEntity) {
-            String modeTranslationKey =
-                    switch (shrinkRayModes[nextMode]) {
-                        case SHRINK -> "techextensions.message.shrink_ray.mode_shrink";
-                        case ENLARGE -> "techextensions.message.shrink_ray.mode_enlarge";
-                        case RESTORE -> "techextensions.message.shrink_ray.mode_restore";
-                    };
+            String modeTranslationKey = switch (shrinkRayModes[nextMode]) {
+                case SHRINK -> "techextensions.message.shrink_ray.mode_shrink";
+                case ENLARGE -> "techextensions.message.shrink_ray.mode_enlarge";
+                case RESTORE -> "techextensions.message.shrink_ray.mode_restore";
+            };
             serverPlayerEntity.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
@@ -247,12 +246,11 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
             final double bellFactor = Math.exp(-(logRatio * logRatio) / (2.0D * sigma * sigma));
             final double change = maxChange * bellFactor;
 
-            final double targetScale =
-                    switch (mode) {
-                        case SHRINK -> Math.max(0.0625D, currentScale * (1.0D - change));
-                        case ENLARGE -> Math.min(16.0D, currentScale * (1.0D + change));
-                        case RESTORE -> baseScale;
-                    };
+            final double targetScale = switch (mode) {
+                case SHRINK -> Math.max(0.0625D, currentScale * (1.0D - change));
+                case ENLARGE -> Math.min(16.0D, currentScale * (1.0D + change));
+                case RESTORE -> baseScale;
+            };
             SHRINK_TASKS.put(living, new ShrinkTask(currentScale, targetScale));
             return InteractionResult.SUCCESS;
         }

@@ -69,12 +69,11 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         int nextMode = (getCurrentMode(stack).ordinal() + 1) % modes.length;
         stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
         if (entity instanceof ServerPlayer serverPlayer) {
-            String modeTranslationKey =
-                    switch (modes[nextMode]) {
-                        case VACUUM -> "techextensions.message.vacuum_gun.mode_vacuum";
-                        case BLOW -> "techextensions.message.vacuum_gun.mode_blow";
-                        case INSPECT -> "techextensions.message.vacuum_gun.mode_inspect";
-                    };
+            String modeTranslationKey = switch (modes[nextMode]) {
+                case VACUUM -> "techextensions.message.vacuum_gun.mode_vacuum";
+                case BLOW -> "techextensions.message.vacuum_gun.mode_blow";
+                case INSPECT -> "techextensions.message.vacuum_gun.mode_inspect";
+            };
             serverPlayer.sendSystemMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
@@ -157,16 +156,15 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         }
 
         VacuumGunMode mode = getCurrentMode(stack);
-        boolean didAction =
-                switch (mode) {
-                    case VACUUM -> VacuumGunActions.performVacuum(serverLevel, player, stack);
-                    case BLOW -> VacuumGunActions.performBlow(serverLevel, player, stack);
-                    case INSPECT -> {
-                        player.openMenu(new SimpleMenuProvider(
-                                (syncId, inventory, _p) -> new VacuumGunMenu(syncId, inventory), stack.getHoverName()));
-                        yield true;
-                    }
-                };
+        boolean didAction = switch (mode) {
+            case VACUUM -> VacuumGunActions.performVacuum(serverLevel, player, stack);
+            case BLOW -> VacuumGunActions.performBlow(serverLevel, player, stack);
+            case INSPECT -> {
+                player.openMenu(new SimpleMenuProvider(
+                        (syncId, inventory, _p) -> new VacuumGunMenu(syncId, inventory), stack.getHoverName()));
+                yield true;
+            }
+        };
 
         if (didAction) {
             tryUseEnergy(stack, cost);
