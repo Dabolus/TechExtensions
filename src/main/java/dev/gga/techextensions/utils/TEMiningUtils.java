@@ -9,6 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import techreborn.utils.ToolsUtil;
 
@@ -32,7 +33,7 @@ public final class TEMiningUtils {
         if (blockState.isAir()) {
             return false;
         }
-        if (blockState.liquid()) {
+        if (blockState.getBlock() instanceof LiquidBlock) {
             return false;
         }
         float blockHardness = blockState.getDestroyProgress(playerIn, worldIn, pos);
@@ -47,7 +48,8 @@ public final class TEMiningUtils {
             ItemStack stack, Level worldIn, Player playerIn, BlockPos pos, LivingEntity entityLiving) {
         for (BlockPos additionalPos : ToolsUtil.getAOEMiningBlocks(worldIn, pos, entityLiving, 1)) {
             if (shouldBreak(playerIn, worldIn, pos, additionalPos)) {
-                ToolsUtil.breakBlock(stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost);
+                ToolsUtil.breakBlock(
+                        stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost.get());
             }
         }
     }

@@ -150,7 +150,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
             return InteractionResult.PASS;
         }
 
-        long cost = TechExtensionsConfig.vacuumGunCostPerAction;
+        long cost = TechExtensionsConfig.vacuumGunCostPerAction.get();
         if (getStoredEnergy(stack) < cost) {
             world.playSound(null, player.blockPosition(), SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 1.0F, 1.2F);
             return InteractionResult.FAIL;
@@ -272,8 +272,8 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         }
 
         final int cooldown = computeCooldown(overclockers);
-        final long energyCapacity =
-                TechExtensionsConfig.vacuumGunCharge + (long) (energyStorage * TechRebornConfig.energyStoragePower);
+        final long energyCapacity = TechExtensionsConfig.vacuumGunCharge.get()
+                + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
 
         CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
             tag.putInt("cache:cooldown", cooldown);
@@ -285,7 +285,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:cooldown",
-                TechExtensionsConfig.vacuumGunCooldown,
+                TechExtensionsConfig.vacuumGunCooldown.get(),
                 tag -> tag.getInt("cache:cooldown"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
@@ -295,15 +295,15 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:energy_capacity",
-                TechExtensionsConfig.vacuumGunCharge,
+                TechExtensionsConfig.vacuumGunCharge.get(),
                 tag -> tag.getInt("cache:energy_capacity"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
     }
 
     public static int computeCooldown(int overclockerUpgrades) {
-        double speedMultiplier = TechRebornConfig.overclockerSpeed * overclockerUpgrades;
-        double cooldown = TechExtensionsConfig.vacuumGunCooldown * (1.0 - speedMultiplier);
+        double speedMultiplier = TechRebornConfig.overclockerSpeed.get() * overclockerUpgrades;
+        double cooldown = TechExtensionsConfig.vacuumGunCooldown.get() * (1.0 - speedMultiplier);
         return (int) Math.round(cooldown);
     }
 }

@@ -145,7 +145,7 @@ public class GuiBubbleGun extends AbstractContainerScreen<BubbleGunMenu> {
         ItemStack gunStack = getGunStack();
         if (!gunStack.isEmpty()) {
             long waterAmount = BubbleGunItem.getWaterAmount(gunStack);
-            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
+            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
             if (maxWater > 0 && waterAmount > 0) {
                 float fillPercent = Math.min(1.0F, (float) waterAmount / maxWater);
                 int fillHeight = Math.max(1, Math.round(fillPercent * (height - 2)));
@@ -227,7 +227,7 @@ public class GuiBubbleGun extends AbstractContainerScreen<BubbleGunMenu> {
             ItemStack gunStack = getGunStack();
             if (!gunStack.isEmpty()) {
                 long waterAmount = BubbleGunItem.getWaterAmount(gunStack);
-                long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
+                long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
                 List<Component> tooltip = List.of(
                         Component.translatable("techextensions.tooltip.bubble_gun.water"),
                         Component.literal(formatNumber(waterAmount) + " / " + formatNumber(maxWater) + " mB")

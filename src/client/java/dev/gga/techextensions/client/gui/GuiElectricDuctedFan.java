@@ -24,8 +24,8 @@ public class GuiElectricDuctedFan extends GuiBase<BuiltScreenHandler> {
         super.extractLabels(drawContext, mouseX, mouseY);
         final Layer layer = Layer.FOREGROUND;
 
-        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost;
-        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost;
+        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
+        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
         long stored = blockEntity.getEnergy();
 
         // Draw the energy bar

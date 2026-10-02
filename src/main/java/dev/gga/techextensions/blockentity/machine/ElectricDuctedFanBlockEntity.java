@@ -49,8 +49,8 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
             return;
         }
         if ((state.getBlock() instanceof ElectricDuctedFanBlock)) {
-            long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost;
-            long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost;
+            long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
+            long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
             long stored = getEnergy();
             boolean shouldProcess = world.isClientSide() ? ElectricDuctedFanBlock.isActive(state) : (stored > minCost);
             if (shouldProcess) {
@@ -256,7 +256,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
 
     @Override
     public long getBaseMaxPower() {
-        return TechExtensionsConfig.electricDuctedFanMaxEnergy;
+        return TechExtensionsConfig.electricDuctedFanMaxEnergy.get();
     }
 
     @Override
@@ -277,7 +277,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
 
     @Override
     public long getBaseMaxInput() {
-        return TechExtensionsConfig.electricDuctedFanMaxInput;
+        return TechExtensionsConfig.electricDuctedFanMaxInput.get();
     }
 
     // MachineBaseBlockEntity

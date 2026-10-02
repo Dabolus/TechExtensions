@@ -101,7 +101,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // MiningToolItem
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
-        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost) {
+        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost.get()) {
             return TEToolMaterials.META_TOOL.speed();
         }
         Tool toolComponent = stack.get(DataComponents.TOOL);
@@ -112,13 +112,13 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     public boolean mineBlock(
             ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
         if (!(entityLiving instanceof Player playerIn)) {
-            tryUseEnergy(stack, TechExtensionsConfig.metaToolCost);
+            tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get());
             return true;
         }
 
         switch (getCurrentMode(stack)) {
             case INACTIVE -> {
-                tryUseEnergy(stack, TechExtensionsConfig.metaToolCost);
+                tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get());
             }
             case AOE_3x3 -> {
                 TEMiningUtils.mineAoe3x3(stack, worldIn, playerIn, pos, entityLiving);
@@ -129,9 +129,9 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     List<BlockPos> ores = TEMiningUtils.findVein(worldIn, pos);
                     ores.remove(pos);
                     ores.stream()
-                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost))
+                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get()))
                             .forEach(pos1 -> ToolsUtil.breakBlock(
-                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost));
+                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost.get()));
                 }
                 // Then, check if we can tree-capitate
                 else if (lastCheckedBlockState == null
@@ -141,9 +141,9 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     List<BlockPos> leaves = findWoodResult.leaves();
                     wood.remove(pos);
                     wood.stream()
-                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost))
+                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get()))
                             .forEach(pos1 -> ToolsUtil.breakBlock(
-                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost));
+                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost.get()));
                     leaves.remove(pos);
                     leaves.forEach(pos1 -> ToolsUtil.breakBlock(stack, worldIn, pos1, entityLiving, 0));
                 }
@@ -159,7 +159,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
 
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost)
+        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost.get())
                 && target.level() instanceof ServerLevel serverWorld) {
             target.hurtServer(serverWorld, serverWorld.damageSources().playerAttack((Player) attacker), 8F);
         }
@@ -176,7 +176,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
         final ItemStack stack = player.getItemInHand(interactionHand);
         if (player.isShiftKeyDown()) {
-            switchMode(stack, TechExtensionsConfig.metaToolCost, player);
+            switchMode(stack, TechExtensionsConfig.metaToolCost.get(), player);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
@@ -224,7 +224,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.metaToolCharge;
+        return TechExtensionsConfig.metaToolCharge.get();
     }
 
     @Override

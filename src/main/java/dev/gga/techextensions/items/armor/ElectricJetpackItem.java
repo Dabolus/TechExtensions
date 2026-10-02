@@ -16,7 +16,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
         super(
                 TEArmorMaterials.ELECTRIC_JETPACK,
                 ArmorType.CHESTPLATE,
-                TechExtensionsConfig.electricJetpackCharge,
+                TechExtensionsConfig.electricJetpackCharge.get(),
                 RcEnergyTier.HIGH,
                 name);
     }
@@ -33,7 +33,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
         if (playerEntity instanceof ServerPlayer serverPlayer && !playerEntity.isCreative()) {
             long storedEnergy = getStoredEnergy(stack);
 
-            if (storedEnergy > TechExtensionsConfig.electricJetpackFlyingCost) {
+            if (storedEnergy > TechExtensionsConfig.electricJetpackFlyingCost.get()) {
                 Vec3 currentVelocity = playerEntity.getDeltaMovement();
                 double vx = currentVelocity.x;
                 double vy = currentVelocity.y;
@@ -47,11 +47,11 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
                 // Allow takeoff from ground OR continued thrust in air
                 if (serverPlayer.getLastClientInput().jump()) {
                     // Apply vertical thrust
-                    vy += TechExtensionsConfig.electricJetpackVerticalThrust;
+                    vy += TechExtensionsConfig.electricJetpackVerticalThrust.get();
 
                     // Cap vertical speed
-                    if (vy > TechExtensionsConfig.electricJetpackMaxVerticalSpeed) {
-                        vy = TechExtensionsConfig.electricJetpackMaxVerticalSpeed;
+                    if (vy > TechExtensionsConfig.electricJetpackMaxVerticalSpeed.get()) {
+                        vy = TechExtensionsConfig.electricJetpackMaxVerticalSpeed.get();
                     }
 
                     // Apply horizontal thrust based on movement input
@@ -70,23 +70,23 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
                         // Forward/backward movement
                         vx += (-sin * forwardInput + cos * strafeInput)
-                                * TechExtensionsConfig.electricJetpackHorizontalThrust;
+                                * TechExtensionsConfig.electricJetpackHorizontalThrust.get();
                         vz += (cos * forwardInput + sin * strafeInput)
-                                * TechExtensionsConfig.electricJetpackHorizontalThrust;
+                                * TechExtensionsConfig.electricJetpackHorizontalThrust.get();
                     }
 
                     // Sprint boost - applies forward thrust when sprinting while flying
                     if (serverPlayer.isSprinting()
                             && storedEnergy
-                                    > TechExtensionsConfig.electricJetpackFlyingCost
-                                            + TechExtensionsConfig.electricJetpackSprintCost) {
+                                    > TechExtensionsConfig.electricJetpackFlyingCost.get()
+                                            + TechExtensionsConfig.electricJetpackSprintCost.get()) {
                         double yawRad = Math.toRadians(playerEntity.getYRot());
                         double sin = Math.sin(yawRad);
                         double cos = Math.cos(yawRad);
 
                         // Apply sprint thrust in the direction the player is looking
-                        vx += -sin * TechExtensionsConfig.electricJetpackSprintThrust;
-                        vz += cos * TechExtensionsConfig.electricJetpackSprintThrust;
+                        vx += -sin * TechExtensionsConfig.electricJetpackSprintThrust.get();
+                        vz += cos * TechExtensionsConfig.electricJetpackSprintThrust.get();
 
                         isSprinting = true;
                     }
@@ -96,7 +96,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
                 // Hover mode when sneaking in the air
                 else if (serverPlayer.getLastClientInput().shift() && !playerEntity.onGround()) {
                     // Counteract gravity to hover
-                    vy += TechExtensionsConfig.electricJetpackHoverStrength;
+                    vy += TechExtensionsConfig.electricJetpackHoverStrength.get();
 
                     // Slow descent while hovering
                     if (vy < -0.1) {
@@ -109,13 +109,13 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
                 // Apply physics when jetpack is active
                 if (isThrusting || isHovering) {
                     // Horizontal drag
-                    vx *= TechExtensionsConfig.electricJetpackHorizontalDrag;
-                    vz *= TechExtensionsConfig.electricJetpackHorizontalDrag;
+                    vx *= TechExtensionsConfig.electricJetpackHorizontalDrag.get();
+                    vz *= TechExtensionsConfig.electricJetpackHorizontalDrag.get();
 
                     // Cap horizontal speed (allow higher speed when sprinting)
                     double maxHorizontalSpeed = isSprinting
-                            ? TechExtensionsConfig.electricJetpackMaxHorizontalSpeed * 1.5
-                            : TechExtensionsConfig.electricJetpackMaxHorizontalSpeed;
+                            ? TechExtensionsConfig.electricJetpackMaxHorizontalSpeed.get() * 1.5
+                            : TechExtensionsConfig.electricJetpackMaxHorizontalSpeed.get();
                     double horizontalSpeed = Math.sqrt(vx * vx + vz * vz);
                     if (horizontalSpeed > maxHorizontalSpeed) {
                         double scale = maxHorizontalSpeed / horizontalSpeed;
@@ -125,7 +125,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
                     // Apply vertical drag when ascending
                     if (vy > 0) {
-                        vy *= TechExtensionsConfig.electricJetpackVerticalDrag;
+                        vy *= TechExtensionsConfig.electricJetpackVerticalDrag.get();
                     }
 
                     // Set the new velocity
@@ -141,12 +141,12 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
                     // Consume energy
                     long energyCost = 0;
                     if (isThrusting) {
-                        energyCost = TechExtensionsConfig.electricJetpackFlyingCost;
+                        energyCost = TechExtensionsConfig.electricJetpackFlyingCost.get();
                         if (isSprinting) {
-                            energyCost += TechExtensionsConfig.electricJetpackSprintCost;
+                            energyCost += TechExtensionsConfig.electricJetpackSprintCost.get();
                         }
                     } else if (isHovering) {
-                        energyCost = TechExtensionsConfig.electricJetpackHoverCost;
+                        energyCost = TechExtensionsConfig.electricJetpackHoverCost.get();
                     }
                     tryUseEnergy(stack, energyCost);
                 }

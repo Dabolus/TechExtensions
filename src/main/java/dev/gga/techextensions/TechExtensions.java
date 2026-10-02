@@ -1,6 +1,7 @@
 package dev.gga.techextensions;
 
 import dev.gga.techextensions.component.TEDataComponentTypes;
+import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.particle.TEParticleTypes;
 import net.fabricmc.api.ModInitializer;
@@ -17,6 +18,8 @@ public class TechExtensions implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        // Config must be loaded first: items capture their energy capacity from it on construction
+        TechExtensionsConfig.init();
         TEContent.register();
         TEDataComponentTypes.init();
         TEParticleTypes.init();

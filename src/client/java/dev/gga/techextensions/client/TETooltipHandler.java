@@ -36,7 +36,7 @@ public class TETooltipHandler implements ItemTooltipCallback {
         if (item == TEContent.META_TOOL) {
             String motto = I18n.get("techextensions.tooltip.meta_tool_motto");
             List<MutableComponent> mottoLines = Arrays.stream(motto.split("\\r?\\n"))
-                    .map(mottoLine -> Component.literal(ChatFormatting.YELLOW + mottoLine))
+                    .map(mottoLine -> Component.literal(mottoLine).withStyle(ChatFormatting.YELLOW))
                     .toList();
             lines.addAll(mottoLines);
         }
@@ -63,7 +63,7 @@ public class TETooltipHandler implements ItemTooltipCallback {
 
             // Show water level
             long waterAmount = BubbleGunItem.getWaterAmount(stack);
-            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
+            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
             lines.add(Component.translatable(
                             "techextensions.tooltip.bubble_gun.water_level",
                             formatNumber(waterAmount),

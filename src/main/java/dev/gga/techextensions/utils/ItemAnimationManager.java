@@ -6,7 +6,7 @@ import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -44,7 +44,7 @@ public final class ItemAnimationManager {
             this.onComplete = onComplete;
 
             Vec3 start = path.getFirst();
-            this.display = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, world);
+            this.display = new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world);
             this.display.setItemStack(displayItem.copy());
             this.display.setNoGravity(true);
             this.display.setInvulnerable(true);

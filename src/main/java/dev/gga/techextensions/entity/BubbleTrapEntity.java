@@ -69,7 +69,7 @@ public class BubbleTrapEntity extends Entity {
         }
 
         // Move bubble and trapped entity upward
-        double floatSpeed = TechExtensionsConfig.bubbleGunBubbleFloatSpeed;
+        double floatSpeed = TechExtensionsConfig.bubbleGunBubbleFloatSpeed.get();
         this.setPos(trapped.getX(), this.getY() + floatSpeed, trapped.getZ());
 
         // Lock the trapped entity's position to the bubble
@@ -112,7 +112,7 @@ public class BubbleTrapEntity extends Entity {
         }
 
         // Check if float duration is exceeded
-        if (floatTicks >= TechExtensionsConfig.bubbleGunBubbleFloatDuration) {
+        if (floatTicks >= TechExtensionsConfig.bubbleGunBubbleFloatDuration.get()) {
             pop();
         }
     }

@@ -93,7 +93,7 @@ final class VacuumGunActions {
     static boolean performVacuum(ServerLevel world, Player player, ItemStack gunStack) {
         Vec3 eyePos = player.getEyePosition(1.0F);
         Vec3 lookDir = player.getViewVector(1.0F).normalize();
-        double range = TechExtensionsConfig.vacuumGunRange;
+        double range = TechExtensionsConfig.vacuumGunRange.get();
         Vec3 endPos = eyePos.add(lookDir.scale(range));
 
         BlockHitResult blockHit = world.clip(new ClipContext(
@@ -297,7 +297,7 @@ final class VacuumGunActions {
         Item item = takenItem.getItem();
         Item nukeItem = TRContent.NUKE.asItem();
 
-        if (item == Items.TNT || (TechRebornConfig.nukeEnabled && item == nukeItem)) {
+        if (item == Items.TNT || (TechRebornConfig.nukeEnabled.get() && item == nukeItem)) {
             return () -> blowExplosive(world, player, takenItem, tr);
         }
         if (item instanceof SpawnEggItem) {
