@@ -8,6 +8,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -33,9 +34,15 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
     private static final double MAX_PUSH_STRENGTH = 1.0;
     private static final int BASE_REACH = 1;
     private static final int MAX_REACH = 21;
+    /** Multiplier gained per additional stacked fan: 1x, 1.52x, 2.04x, 2.56x */
+    private static final double STACKED_FAN_BONUS = 0.52;
+
+    /** Ticks without enough energy before the fan is marked inactive, to avoid block state flicker. */
+    private static final int INACTIVE_GRACE_TICKS = 10;
 
     // Keep track of the last tick so that we can display particles every x ticks
     private long lastParticlesTick = 0;
+    private int idleTicks = 0;
 
     public ElectricDuctedFanBlockEntity(BlockPos pos, BlockState state) {
         super(TEBlockEntities.ELECTRIC_DUCTED_FAN, pos, state);
@@ -45,46 +52,59 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
     @Override
     public void tick(Level world, BlockPos pos, BlockState state, MachineBaseBlockEntity blockEntity) {
         super.tick(world, pos, state, blockEntity);
-        if (world == null) {
+        if (world == null || !(state.getBlock() instanceof ElectricDuctedFanBlock)) {
             return;
         }
-        if ((state.getBlock() instanceof ElectricDuctedFanBlock)) {
-            long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
-            long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
-            long stored = getEnergy();
-            boolean shouldProcess = world.isClientSide() ? ElectricDuctedFanBlock.isActive(state) : (stored > minCost);
-            if (shouldProcess) {
-                long usedEnergy = Math.min(stored, maxCost);
-                Direction facing = ElectricDuctedFanBlock.getFacing(state);
-                int fanCount = ElectricDuctedFanBlock.getFanCount(state);
-                // Calculate power ratio (0.0 to 1.0) based on energy used
-                double powerRatio = (double) (usedEnergy - minCost) / (maxCost - minCost);
-                powerRatio = Math.max(0.0, Math.min(1.0, powerRatio));
-                // Stacked fans increase both reach and strength
-                double fanMultiplier = 1.0 + (fanCount - 1) * 0.52; // 1x, 1.52x, 2.04x, 2.56x
+        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
+        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
+        long stored = getEnergy();
+        boolean shouldProcess = world.isClientSide() ? ElectricDuctedFanBlock.isActive(state) : (stored > minCost);
+        if (shouldProcess) {
+            Direction facing = ElectricDuctedFanBlock.getFacing(state);
+            int fanCount = ElectricDuctedFanBlock.getFanCount(state);
+            double powerRatio = computePowerRatio(stored);
+            double fanMultiplier = computeFanMultiplier(fanCount);
 
-                if (world.isClientSide()) {
-                    long currentTick = world.getGameTime();
-                    long particlesCooldown = 10L - Math.round(computeRangedValue(0.0, 9.0, powerRatio, fanMultiplier));
-                    if (currentTick - lastParticlesTick < particlesCooldown) {
-                        return;
-                    }
-                    lastParticlesTick = currentTick;
-
-                    spawnParticles(world, pos, facing, powerRatio, fanCount);
-                } else {
-                    useEnergy(usedEnergy);
-                    // Push entities in front of the fan
-                    pushEntities(world, pos, facing, powerRatio, fanMultiplier);
-
-                    if (!ElectricDuctedFanBlock.isActive(state)) {
-                        ElectricDuctedFanBlock.setActive(true, world, pos);
-                    }
+            if (world.isClientSide()) {
+                long currentTick = world.getGameTime();
+                long particlesCooldown = 10L - Math.round(computeRangedValue(0.0, 9.0, powerRatio, fanMultiplier));
+                if (currentTick - lastParticlesTick < particlesCooldown) {
+                    return;
                 }
-            } else if (!world.isClientSide() && ElectricDuctedFanBlock.isActive(state)) {
+                lastParticlesTick = currentTick;
+
+                spawnParticles(world, pos, facing, powerRatio, fanCount);
+            } else {
+                useEnergy(Math.min(stored, maxCost));
+                // Push entities in front of the fan
+                pushEntities(world, pos, facing, powerRatio, fanMultiplier);
+
+                idleTicks = 0;
+                if (!ElectricDuctedFanBlock.isActive(state)) {
+                    ElectricDuctedFanBlock.setActive(true, world, pos);
+                }
+            }
+        } else if (!world.isClientSide() && ElectricDuctedFanBlock.isActive(state)) {
+            if (++idleTicks >= INACTIVE_GRACE_TICKS) {
                 ElectricDuctedFanBlock.setActive(false, world, pos);
             }
         }
+    }
+
+    /** Ratio (0.0 to 1.0) of the energy the fan can burn this tick, between the min and max operation cost. */
+    public static double computePowerRatio(long storedEnergy) {
+        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
+        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
+        if (maxCost <= minCost) {
+            return 1.0;
+        }
+        double ratio = (double) (Math.min(storedEnergy, maxCost) - minCost) / (maxCost - minCost);
+        return Mth.clamp(ratio, 0.0, 1.0);
+    }
+
+    /** Stacked fans increase both reach and strength. */
+    public static double computeFanMultiplier(int fanCount) {
+        return 1.0 + (fanCount - 1) * STACKED_FAN_BONUS;
     }
 
     public double computeReach(double powerRatio, double fanMultiplier) {
@@ -113,6 +133,9 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
 
         // Get all entities in the push area
         List<Entity> entities = world.getEntities((Entity) null, pushArea, entity -> !entity.isSpectator());
+        if (entities.isEmpty()) {
+            return;
+        }
 
         // Push direction vector
         Vec3 pushDir = Vec3.atLowerCornerOf(facing.getUnitVec3i());
@@ -262,7 +285,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
     @Override
     protected boolean canAcceptEnergy(@Nullable Direction side) {
         // Accept energy from any side except the front
-        return side == null || getFacing() != Direction.values()[side.ordinal()];
+        return side == null || side != getFacing();
     }
 
     @Override
@@ -283,10 +306,10 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
     // MachineBaseBlockEntity
     @Override
     public Direction getFacing() {
-        if (level == null) {
-            return Direction.NORTH;
-        }
-        return ElectricDuctedFanBlock.getFacing(level.getBlockState(worldPosition));
+        BlockState state = getBlockState();
+        return state.getBlock() instanceof ElectricDuctedFanBlock
+                ? ElectricDuctedFanBlock.getFacing(state)
+                : Direction.NORTH;
     }
 
     @Override
@@ -302,7 +325,8 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
     // IToolDrop
     @Override
     public ItemStack getToolDrop(Player player) {
-        return new ItemStack(TEContent.ELECTRIC_DUCTED_FAN);
+        // Wrenching returns every fan in the stack, like breaking the block does
+        return new ItemStack(TEContent.ELECTRIC_DUCTED_FAN, ElectricDuctedFanBlock.getFanCount(getBlockState()));
     }
 
     // BuiltScreenHandlerProvider

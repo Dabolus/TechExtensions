@@ -11,16 +11,18 @@ import net.minecraft.world.item.ItemStack;
 import reborncore.api.blockentity.IUpgrade;
 
 public class ResonanceScannerMenu extends AbstractContainerMenu {
+    private static final int PLAYER_SLOTS = 36;
+
     private final Container inventory;
     private final ItemStack scannerStack;
 
-    public ResonanceScannerMenu(int i, Inventory inventory) {
-        super(TEContent.RESONANCE_SCANNER_MENU, i);
+    public ResonanceScannerMenu(int syncId, Inventory inventory) {
+        super(TEContent.RESONANCE_SCANNER_MENU, syncId);
 
         // Find the scanner stack
-        Player playerEntity = inventory.player;
-        ItemStack mainHand = playerEntity.getMainHandItem();
-        ItemStack offHand = playerEntity.getOffhandItem();
+        Player player = inventory.player;
+        ItemStack mainHand = player.getMainHandItem();
+        ItemStack offHand = player.getOffhandItem();
         if (mainHand.getItem() instanceof ResonanceScannerItem) {
             this.scannerStack = mainHand;
         } else if (offHand.getItem() instanceof ResonanceScannerItem) {
@@ -31,8 +33,8 @@ public class ResonanceScannerMenu extends AbstractContainerMenu {
 
         this.inventory = ResonanceScannerItem.getInventory(this.scannerStack);
 
-        // Scanner Slot
-        this.addSlot(new Slot(this.inventory, 0, 80, 35) {
+        // Target slot
+        this.addSlot(new Slot(this.inventory, ResonanceScannerItem.TARGET_SLOT, 80, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return !(stack.getItem() instanceof ResonanceScannerItem);
@@ -40,8 +42,8 @@ public class ResonanceScannerMenu extends AbstractContainerMenu {
         });
 
         // Upgrade Slots
-        for (int j = 0; j < 2; j++) {
-            this.addSlot(new Slot(this.inventory, 1 + j, -18, 12 + j * 18) {
+        for (int j = 0; j < ResonanceScannerItem.ALLOWED_UPGRADES; j++) {
+            this.addSlot(new Slot(this.inventory, ResonanceScannerItem.INVENTORY_SIZE + j, -18, 12 + j * 18) {
                 @Override
                 public int getMaxStackSize() {
                     return 1;
@@ -68,52 +70,63 @@ public class ResonanceScannerMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public ItemStack quickMoveStack(Player player, int i) {
-        ItemStack itemStack = ItemStack.EMPTY;
-        Slot slot = this.slots.get(i);
-        if (slot.hasItem()) {
-            ItemStack itemStack2 = slot.getItem();
-            itemStack = itemStack2.copy();
+    public ItemStack quickMoveStack(Player player, int index) {
+        ItemStack result = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
+        int itemSlots = ResonanceScannerItem.TOTAL_SLOTS;
+        int totalSlots = itemSlots + PLAYER_SLOTS;
 
-            if (i < 3) { // Item Inventory (Scanner + Upgrades) -> Player Inventory
-                if (!this.moveItemStackTo(itemStack2, 3, 39, true)) {
+        if (slot.hasItem()) {
+            ItemStack slotStack = slot.getItem();
+            result = slotStack.copy();
+
+            if (index < itemSlots) {
+                // Scanner → Player
+                if (!this.moveItemStackTo(slotStack, itemSlots, totalSlots, true)) {
                     return ItemStack.EMPTY;
                 }
-            } else { // Player Inventory -> Item Inventory
-                // Try Upgrades
-                if (itemStack2.getItem() instanceof IUpgrade) {
-                    this.moveItemStackTo(itemStack2, 1, 3, false); // Continue if failed
+            } else {
+                // Player → Scanner: upgrades first
+                if (slotStack.getItem() instanceof IUpgrade) {
+                    this.moveItemStackTo(
+                            slotStack, ResonanceScannerItem.INVENTORY_SIZE, ResonanceScannerItem.TOTAL_SLOTS, false);
                 }
 
-                // Try Scanner
-                if (!itemStack2.isEmpty() && this.slots.getFirst().mayPlace(itemStack2)) {
-                    if (itemStack2.getCount() == itemStack.getCount()) {
-                        this.moveItemStackTo(itemStack2, 0, 1, false); // Continue if failed
-                    }
+                // Then the target slot, unless part of the stack already went into the upgrades
+                if (!slotStack.isEmpty()
+                        && slotStack.getCount() == result.getCount()
+                        && this.slots.get(ResonanceScannerItem.TARGET_SLOT).mayPlace(slotStack)) {
+                    this.moveItemStackTo(
+                            slotStack, ResonanceScannerItem.TARGET_SLOT, ResonanceScannerItem.TARGET_SLOT + 1, false);
                 }
 
-                if (!itemStack2.isEmpty()) {
-                    // Main <-> Hotbar
-                    if (i < 30) { // Main Inv
-                        if (!this.moveItemStackTo(itemStack2, 30, 39, false)) {
+                // Main <-> Hotbar fallback
+                if (!slotStack.isEmpty()) {
+                    int playerInvStart = itemSlots;
+                    int playerInvEnd = itemSlots + 27;
+                    int hotbarStart = playerInvEnd;
+                    int hotbarEnd = totalSlots;
+
+                    if (index < playerInvEnd) {
+                        if (!this.moveItemStackTo(slotStack, hotbarStart, hotbarEnd, false)) {
                             return ItemStack.EMPTY;
                         }
-                    } else if (i < 39) { // Hotbar
-                        if (!this.moveItemStackTo(itemStack2, 3, 30, false)) {
+                    } else {
+                        if (!this.moveItemStackTo(slotStack, playerInvStart, playerInvEnd, false)) {
                             return ItemStack.EMPTY;
                         }
                     }
                 }
             }
 
-            if (itemStack2.isEmpty()) {
+            if (slotStack.isEmpty()) {
                 slot.set(ItemStack.EMPTY);
             } else {
                 slot.setChanged();
             }
         }
 
-        return itemStack;
+        return result;
     }
 
     @Override

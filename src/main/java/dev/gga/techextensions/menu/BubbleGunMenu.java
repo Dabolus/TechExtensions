@@ -9,11 +9,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluids;
 import reborncore.api.blockentity.IUpgrade;
-import reborncore.common.fluid.container.ItemFluidInfo;
 
 public class BubbleGunMenu extends AbstractContainerMenu {
+    private static final int PLAYER_SLOTS = 36;
+
     private final Container inventory;
     private final ItemStack gunStack;
 
@@ -42,19 +42,16 @@ public class BubbleGunMenu extends AbstractContainerMenu {
             }
         });
 
-        // Cell input slot (index 1) — left of center bottom area
+        // Water container input slot (index 1) — left of center bottom area.
+        // Accepts anything the Transfer API can drain water from: Tech Reborn water cells, water buckets, ...
         this.addSlot(new Slot(this.inventory, BubbleGunItem.CELL_INPUT_SLOT, 62, 53) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                // Accept water cells or empty cells
-                if (stack.getItem() instanceof ItemFluidInfo info) {
-                    return info.getFluid(stack) == Fluids.WATER || info.getFluid(stack) == Fluids.EMPTY;
-                }
-                return false;
+                return BubbleGunItem.isWaterContainer(stack);
             }
         });
 
-        // Cell output slot (index 2) — right of center bottom area
+        // Emptied container output slot (index 2) — right of center bottom area
         this.addSlot(new Slot(this.inventory, BubbleGunItem.CELL_OUTPUT_SLOT, 98, 53) {
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -95,7 +92,7 @@ public class BubbleGunMenu extends AbstractContainerMenu {
         ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         int gunSlots = BubbleGunItem.TOTAL_SLOTS; // 3 functional + 2 upgrades = 5
-        int totalSlots = gunSlots + 36; // + 36 player inventory/hotbar
+        int totalSlots = gunSlots + PLAYER_SLOTS;
 
         if (slot.hasItem()) {
             ItemStack slotStack = slot.getItem();
@@ -122,19 +119,17 @@ public class BubbleGunMenu extends AbstractContainerMenu {
                     this.moveItemStackTo(slotStack, BubbleGunItem.SOAP_SLOT, BubbleGunItem.SOAP_SLOT + 1, false);
                 }
 
-                // Try cell input slot
-                if (!slotStack.isEmpty() && slotStack.getItem() instanceof ItemFluidInfo info) {
-                    if (info.getFluid(slotStack) == Fluids.WATER || info.getFluid(slotStack) == Fluids.EMPTY) {
-                        this.moveItemStackTo(
-                                slotStack, BubbleGunItem.CELL_INPUT_SLOT, BubbleGunItem.CELL_INPUT_SLOT + 1, false);
-                    }
+                // Try water container input slot
+                if (!slotStack.isEmpty() && BubbleGunItem.isWaterContainer(slotStack)) {
+                    this.moveItemStackTo(
+                            slotStack, BubbleGunItem.CELL_INPUT_SLOT, BubbleGunItem.CELL_INPUT_SLOT + 1, false);
                 }
 
                 // Main <-> Hotbar fallback
                 if (!slotStack.isEmpty()) {
                     int playerInvStart = gunSlots;
                     int playerInvEnd = gunSlots + 27;
-                    int hotbarStart = gunSlots + 27;
+                    int hotbarStart = playerInvEnd;
                     int hotbarEnd = totalSlots;
 
                     if (index < playerInvEnd) {
@@ -166,5 +161,9 @@ public class BubbleGunMenu extends AbstractContainerMenu {
 
     public Container getGunInventory() {
         return inventory;
+    }
+
+    public ItemStack getGunStack() {
+        return gunStack;
     }
 }

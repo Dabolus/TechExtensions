@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Applies saturation or hunger effects to living entities that have been
- * resized by the Shrink Ray. The effect persists as long as the entity's
- * scale differs from its base scale, with a level proportional to the
+ * resized by the Shrink Ray. The effect persists as long as the ray's scale
+ * modifier changes the entity's size, with a level proportional to the
  * magnitude of the size change.
  */
 @Mixin(LivingEntity.class)
@@ -45,11 +45,12 @@ public abstract class ShrinkRayEffectMixin {
             return;
         }
 
-        double baseScale = scaleAttr.getBaseValue();
-        double currentScale = scaleAttr.getValue();
+        // The ray's modifier multiplies the scale by (1 + amount): that is exactly the size change it applied,
+        // independent of the base scale or of other modifiers such as the baby one
+        double ratio = 1.0D + modifier.amount();
 
-        if (Math.abs(currentScale - baseScale) < 0.001D) {
-            // Entity is at base scale (restored), remove both effects
+        if (Math.abs(ratio - 1.0D) < 0.001D) {
+            // Entity is at its natural scale (restored), remove both effects
             self.removeEffect(MobEffects.SATURATION);
             self.removeEffect(MobEffects.HUNGER);
             return;
@@ -57,10 +58,9 @@ public abstract class ShrinkRayEffectMixin {
 
         // Effect level proportional to size change using log2 of the ratio.
         // level 0 (I) at ~2x change, level 1 (II) at ~4x, level 2 (III) at ~8x, etc.
-        double ratio = currentScale / baseScale;
         int level = Math.max(0, (int) Math.floor(Math.abs(Math.log(ratio) / Math.log(2.0D))));
 
-        if (currentScale < baseScale) {
+        if (ratio < 1.0D) {
             // Shrunk — apply saturation, clear hunger
             applyOrRefreshEffect(self, true, level);
         } else {

@@ -2,12 +2,15 @@ package dev.gga.techextensions.items.tool.advanced;
 
 import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
+import dev.gga.techextensions.entity.BubbleTrapEntity;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.menu.BubbleGunMenu;
 import dev.gga.techextensions.utils.TEAimingUtils;
 import dev.gga.techextensions.utils.TECacheUtils;
 import dev.gga.techextensions.utils.TECleaningUtils;
+import dev.gga.techextensions.utils.TEContainerUtils;
+import dev.gga.techextensions.utils.TENbtUtils;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
@@ -31,6 +34,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -39,12 +43,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import reborncore.api.blockentity.IUpgrade;
 import reborncore.api.blockentity.IUpgradeable;
 import reborncore.common.powerSystem.RcEnergyItem;
@@ -65,11 +71,11 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
     /** Index 0: Soap slot */
     public static final int SOAP_SLOT = 0;
-    /** Index 1: Cell input slot (water cells go in) */
+    /** Index 1: Water container input slot (water cells, buckets, ... go in) */
     public static final int CELL_INPUT_SLOT = 1;
-    /** Index 2: Cell output slot (empty cells come out) */
+    /** Index 2: Container output slot (emptied containers come out) */
     public static final int CELL_OUTPUT_SLOT = 2;
-    /** Total functional item slots (soap + cell input + cell output) */
+    /** Total functional item slots (soap + container input + container output) */
     public static final int INVENTORY_SIZE = 3;
     /** Number of upgrade slots */
     public static final int ALLOWED_UPGRADES = 2;
@@ -78,6 +84,14 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
     /** Millibuckets per bucket (used for world water source fill). */
     private static final long MB_PER_BUCKET = 1000;
+
+    // CustomData keys
+    private static final String WATER_KEY = "water_amount";
+    private static final String CLEANING_TARGET_KEY = "cleaning_target";
+    private static final String CLEANING_PROGRESS_KEY = "cleaning_progress";
+    private static final String TRAPPING_TARGET_KEY = "trapping_target_id";
+    private static final String TRAPPING_PROGRESS_KEY = "trapping_progress";
+    private static final String ENERGY_CAPACITY_CACHE_KEY = "cache:energy_capacity";
 
     public final RcEnergyTier tier = RcEnergyTier.HIGH;
 
@@ -167,37 +181,25 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
     // --- Interaction ---
 
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-
-        // Check if player right-clicked on a water source block to fill the tank
-        if (level.getFluidState(pos).getType() == Fluids.WATER
-                && level.getFluidState(pos).isSource()) {
-            if (!level.isClientSide()) {
-                ItemStack stack = context.getItemInHand();
-                long currentWater = getWaterAmount(stack);
-                long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
-                if (currentWater < maxWater) {
-                    long toFill = Math.min(MB_PER_BUCKET, maxWater - currentWater);
-                    setWaterAmount(stack, currentWater + toFill);
-                    level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 1.0F, 1.0F);
-                }
-            }
-            return InteractionResult.CONSUME;
-        }
-
-        // Fall through to use() for mode-based logic
-        return InteractionResult.PASS;
-    }
-
-    @Override
     public InteractionResult use(final Level world, final Player player, final InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
 
         if (player.isShiftKeyDown()) {
             switchMode(stack, player);
             return InteractionResult.CONSUME;
+        }
+
+        // Aiming at a water source refills the tank, unless it is already full. The crosshair raycast ignores
+        // fluids, so trace them here like buckets do.
+        if (getWaterAmount(stack) < TechExtensionsConfig.bubbleGunWaterCapacity.get()) {
+            BlockHitResult fluidHit = getPlayerPOVHitResult(world, player, ClipContext.Fluid.SOURCE_ONLY);
+            if (fluidHit.getType() == HitResult.Type.BLOCK
+                    && isWaterSource(world.getFluidState(fluidHit.getBlockPos()))) {
+                if (!world.isClientSide()) {
+                    fillFromWorld(world, stack, fluidHit.getBlockPos());
+                }
+                return InteractionResult.CONSUME;
+            }
         }
 
         BubbleGunMode mode = getCurrentMode(stack);
@@ -227,9 +229,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 }
                 return InteractionResult.FAIL;
             }
-            Container inv = getInventory(stack);
-            ItemStack soapStack = inv.getItem(SOAP_SLOT);
-            if (soapStack.isEmpty() || !(soapStack.getItem() instanceof SoapItem)) {
+            if (!(getSoap(stack).getItem() instanceof SoapItem)) {
                 if (player instanceof ServerPlayer serverPlayer) {
                     serverPlayer.sendSystemMessage(
                             Component.translatable("techextensions.message.bubble_gun.no_soap")
@@ -256,13 +256,25 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return InteractionResult.CONSUME;
     }
 
-    @Override
-    public void onUseTick(Level level, LivingEntity entity, ItemStack stack, int remainingUseTicks) {
-        if (level.isClientSide() || !(entity instanceof Player player)) {
+    private static boolean isWaterSource(FluidState state) {
+        return state.is(Fluids.WATER) && state.isSource();
+    }
+
+    private static void fillFromWorld(Level world, ItemStack stack, BlockPos pos) {
+        long currentWater = getWaterAmount(stack);
+        long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+        if (currentWater >= maxWater) {
             return;
         }
+        setWaterAmount(stack, currentWater + Math.min(MB_PER_BUCKET, maxWater - currentWater));
+        world.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 1.0F, 1.0F);
+    }
 
-        ServerLevel serverLevel = (ServerLevel) level;
+    @Override
+    public void onUseTick(Level level, LivingEntity entity, ItemStack stack, int remainingUseTicks) {
+        if (!(level instanceof ServerLevel serverLevel) || !(entity instanceof Player player)) {
+            return;
+        }
 
         // Check energy
         long energyCostPerTick = TechExtensionsConfig.bubbleGunEnergyCostPerTick.get();
@@ -271,31 +283,28 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
             return;
         }
 
+        // All tracked state is read once here and written back once at the end of the tick
+        CompoundTag tag =
+                stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+
         // Check water
         long waterCostPerTick = TechExtensionsConfig.bubbleGunWaterCostPerTick.get();
-        long currentWater = getWaterAmount(stack);
+        long currentWater = tag.getLongOr(WATER_KEY, 0L);
         if (currentWater < waterCostPerTick) {
             entity.stopUsingItem();
             return;
         }
 
         // Check soap
-        Container inv = getInventory(stack);
-        ItemStack soapStack = inv.getItem(SOAP_SLOT);
-        if (soapStack.isEmpty() || !(soapStack.getItem() instanceof SoapItem)) {
-            entity.stopUsingItem();
-            return;
-        }
-
-        int soapDurabilityLeft = soapStack.getMaxDamage() - soapStack.getDamageValue();
-        if (soapDurabilityLeft <= 0) {
+        ItemStack soapStack = getSoap(stack);
+        if (!(soapStack.getItem() instanceof SoapItem) || soapStack.getMaxDamage() - soapStack.getDamageValue() <= 0) {
             entity.stopUsingItem();
             return;
         }
 
         // Consume resources
         tryUseEnergy(stack, energyCostPerTick);
-        setWaterAmount(stack, currentWater - waterCostPerTick);
+        tag.putLong(WATER_KEY, Math.max(0L, currentWater - waterCostPerTick));
 
         // Spawn bubble particles along the look direction
         Vec3 eyePos = player.getEyePosition(1.0F);
@@ -330,10 +339,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 player,
                 eyePos,
                 endPos,
-                e -> e instanceof LivingEntity
-                        && e.isAlive()
-                        && !e.isSpectator()
-                        && !e.entityTags().contains("techextensions:bubble_trapped"),
+                e -> e instanceof LivingEntity && e.isAlive() && !e.isSpectator() && !BubbleTrapEntity.isTrapped(e),
                 0.3D,
                 null);
         LivingEntity closestEntity = entityHit != null ? (LivingEntity) entityHit.entity() : null;
@@ -342,23 +348,17 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         BlockHitResult hitResult = TEAimingUtils.traceBlock(
                 level, player, eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE);
 
+        int soapDamage = 0;
         if (closestEntity != null) {
             // Reset block cleaning state since we're targeting an entity
-            resetCleaningState(stack);
+            clearCleaningState(tag);
 
             // Track entity trapping progress
             int entityId = closestEntity.getId();
-            int prevTargetId = getTrappingTargetId(stack);
-            int trapProgress = getTrappingProgress(stack);
-
-            if (prevTargetId == entityId) {
-                trapProgress++;
-            } else {
-                trapProgress = 1;
-            }
-
-            setTrappingTargetId(stack, entityId);
-            setTrappingProgress(stack, trapProgress);
+            int trapProgress =
+                    tag.getIntOr(TRAPPING_TARGET_KEY, -1) == entityId ? tag.getIntOr(TRAPPING_PROGRESS_KEY, 0) + 1 : 1;
+            tag.putInt(TRAPPING_TARGET_KEY, entityId);
+            tag.putInt(TRAPPING_PROGRESS_KEY, trapProgress);
 
             // Spawn bubble particles around the targeted entity to show it's being hit
             serverLevel.sendParticles(
@@ -374,113 +374,111 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
             // Trap the entity once the threshold is met
             if (trapProgress >= TechExtensionsConfig.bubbleGunTrapDuration.get()) {
-                dev.gga.techextensions.entity.BubbleTrapEntity bubble =
-                        new dev.gga.techextensions.entity.BubbleTrapEntity(TEContent.BUBBLE_TRAP_ENTITY, serverLevel);
+                BubbleTrapEntity bubble = new BubbleTrapEntity(TEContent.BUBBLE_TRAP_ENTITY, serverLevel);
                 bubble.setPos(closestEntity.getX(), closestEntity.getY(), closestEntity.getZ());
                 bubble.setTrappedEntity(closestEntity);
                 serverLevel.addFreshEntity(bubble);
 
-                // Damage the soap
-                soapStack.hurtAndBreak(2, entity, EquipmentSlot.MAINHAND);
-                if (soapStack.isEmpty()) {
-                    inv.setItem(SOAP_SLOT, ItemStack.EMPTY);
-                }
-                inv.setChanged();
-
-                // Reset progress
-                resetTrappingState(stack);
+                soapDamage = 2;
+                clearTrappingState(tag);
             }
         } else if (hitResult != null) {
             // Reset entity trapping state since we're targeting a block
-            resetTrappingState(stack);
+            clearTrappingState(tag);
 
             BlockPos hitPos = hitResult.getBlockPos();
 
             if (TECleaningUtils.isCleanable(level, hitPos)) {
                 // Track cleaning progress on the targeted block
-                BlockPos prevTarget = getCleaningTarget(stack);
-                int progress = getCleaningProgress(stack);
-
-                if (prevTarget != null && prevTarget.equals(hitPos)) {
-                    progress++;
-                } else {
-                    progress = 1;
-                }
-
-                setCleaningTarget(stack, hitPos);
-                setCleaningProgress(stack, progress);
+                boolean sameTarget =
+                        tag.contains(CLEANING_TARGET_KEY) && tag.getLongOr(CLEANING_TARGET_KEY, 0L) == hitPos.asLong();
+                int progress = sameTarget ? tag.getIntOr(CLEANING_PROGRESS_KEY, 0) + 1 : 1;
+                tag.putLong(CLEANING_TARGET_KEY, hitPos.asLong());
+                tag.putInt(CLEANING_PROGRESS_KEY, progress);
 
                 // Clean the block once the threshold is met
                 if (progress >= TechExtensionsConfig.bubbleGunCleanDuration.get()) {
                     if (TECleaningUtils.cleanBlock(level, hitPos)) {
                         level.playSound(null, hitPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
-
-                        // Damage the soap inside the gun's inventory
-                        soapStack.hurtAndBreak(1, entity, EquipmentSlot.MAINHAND);
-                        if (soapStack.isEmpty()) {
-                            inv.setItem(SOAP_SLOT, ItemStack.EMPTY);
-                        }
-                        inv.setChanged();
+                        soapDamage = 1;
                     }
                     // Reset progress after cleaning
-                    setCleaningProgress(stack, 0);
-                    setCleaningTarget(stack, null);
+                    clearCleaningState(tag);
                 }
             } else {
                 // Not a cleanable block — reset progress
-                resetCleaningState(stack);
+                clearCleaningState(tag);
             }
         } else {
             // Missed — reset both progress states
-            resetCleaningState(stack);
-            resetTrappingState(stack);
+            clearCleaningState(tag);
+            clearTrappingState(tag);
+        }
+
+        // Single component write per tick
+        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+
+        // Done after the custom data write: damaging the soap rewrites the container and refreshes the cache
+        if (soapDamage > 0) {
+            damageSoap(stack, serverLevel, player, soapDamage);
         }
     }
 
     @Override
     public boolean releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
-        resetCleaningState(stack);
-        resetTrappingState(stack);
+        clearProgressState(stack);
         return super.releaseUsing(stack, level, entity, timeLeft);
     }
 
-    // --- Inventory tick: process cell input ---
+    /** Damages the soap inside the gun without the equipment break animation, which would target the gun's hand. */
+    private static void damageSoap(ItemStack gunStack, ServerLevel level, Player player, int amount) {
+        Container inv = getInventory(gunStack);
+        ItemStack soap = inv.getItem(SOAP_SLOT);
+        if (soap.isEmpty()) {
+            return;
+        }
+        soap.hurtAndBreak(amount, level, player instanceof ServerPlayer serverPlayer ? serverPlayer : null, item -> {});
+        if (soap.isEmpty()) {
+            inv.setItem(SOAP_SLOT, ItemStack.EMPTY);
+        } else {
+            inv.setChanged();
+        }
+    }
+
+    // --- Inventory tick: process the water container input ---
 
     @Override
-    public void inventoryTick(
-            ItemStack stack,
-            ServerLevel world,
-            net.minecraft.world.entity.Entity entity,
-            net.minecraft.world.entity.EquipmentSlot slot) {
-        if (world.isClientSide()) {
+    public void inventoryTick(ItemStack stack, ServerLevel world, Entity entity, @Nullable EquipmentSlot slot) {
+        ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
+        if (contents == null) {
+            return;
+        }
+        // Cheap early-outs before building any container: nothing to drain, tank full, or output blocked
+        if (TEContainerUtils.copySlot(contents, CELL_INPUT_SLOT).isEmpty()) {
+            return;
+        }
+        long currentWater = getWaterAmount(stack);
+        long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+        if (currentWater >= maxWater) {
+            return;
+        }
+        ItemStack output = TEContainerUtils.copySlot(contents, CELL_OUTPUT_SLOT);
+        if (!output.isEmpty() && output.getCount() >= output.getMaxStackSize()) {
             return;
         }
 
-        // When the bubble gun menu is open, use its live container so that
-        // changes here are visible in the GUI and won't be overwritten on close.
-        Container inv;
-        if (entity instanceof Player player
-                && player.containerMenu instanceof dev.gga.techextensions.menu.BubbleGunMenu bubbleGunMenu) {
-            inv = bubbleGunMenu.getGunInventory();
-        } else {
-            inv = getInventory(stack);
-        }
+        // When this gun's menu is open, use its live container so that changes are visible in the GUI and
+        // won't be overwritten on close.
+        Container inv = entity instanceof Player player
+                        && player.containerMenu instanceof BubbleGunMenu bubbleGunMenu
+                        && bubbleGunMenu.getGunStack() == stack
+                ? bubbleGunMenu.getGunInventory()
+                : getInventory(stack);
 
-        ItemStack inputItem = inv.getItem(CELL_INPUT_SLOT);
-
-        if (!inputItem.isEmpty()) {
-            long currentWater = getWaterAmount(stack);
-            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
-
-            if (currentWater < maxWater) {
-                // Use Fabric Transfer API to properly drain fluid from the input container,
-                // moving the emptied container to the output slot (like TR fluid tanks).
-                long extracted = drainFluidContainer(inv, maxWater - currentWater);
-                if (extracted > 0) {
-                    setWaterAmount(stack, currentWater + extracted);
-                    inv.setChanged();
-                }
-            }
+        long extracted = drainFluidContainer(inv, maxWater - currentWater);
+        if (extracted > 0) {
+            setWaterAmount(stack, currentWater + extracted);
+            inv.setChanged();
         }
     }
 
@@ -572,6 +570,28 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return droplets * 1000 / FluidConstants.BUCKET;
     }
 
+    /**
+     * Returns `true` if the stack holds water that the Transfer API can drain: Tech Reborn water cells,
+     * vanilla water buckets and any other mod's water containers.
+     */
+    public static boolean isWaterContainer(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return false;
+        }
+        Storage<FluidVariant> storage = ContainerItemContext.withConstant(stack).find(FluidStorage.ITEM);
+        if (storage == null) {
+            return false;
+        }
+        for (StorageView<FluidVariant> view : storage) {
+            if (!view.isResourceBlank()
+                    && view.getAmount() > 0
+                    && view.getResource().getFluid() == Fluids.WATER) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // --- IUpgradeable ---
 
     @Override
@@ -621,134 +641,70 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return container;
     }
 
+    /** A copy of the soap loaded in the gun, or an empty stack. Reads only that slot of the container. */
+    public static ItemStack getSoap(ItemStack gunStack) {
+        return TEContainerUtils.copySlot(gunStack, SOAP_SLOT);
+    }
+
     // --- Water storage ---
 
     public static long getWaterAmount(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains("water_amount")) {
-            return tag.getLong("water_amount").orElse(0L);
-        }
-        return 0;
+        return TENbtUtils.view(stack).getLongOr(WATER_KEY, 0L);
     }
 
     public static void setWaterAmount(ItemStack stack, long amount) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.putLong("water_amount", Math.max(0, amount));
-        });
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.putLong(WATER_KEY, Math.max(0, amount)));
     }
 
-    // --- Cleaning state tracking ---
+    // --- Cleaning / trapping progress state (kept in the gun's custom data while shooting) ---
 
-    private static BlockPos getCleaningTarget(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains("cleaning_target")) {
-            return BlockPos.of(tag.getLong("cleaning_target").orElse(0L));
+    private static void clearCleaningState(CompoundTag tag) {
+        tag.remove(CLEANING_TARGET_KEY);
+        tag.remove(CLEANING_PROGRESS_KEY);
+    }
+
+    private static void clearTrappingState(CompoundTag tag) {
+        tag.remove(TRAPPING_TARGET_KEY);
+        tag.remove(TRAPPING_PROGRESS_KEY);
+    }
+
+    private static void clearProgressState(ItemStack stack) {
+        CompoundTag view = TENbtUtils.view(stack);
+        if (view.contains(CLEANING_TARGET_KEY)
+                || view.contains(CLEANING_PROGRESS_KEY)
+                || view.contains(TRAPPING_TARGET_KEY)
+                || view.contains(TRAPPING_PROGRESS_KEY)) {
+            CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+                clearCleaningState(tag);
+                clearTrappingState(tag);
+            });
         }
-        return null;
-    }
-
-    private static void setCleaningTarget(ItemStack stack, BlockPos pos) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            if (pos == null) {
-                tag.remove("cleaning_target");
-            } else {
-                tag.putLong("cleaning_target", pos.asLong());
-            }
-        });
-    }
-
-    private static int getCleaningProgress(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains("cleaning_progress")) {
-            return tag.getInt("cleaning_progress").orElse(0);
-        }
-        return 0;
-    }
-
-    private static void setCleaningProgress(ItemStack stack, int progress) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.putInt("cleaning_progress", progress);
-        });
-    }
-
-    private static void resetCleaningState(ItemStack stack) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.remove("cleaning_target");
-            tag.remove("cleaning_progress");
-        });
-    }
-
-    // --- Entity trapping state tracking ---
-
-    private static int getTrappingTargetId(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains("trapping_target_id")) {
-            return tag.getInt("trapping_target_id").orElse(-1);
-        }
-        return -1;
-    }
-
-    private static void setTrappingTargetId(ItemStack stack, int entityId) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.putInt("trapping_target_id", entityId);
-        });
-    }
-
-    private static int getTrappingProgress(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains("trapping_progress")) {
-            return tag.getInt("trapping_progress").orElse(0);
-        }
-        return 0;
-    }
-
-    private static void setTrappingProgress(ItemStack stack, int progress) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.putInt("trapping_progress", progress);
-        });
-    }
-
-    private static void resetTrappingState(ItemStack stack) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.remove("trapping_target_id");
-            tag.remove("trapping_progress");
-        });
     }
 
     // --- Cached upgrade values ---
 
     private static void updateCache(ItemStack stack, Container inventory) {
-        int overclockers = 0;
         int energyStorage = 0;
 
         for (int i = INVENTORY_SIZE; i < TOTAL_SLOTS; i++) {
             ItemStack s = inventory.getItem(i);
-            if (s.isEmpty()) continue;
-            if (s.getItem() instanceof UpgradeItem) {
-                if (s.is(TRContent.Upgrades.OVERCLOCKER.item)) overclockers += s.getCount();
-                if (s.is(TRContent.Upgrades.ENERGY_STORAGE.item)) energyStorage += s.getCount();
-            }
+            if (s.isEmpty() || !(s.getItem() instanceof UpgradeItem)) continue;
+            if (s.is(TRContent.Upgrades.ENERGY_STORAGE.item)) energyStorage += s.getCount();
         }
 
         final long energyCapacity = TechExtensionsConfig.bubbleGunCharge.get()
                 + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
 
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.putLong("cache:energy_capacity", energyCapacity);
-        });
+        CustomData.update(
+                DataComponents.CUSTOM_DATA, stack, tag -> tag.putLong(ENERGY_CAPACITY_CACHE_KEY, energyCapacity));
     }
 
-    private static int getEnergyCapacityFromCache(ItemStack stack) {
+    private static long getEnergyCapacityFromCache(ItemStack stack) {
         return TECacheUtils.getCachedValue(
                 stack,
-                "cache:energy_capacity",
-                TechExtensionsConfig.bubbleGunCharge.get(),
-                tag -> tag.getInt("cache:energy_capacity"),
+                ENERGY_CAPACITY_CACHE_KEY,
+                (long) TechExtensionsConfig.bubbleGunCharge.get(),
+                tag -> tag.getLong(ENERGY_CAPACITY_CACHE_KEY),
                 BubbleGunItem::getInventory,
                 BubbleGunItem::updateCache);
     }

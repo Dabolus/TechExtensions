@@ -3,10 +3,10 @@ package dev.gga.techextensions.items.tool.advanced;
 import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEItemSettings;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
@@ -21,6 +21,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -55,9 +56,10 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
 
     /**
      * Tracks how many ticks each player has been blocking, so we can drain
-     * energy in bulk when they stop.
+     * energy in bulk when they stop. Weak keys so entities that die or
+     * disconnect while blocking are not retained.
      */
-    private static final Map<LivingEntity, Integer> blockingTicks = new HashMap<>();
+    private static final Map<LivingEntity, Integer> blockingTicks = new WeakHashMap<>();
 
     /**
      * Creates a `BlocksAttacks` component with the given parameters.
@@ -68,8 +70,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
      */
     private static BlocksAttacks createBlocksAttacks(
             HolderGetter.Provider provider, float blockingAngle, float damageReductionFactor) {
-        HolderSet.Named<net.minecraft.world.damagesource.DamageType> bypassedBy =
-                provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD);
+        HolderSet.Named<DamageType> bypassedBy = provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD);
         return new BlocksAttacks(
                 0.25F,
                 1.0F,
@@ -268,9 +269,10 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
                         defender.getX(),
                         defender.getEyeY(),
                         defender.getZ(),
-                        originalArrow.getWeaponItem(),
-                        null);
+                        originalArrow.getPickupItemStackOrigin(),
+                        originalArrow.getWeaponItem());
                 reflected.setOwner(defender);
+                reflected.pickup = originalArrow.pickup;
                 double dx = attacker.getX() - defender.getX();
                 double dy = attacker.getEyeY() - defender.getEyeY();
                 double dz = attacker.getZ() - defender.getZ();
@@ -285,9 +287,6 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
         if (directEntity instanceof Projectile projectile) {
             Entity attacker = source.getEntity();
             if (attacker != null) {
-                double dx = attacker.getX() - defender.getX();
-                double dy = attacker.getEyeY() - defender.getEyeY();
-                double dz = attacker.getZ() - defender.getZ();
                 projectile.deflect(ProjectileDeflection.REVERSE, defender, EntityReference.of(defender), true);
                 projectile.setDeltaMovement(
                         projectile.getDeltaMovement().normalize().scale(1.5));

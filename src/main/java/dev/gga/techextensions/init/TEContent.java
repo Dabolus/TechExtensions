@@ -14,14 +14,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 public class TEContent {
-    public static final Marker DATAGEN = MarkerFactory.getMarker("datagen");
-
     // Blocks
-    public static Block ELECTRIC_DUCTED_FAN = new ElectricDuctedFanBlock(12, 4, 12, "electric_ducted_fan");
+    public static Block ELECTRIC_DUCTED_FAN = new ElectricDuctedFanBlock(4, 12, "electric_ducted_fan");
 
     // Items
     public static Item BUBBLE_GUN;

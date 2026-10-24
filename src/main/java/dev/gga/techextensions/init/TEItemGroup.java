@@ -69,7 +69,7 @@ public class TEItemGroup {
     }
 
     private static void addCombat(FabricCreativeModeTabOutput entries) {
-        addPoweredItem(TEContent.CYBER_SHIELD, entries, Items.SHIELD, true);
+        addPoweredItem(TEContent.CYBER_SHIELD, entries, Items.SHIELD, false);
     }
 
     private static void addPoweredItem(

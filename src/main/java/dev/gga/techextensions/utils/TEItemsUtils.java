@@ -11,81 +11,59 @@ import net.minecraft.world.phys.BlockHitResult;
 import reborncore.common.util.ItemUsageContextCustomStack;
 
 public final class TEItemsUtils {
-    public static InteractionResult placeTorch(UseOnContext itemUsageContext) {
-        Player player = itemUsageContext.getPlayer();
+    private TEItemsUtils() {}
+
+    /**
+     * Places a torch from the player's inventory at the clicked position, trying the offhand first and then
+     * the main inventory.
+     */
+    public static InteractionResult placeTorch(UseOnContext context) {
+        Player player = context.getPlayer();
         if (player == null) {
             return InteractionResult.FAIL;
         }
 
-        // TODO: optimize next blocks to avoid code duplication
-        // Try with offhand first
-        ItemStack offhandStack = player.getOffhandItem();
-        if (!offhandStack.isEmpty()
-                && offhandStack
-                        .getItem()
-                        .getDescriptionId()
-                        .toLowerCase(Locale.ROOT)
-                        .contains("torch")) {
-            if (offhandStack.getItem() instanceof BlockItem) {
-                int oldSize = offhandStack.getCount();
-                UseOnContext context = new ItemUsageContextCustomStack(
-                        itemUsageContext.getLevel(),
-                        player,
-                        itemUsageContext.getHand(),
-                        offhandStack,
-                        new BlockHitResult(
-                                itemUsageContext.getClickLocation(),
-                                itemUsageContext.getClickedFace(),
-                                itemUsageContext.getClickedPos(),
-                                true));
-                InteractionResult result = offhandStack.useOn(context);
-                if (player.isCreative()) {
-                    offhandStack.setCount(oldSize);
-                } else if (offhandStack.getCount() <= 0) {
-                    player.setItemInHand(itemUsageContext.getHand(), ItemStack.EMPTY);
-                }
-                if (result == InteractionResult.SUCCESS) {
-                    return InteractionResult.SUCCESS;
-                }
-            }
+        Inventory inventory = player.getInventory();
+        if (tryPlaceTorch(context, player, inventory.getItem(Inventory.SLOT_OFFHAND), Inventory.SLOT_OFFHAND)) {
+            return InteractionResult.SUCCESS;
         }
-
-        // Then try main inventory
-        for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
-            ItemStack torchStack = player.getInventory().getItem(i);
-            if (torchStack.isEmpty()
-                    || !torchStack
-                            .getItem()
-                            .getDescriptionId()
-                            .toLowerCase(Locale.ROOT)
-                            .contains("torch")) {
-                continue;
-            }
-            if (!(torchStack.getItem() instanceof BlockItem)) {
-                continue;
-            }
-
-            int oldSize = torchStack.getCount();
-            UseOnContext context = new ItemUsageContextCustomStack(
-                    itemUsageContext.getLevel(),
-                    player,
-                    itemUsageContext.getHand(),
-                    torchStack,
-                    new BlockHitResult(
-                            itemUsageContext.getClickLocation(),
-                            itemUsageContext.getClickedFace(),
-                            itemUsageContext.getClickedPos(),
-                            true));
-            InteractionResult result = torchStack.useOn(context);
-            if (player.isCreative()) {
-                torchStack.setCount(oldSize);
-            } else if (torchStack.getCount() <= 0) {
-                player.getInventory().setItem(i, ItemStack.EMPTY);
-            }
-            if (result == InteractionResult.SUCCESS) {
+        for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
+            if (tryPlaceTorch(context, player, inventory.getItem(slot), slot)) {
                 return InteractionResult.SUCCESS;
             }
         }
         return InteractionResult.FAIL;
+    }
+
+    private static boolean isTorch(ItemStack stack) {
+        return !stack.isEmpty()
+                && stack.getItem() instanceof BlockItem
+                && stack.getItem().getDescriptionId().toLowerCase(Locale.ROOT).contains("torch");
+    }
+
+    /**
+     * @param torchStack    the candidate stack
+     * @param inventorySlot the player inventory slot the stack lives in, cleared if the stack is used up
+     */
+    private static boolean tryPlaceTorch(UseOnContext context, Player player, ItemStack torchStack, int inventorySlot) {
+        if (!isTorch(torchStack)) {
+            return false;
+        }
+        int oldSize = torchStack.getCount();
+        UseOnContext torchContext = new ItemUsageContextCustomStack(
+                context.getLevel(),
+                player,
+                context.getHand(),
+                torchStack,
+                new BlockHitResult(
+                        context.getClickLocation(), context.getClickedFace(), context.getClickedPos(), true));
+        InteractionResult result = torchStack.useOn(torchContext);
+        if (player.isCreative()) {
+            torchStack.setCount(oldSize);
+        } else if (torchStack.isEmpty()) {
+            // Clear the slot the torch came from, never the hand holding the tool
+            player.getInventory().setItem(inventorySlot, ItemStack.EMPTY);
+        }
+        return result.consumesAction();
     }
 }

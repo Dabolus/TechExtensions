@@ -84,12 +84,4 @@ public record TEGuiType<T extends BlockEntity>(Identifier identifier, MenuType<B
         public static final StreamCodec<RegistryFriendlyByteBuf, ScreenHandlerData> PACKET_CODEC =
                 StreamCodec.composite(BlockPos.STREAM_CODEC, ScreenHandlerData::pos, ScreenHandlerData::new);
     }
-
-    public Identifier getIdentifier() {
-        return identifier;
-    }
-
-    public MenuType<BuiltScreenHandler> getScreenHandlerType() {
-        return screenHandlerType;
-    }
 }

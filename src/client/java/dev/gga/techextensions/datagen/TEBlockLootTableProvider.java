@@ -51,6 +51,5 @@ public class TEBlockLootTableProvider extends FabricBlockLootSubProvider {
                                                                 TEContent.ELECTRIC_DUCTED_FAN)
                                                         .setProperties(StatePropertiesPredicate.Builder.properties()
                                                                 .hasProperty(ElectricDuctedFanBlock.FANS, 4)))))));
-        ;
     }
 }

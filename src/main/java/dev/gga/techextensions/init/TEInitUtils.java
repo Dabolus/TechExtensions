@@ -3,10 +3,7 @@ package dev.gga.techextensions.init;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.events.ModRegistry;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -46,16 +43,6 @@ public class TEInitUtils {
         }
 
         return block;
-    }
-
-    public static SoundEvent setup(String name) {
-        Identifier identifier = Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name);
-        return Registry.register(
-                BuiltInRegistries.SOUND_EVENT, identifier, SoundEvent.createVariableRangeEvent(identifier));
-    }
-
-    public static boolean isDatagenRunning() {
-        return System.getProperty("fabric-api.datagen") != null;
     }
 
     private TEInitUtils() {

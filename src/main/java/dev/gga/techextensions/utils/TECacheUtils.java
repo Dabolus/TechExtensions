@@ -3,11 +3,9 @@ package dev.gga.techextensions.utils;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
 /**
  * Generic cache utilities for items that store computed values in
@@ -19,7 +17,7 @@ public final class TECacheUtils {
 
     /**
      * Retrieves a cached value from the stack's CustomData, recomputing
-     * the cache if the key is missing.
+     * the cache if the key is missing. Reads never copy the tag.
      *
      * @param stack           the item stack
      * @param key             the NBT key for the cached value
@@ -38,16 +36,11 @@ public final class TECacheUtils {
         if (stack == null) {
             return defaultValue;
         }
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
+        CompoundTag tag = TENbtUtils.view(stack);
         if (tag.contains(key)) {
             return extractor.apply(tag).orElse(defaultValue);
         }
-        Container inv = inventoryGetter.apply(stack);
-        cacheUpdater.accept(stack, inv);
-        return extractor
-                .apply(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
-                        .copyTag())
-                .orElse(defaultValue);
+        cacheUpdater.accept(stack, inventoryGetter.apply(stack));
+        return extractor.apply(TENbtUtils.view(stack)).orElse(defaultValue);
     }
 }

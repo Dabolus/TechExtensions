@@ -3,6 +3,7 @@ package dev.gga.techextensions.blocks.machine;
 import dev.gga.techextensions.blockentity.TEGuiType;
 import dev.gga.techextensions.blockentity.machine.ElectricDuctedFanBlockEntity;
 import dev.gga.techextensions.init.TEBlockSettings;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -57,14 +58,12 @@ public class ElectricDuctedFanBlock extends BaseBlockEntityProvider implements S
 
     private final double depth;
     private final double width;
-    private final int cost;
 
-    public ElectricDuctedFanBlock(int cost, double depth, double width, String name) {
+    public ElectricDuctedFanBlock(double depth, double width, String name) {
         super(TEBlockSettings.fan(name));
         this.depth = depth;
         this.width = width;
         this.shapes = genAllShapes();
-        this.cost = cost;
         this.registerDefaultState(this.getStateDefinition()
                 .any()
                 .setValue(FACING, Direction.UP)
@@ -122,14 +121,17 @@ public class ElectricDuctedFanBlock extends BaseBlockEntityProvider implements S
         world.setBlock(pos, newState, 3);
     }
 
-    public int getCost() {
-        return cost;
-    }
-
     // BaseBlockEntityProvider
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new ElectricDuctedFanBlockEntity(pos, state);
+    }
+
+    @Override
+    public Optional<ItemStack> getDropWithContents(Level level, BlockPos pos, ItemStack stack) {
+        // Wrenching drops plain fans, like the loot table does: copying the energy buffer onto a stack of
+        // several fans would give every one of them the full buffer
+        return Optional.of(stack);
     }
 
     // Block

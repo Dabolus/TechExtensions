@@ -19,6 +19,6 @@ public record TEClientGuiType<T extends BlockEntity>(TEGuiType<T> guiType, TEGui
         this.guiType = Objects.requireNonNull(guiType);
         this.guiFactory = Objects.requireNonNull(guiFactory);
 
-        MenuScreens.register(guiType.getScreenHandlerType(), guiFactory());
+        MenuScreens.register(guiType.screenHandlerType(), guiFactory());
     }
 }

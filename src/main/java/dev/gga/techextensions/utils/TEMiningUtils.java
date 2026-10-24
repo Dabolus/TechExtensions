@@ -2,78 +2,91 @@ package dev.gga.techextensions.utils;
 
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import techreborn.utils.ToolsUtil;
 
 public final class TEMiningUtils {
+    /** Limit the amount of ores to be broken. */
+    private static final int MAX_ORES = 64;
+    /** Per-block memo of the ore tag check. Tags only change on (re)load, which clears the cache. */
+    private static final Map<Block, Boolean> ORE_CACHE = new ConcurrentHashMap<>();
+
+    private TEMiningUtils() {}
+
+    public static void init() {
+        CommonLifecycleEvents.TAGS_LOADED.register((registries, client) -> ORE_CACHE.clear());
+    }
+
     public static boolean isValidOre(BlockState state) {
         // Consider it an ore if it has a tag that starts with ores/
-        return state.typeHolder()
-                .tags()
-                .anyMatch(tag -> tag.location().getPath().startsWith("ores/"));
+        return ORE_CACHE.computeIfAbsent(
+                state.getBlock(),
+                block -> state.typeHolder()
+                        .tags()
+                        .anyMatch(tag -> tag.location().getPath().startsWith("ores/")));
     }
 
     public static boolean isValidVeinMineStartBlock(BlockState state) {
         return isValidOre(state);
     }
 
-    private static boolean shouldBreak(Player playerIn, Level worldIn, BlockPos originalPos, BlockPos pos) {
-        if (originalPos.equals(pos)) {
-            return false;
-        }
-        BlockState blockState = worldIn.getBlockState(pos);
-        if (blockState.isAir()) {
-            return false;
-        }
-        if (blockState.getBlock() instanceof LiquidBlock) {
-            return false;
-        }
-        float blockHardness = blockState.getDestroyProgress(playerIn, worldIn, pos);
-        if (blockHardness == -1.0F) {
-            return false;
-        }
-        float originalHardness = worldIn.getBlockState(originalPos).getDestroySpeed(worldIn, originalPos);
-        return !((originalHardness / blockHardness) > 10.0F);
-    }
-
-    public static void mineAoe3x3(
-            ItemStack stack, Level worldIn, Player playerIn, BlockPos pos, LivingEntity entityLiving) {
+    /**
+     * Breaks the 3x3 around {@code pos}, like Tech Reborn's industrial drill does: every neighbour except air,
+     * liquids and unbreakable blocks ({@code ToolsUtil.breakBlock} skips the latter and charges the energy).
+     */
+    public static void mineAoe3x3(ItemStack stack, Level worldIn, BlockPos pos, LivingEntity entityLiving) {
         for (BlockPos additionalPos : ToolsUtil.getAOEMiningBlocks(worldIn, pos, entityLiving, 1)) {
-            if (shouldBreak(playerIn, worldIn, pos, additionalPos)) {
+            if (shouldBreak(worldIn, pos, additionalPos)) {
                 ToolsUtil.breakBlock(
                         stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost.get());
             }
         }
     }
 
-    public static List<BlockPos> findVein(Level world, BlockPos pos) {
-        List<BlockPos> foundOres = new ArrayList<>();
-        recursivelyFindVein(world, pos, foundOres);
-        return foundOres;
+    private static boolean shouldBreak(Level worldIn, BlockPos originalPos, BlockPos pos) {
+        if (originalPos.equals(pos)) {
+            return false;
+        }
+        BlockState blockState = worldIn.getBlockState(pos);
+        return !blockState.isAir() && !(blockState.getBlock() instanceof LiquidBlock);
     }
 
-    private static void recursivelyFindVein(Level world, BlockPos pos, List<BlockPos> foundOres) {
-        // Limit the amount of ores to be broken to 64 blocks.
-        if (foundOres.size() >= 64) {
+    /** Finds the ores connected to {@code pos}. The start position itself is not included. */
+    public static List<BlockPos> findVein(Level world, BlockPos pos) {
+        // Sets keep the visited checks O(1); insertion order is preserved so blocks break in the same order
+        Set<BlockPos> foundOres = new LinkedHashSet<>();
+        Set<BlockPos> visited = new HashSet<>();
+        visited.add(pos);
+        recursivelyFindVein(world, pos, foundOres, visited);
+        return new ArrayList<>(foundOres);
+    }
+
+    private static void recursivelyFindVein(Level world, BlockPos pos, Set<BlockPos> foundOres, Set<BlockPos> visited) {
+        if (foundOres.size() >= MAX_ORES) {
             return;
         }
         for (Direction facing : Direction.values()) {
             BlockPos checkPos = pos.relative(facing);
-            if (!foundOres.contains(checkPos)) {
-                BlockState state = world.getBlockState(checkPos);
-
-                if (isValidOre(state)) {
-                    foundOres.add(checkPos);
-                    recursivelyFindVein(world, checkPos, foundOres);
-                }
+            if (!visited.add(checkPos)) {
+                continue;
+            }
+            if (isValidOre(world.getBlockState(checkPos))) {
+                foundOres.add(checkPos);
+                recursivelyFindVein(world, checkPos, foundOres, visited);
             }
         }
     }

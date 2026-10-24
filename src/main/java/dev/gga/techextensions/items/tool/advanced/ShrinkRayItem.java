@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -18,10 +19,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -33,7 +35,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
 import reborncore.common.powerSystem.RcEnergyItem;
 import reborncore.common.powerSystem.RcEnergyTier;
 import reborncore.common.util.ItemUtils;
@@ -49,39 +50,48 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
     private static final int SHRINK_DURATION_TICKS = 10;
     private static final int BEAM_DURATION_TICKS = 10;
+    private static final double MIN_SCALE = 0.0625D;
+    private static final double MAX_SCALE = 16.0D;
     private static final WeakHashMap<LivingEntity, ShrinkTask> SHRINK_TASKS = new WeakHashMap<>();
     private static final List<BeamTask> BEAM_TASKS = new ArrayList<>();
 
-    private static class AttributeModifierInfo {
-        Holder<Attribute> attribute;
-        Identifier modifierId;
-        double multiplyDelta;
-        AttributeModifier.Operation operation;
+    /**
+     * An attribute adjusted together with the size.
+     *
+     * @param multiplyDelta how much of the size change (as a ratio to the natural size) applies to the attribute
+     */
+    private record AttributeModifierInfo(
+            Holder<Attribute> attribute,
+            Identifier modifierId,
+            double multiplyDelta,
+            AttributeModifier.Operation operation) {
 
         AttributeModifierInfo(
                 Holder<Attribute> attribute,
                 String modifierName,
                 double multiplyDelta,
                 AttributeModifier.Operation operation) {
-            this.attribute = attribute;
-            this.modifierId = Identifier.fromNamespaceAndPath(
-                    TechExtensions.MOD_ID, "shrink_ray_" + modifierName + "_adjustment");
-            this.multiplyDelta = multiplyDelta;
-            this.operation = operation;
+            this(
+                    attribute,
+                    Identifier.fromNamespaceAndPath(
+                            TechExtensions.MOD_ID, "shrink_ray_" + modifierName + "_adjustment"),
+                    multiplyDelta,
+                    operation);
         }
 
         AttributeModifierInfo(Holder<Attribute> attribute, String modifierName, double multiplyDelta) {
             this(attribute, modifierName, multiplyDelta, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         }
 
-        AttributeModifier getAttributeModifier(double modifierValue) {
-            return new AttributeModifier(modifierId, modifierValue - 1.0D, operation);
+        /** Modifier for a size ratio (new scale / natural scale); a ratio of 1 means "unchanged". */
+        AttributeModifier forRatio(double ratio) {
+            return new AttributeModifier(modifierId, (ratio - 1.0D) * multiplyDelta, operation);
         }
     }
 
     private static final AttributeModifierInfo SCALE_MODIFIER_INFO =
             new AttributeModifierInfo(Attributes.SCALE, "scale", 1.0D);
-    public static final Identifier SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId;
+    public static final Identifier SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId();
 
     private static final List<AttributeModifierInfo> ATTRIBUTE_MODIFIER_INFO = List.of(
             new AttributeModifierInfo(Attributes.ATTACK_DAMAGE, "attack_damage", 0.8D),
@@ -108,30 +118,45 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
             new AttributeModifierInfo(Attributes.MOVEMENT_SPEED, "movement_speed", 0.8D),
             new AttributeModifierInfo(Attributes.STEP_HEIGHT, "step_height", 0.8D));
 
-    private static class ShrinkTask {
+    /**
+     * Animates the scale from start to target. Both are relative to the entity's natural scale (its scale
+     * without this ray's modifier), so babies and other scale modifiers are respected.
+     */
+    private static final class ShrinkTask {
         final double startScale;
         final double targetScale;
+        final double naturalScale;
         int currentTick = 0;
 
-        ShrinkTask(double startScale, double targetScale) {
+        ShrinkTask(double startScale, double targetScale, double naturalScale) {
             this.startScale = startScale;
             this.targetScale = targetScale;
+            this.naturalScale = naturalScale;
         }
     }
 
-    private static class BeamTask {
+    private static final class BeamTask {
+        final ServerLevel level;
         final Vec3 origin;
         final Vec3 target;
+        final SoundSource soundSource;
         int currentTick = 0;
 
-        BeamTask(Vec3 origin, Vec3 target) {
+        BeamTask(ServerLevel level, Vec3 origin, Vec3 target, SoundSource soundSource) {
+            this.level = level;
             this.origin = origin;
             this.target = target;
+            this.soundSource = soundSource;
         }
     }
 
     public ShrinkRayItem(String name) {
         super(TEItemSettings.item(name).durability(0));
+    }
+
+    /** Registers the server tick handler that drives beams and scale animations. */
+    public static void initTicking() {
+        ServerTickEvents.END_SERVER_TICK.register(server -> tickTasks());
     }
 
     private ShrinkRayMode getCurrentMode(ItemStack stack) {
@@ -201,7 +226,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
             switchMode(stack, player);
             return InteractionResult.SUCCESS;
         }
-        if (world.isClientSide()) {
+        if (!(world instanceof ServerLevel serverLevel)) {
             return InteractionResult.PASS;
         }
         // Not enough energy, no-op
@@ -231,35 +256,46 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
         } else {
             beamEnd = end;
         }
-        BEAM_TASKS.add(new BeamTask(start, beamEnd));
+        BEAM_TASKS.add(new BeamTask(serverLevel, start, beamEnd, player.getSoundSource()));
 
         if (closestEntity instanceof LivingEntity living) {
-            final double baseScale = living.getAttributeBaseValue(SCALE_MODIFIER_INFO.attribute);
-            final double currentScale = living.getAttributeValue(SCALE_MODIFIER_INFO.attribute);
+            final AttributeInstance scaleAttr = living.getAttribute(Attributes.SCALE);
+            if (scaleAttr == null) {
+                return InteractionResult.PASS;
+            }
+            final double currentScale = scaleAttr.getValue();
+            final double naturalScale = naturalScale(scaleAttr);
             final ShrinkRayMode mode = getCurrentMode(stack);
 
-            // Bell-curve scaling: change is largest at the entity's base scale
+            // Bell-curve scaling: change is largest at the entity's natural scale
             // and diminishes toward the min/max extremes using a Gaussian in log-space
             final double maxChange = 0.1D;
-            final double logRatio = Math.log(currentScale / baseScale) / Math.log(2.0D);
+            final double logRatio = Math.log(currentScale / naturalScale) / Math.log(2.0D);
             final double sigma = 1.8D;
             final double bellFactor = Math.exp(-(logRatio * logRatio) / (2.0D * sigma * sigma));
             final double change = maxChange * bellFactor;
 
             final double targetScale = switch (mode) {
-                case SHRINK -> Math.max(0.0625D, currentScale * (1.0D - change));
-                case ENLARGE -> Math.min(16.0D, currentScale * (1.0D + change));
-                case RESTORE -> baseScale;
+                case SHRINK -> Math.max(MIN_SCALE, currentScale * (1.0D - change));
+                case ENLARGE -> Math.min(MAX_SCALE, currentScale * (1.0D + change));
+                case RESTORE -> naturalScale;
             };
-            SHRINK_TASKS.put(living, new ShrinkTask(currentScale, targetScale));
+            SHRINK_TASKS.put(living, new ShrinkTask(currentScale, targetScale, naturalScale));
             return InteractionResult.SUCCESS;
         }
 
         return InteractionResult.PASS;
     }
 
+    /** The entity's scale without this ray's modifier (base scale plus any other modifier, e.g. babies). */
+    private static double naturalScale(AttributeInstance scaleAttr) {
+        AttributeModifier ours = scaleAttr.getModifier(SHRINK_RAY_SCALE_MODIFIER_ID);
+        double ourFactor = ours == null ? 1.0D : 1.0D + ours.amount();
+        return ourFactor <= 0.0D ? scaleAttr.getBaseValue() : scaleAttr.getValue() / ourFactor;
+    }
+
     private Vec3 getBeamStartPosition(Player player, Vec3 viewVector, InteractionHand hand) {
-        double playerScale = player.getAttributeValue(SCALE_MODIFIER_INFO.attribute);
+        double playerScale = player.getAttributeValue(Attributes.SCALE);
         int playerHandSide = (player.getMainArm() == HumanoidArm.RIGHT) ? 1 : -1;
         if (hand == InteractionHand.OFF_HAND) {
             playerHandSide *= -1;
@@ -276,10 +312,9 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 .add(downVector.scale(verticalOffset)); // Move slightly down
     }
 
-    // Item
-    @Override
-    public void inventoryTick(ItemStack stack, ServerLevel worldIn, Entity entityIn, @Nullable EquipmentSlot slot) {
-        if (worldIn.isClientSide() || (SHRINK_TASKS.isEmpty() && BEAM_TASKS.isEmpty())) {
+    /** Advances beams and scale animations once per server tick. */
+    private static void tickTasks() {
+        if (SHRINK_TASKS.isEmpty() && BEAM_TASKS.isEmpty()) {
             return;
         }
 
@@ -291,16 +326,16 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
             final double progress = Math.min(1.0D, (double) beam.currentTick / BEAM_DURATION_TICKS);
             final Vec3 particlePos =
                     beam.origin.add(beam.target.subtract(beam.origin).scale(progress));
-            worldIn.playSound(
+            beam.level.playSound(
                     null,
                     particlePos.x,
                     particlePos.y,
                     particlePos.z,
                     SoundEvents.AMETHYST_BLOCK_RESONATE,
-                    entityIn.getSoundSource(),
+                    beam.soundSource,
                     0.5F,
                     1.8F + (float) progress * 0.2F);
-            worldIn.sendParticles(
+            beam.level.sendParticles(
                     TEParticleTypes.SHRINK_RAY,
                     particlePos.x,
                     particlePos.y,
@@ -337,26 +372,46 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
             // Interpolate scale with easing
             final double currentScale = task.startScale + (task.targetScale - task.startScale) * easedProgress;
-            final AttributeInstance scaleAttr = target.getAttribute(SCALE_MODIFIER_INFO.attribute);
+            final AttributeInstance scaleAttr = target.getAttribute(Attributes.SCALE);
             if (scaleAttr != null) {
-                scaleAttr.addOrReplacePermanentModifier(SCALE_MODIFIER_INFO.getAttributeModifier(currentScale));
+                scaleAttr.addOrReplacePermanentModifier(SCALE_MODIFIER_INFO.forRatio(currentScale / task.naturalScale));
                 target.refreshDimensions();
             }
             if (task.currentTick >= SHRINK_DURATION_TICKS) {
-                // Adjust attributes proportionally to the new scale
-                double baseScale = scaleAttr == null ? 1.0D : scaleAttr.getBaseValue();
-                for (AttributeModifierInfo attrInfo : ATTRIBUTE_MODIFIER_INFO) {
-                    final AttributeInstance attrInstance = target.getAttribute(attrInfo.attribute);
-                    if (attrInstance != null) {
-                        // Apply the delta to the percent change in scale, so
-                        // attributes adjust proportionally to the new size
-                        double modifierValue = ((task.targetScale - baseScale) * attrInfo.multiplyDelta) + baseScale;
-                        attrInstance.addOrReplacePermanentModifier(attrInfo.getAttributeModifier(modifierValue));
-                    }
-                }
-                target.refreshDimensions();
+                finishResize(target, task);
                 it.remove();
             }
         }
+    }
+
+    /** Applies the final attribute adjustments, or removes everything when the entity is back to its natural size. */
+    private static void finishResize(LivingEntity target, ShrinkTask task) {
+        final double ratio = task.targetScale / task.naturalScale;
+        final boolean restored = Math.abs(ratio - 1.0D) < 1.0E-6D;
+        final boolean wasResized = Math.abs(task.startScale / task.naturalScale - 1.0D) > 1.0E-6D;
+
+        for (AttributeModifierInfo attrInfo : ATTRIBUTE_MODIFIER_INFO) {
+            final AttributeInstance attrInstance = target.getAttribute(attrInfo.attribute());
+            if (attrInstance == null) {
+                continue;
+            }
+            if (restored) {
+                attrInstance.removeModifier(attrInfo.modifierId());
+            } else {
+                attrInstance.addOrReplacePermanentModifier(attrInfo.forRatio(ratio));
+            }
+        }
+        if (restored) {
+            final AttributeInstance scaleAttr = target.getAttribute(Attributes.SCALE);
+            if (scaleAttr != null) {
+                scaleAttr.removeModifier(SHRINK_RAY_SCALE_MODIFIER_ID);
+            }
+            // Only drop the effects the ray applied: an entity that was never resized keeps its own
+            if (wasResized) {
+                target.removeEffect(MobEffects.SATURATION);
+                target.removeEffect(MobEffects.HUNGER);
+            }
+        }
+        target.refreshDimensions();
     }
 }

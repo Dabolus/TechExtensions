@@ -12,7 +12,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.TooltipDisplay;
 
 public class TEItemSettings {
-    public static TooltipDisplay UNBREAKABLE_HIDE =
+    public static final TooltipDisplay UNBREAKABLE_HIDE =
             new TooltipDisplay(false, new LinkedHashSet<>(Set.of(DataComponents.UNBREAKABLE)));
 
     public static Item.Properties item(String name) {

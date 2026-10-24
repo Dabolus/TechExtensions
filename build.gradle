@@ -65,10 +65,10 @@ dependencies {
 	implementation "TechReborn:TechReborn-${project.tech_reborn_version}"
 
 	// We provide LambDynamicLights configuration, even if we don't directly depend on it
-	localRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:4.12.4+26.2"
+	localRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${project.lambdynamiclights_version}"
 
 	// To easily check and debug recipes in-game
-	localRuntime "mezz.jei:jei-${project.minecraft_version}-fabric:30.39.0.232"
+	localRuntime "mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}"
 }
 
 processResources {
@@ -122,7 +122,7 @@ publishing {
 publishMods {
     file = jar.archiveFile
     version = project.mod_version
-    changelog = providers.environmentVariable("CHANGELOG").orElse("No changelog provided")
+    changelog = providers.environmentVariable("CHANGELOG").orElse("").map { it.isBlank() ? "See the commit history for the list of changes." : it }
     type = providers.environmentVariable("RELEASE_CHANNEL").orElse("stable").map { value ->
         switch (value) {
             case "alpha": return ALPHA

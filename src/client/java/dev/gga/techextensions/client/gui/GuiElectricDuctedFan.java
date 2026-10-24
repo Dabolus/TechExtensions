@@ -2,7 +2,6 @@ package dev.gga.techextensions.client.gui;
 
 import dev.gga.techextensions.blockentity.machine.ElectricDuctedFanBlockEntity;
 import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
-import dev.gga.techextensions.config.TechExtensionsConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
@@ -24,8 +23,6 @@ public class GuiElectricDuctedFan extends GuiBase<BuiltScreenHandler> {
         super.extractLabels(drawContext, mouseX, mouseY);
         final Layer layer = Layer.FOREGROUND;
 
-        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
-        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
         long stored = blockEntity.getEnergy();
 
         // Draw the energy bar
@@ -52,13 +49,10 @@ public class GuiElectricDuctedFan extends GuiBase<BuiltScreenHandler> {
             return;
         }
 
-        long usedEnergy = Math.min(stored, maxCost);
-        int fanCount = ElectricDuctedFanBlock.getFanCount(blockEntity.getBlockState());
-        // Calculate power ratio (0.0 to 1.0) based on energy used
-        double powerRatio = (double) (usedEnergy - minCost) / (maxCost - minCost);
-        powerRatio = Math.max(0.0, Math.min(1.0, powerRatio));
-        // Stacked fans increase both reach and strength
-        double fanMultiplier = 1.0 + (fanCount - 1) * 0.52; // 1x, 1.52x, 2.04x, 2.56x
+        // Same formulas as the block entity, so the GUI always matches the actual push behaviour
+        double powerRatio = ElectricDuctedFanBlockEntity.computePowerRatio(stored);
+        double fanMultiplier = ElectricDuctedFanBlockEntity.computeFanMultiplier(
+                ElectricDuctedFanBlock.getFanCount(blockEntity.getBlockState()));
 
         double reach = blockEntity.computeReach(powerRatio, fanMultiplier);
         double pushStrength = blockEntity.computePushStrength(powerRatio, fanMultiplier);

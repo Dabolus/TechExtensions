@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -40,8 +41,6 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
         AOE_3x3,
         SMART, // Vein-mining for ores, tree-capitating for logs/leaves, 3x3 otherwise
     }
-
-    private BlockState lastCheckedBlockState;
 
     public MetaToolItem(String name) {
         super(TEItemSettings.unbreakable(name)
@@ -110,45 +109,26 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     @Override
     public boolean mineBlock(
             ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
-        if (!(entityLiving instanceof Player playerIn)) {
-            tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get());
+        int cost = TechExtensionsConfig.metaToolCost.get();
+        if (!(entityLiving instanceof Player)) {
+            tryUseEnergy(stack, cost);
             return true;
         }
 
         switch (getCurrentMode(stack)) {
-            case INACTIVE -> {
-                tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get());
-            }
-            case AOE_3x3 -> {
-                TEMiningUtils.mineAoe3x3(stack, worldIn, playerIn, pos, entityLiving);
-            }
+            case INACTIVE -> tryUseEnergy(stack, cost);
+            case AOE_3x3 -> TEMiningUtils.mineAoe3x3(stack, worldIn, pos, entityLiving);
             case SMART -> {
-                // Check if we can vein-mine first
-                if (lastCheckedBlockState != null && TEMiningUtils.isValidVeinMineStartBlock(lastCheckedBlockState)) {
-                    List<BlockPos> ores = TEMiningUtils.findVein(worldIn, pos);
-                    ores.remove(pos);
-                    ores.stream()
-                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get()))
-                            .forEach(pos1 -> ToolsUtil.breakBlock(
-                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost.get()));
-                }
-                // Then, check if we can tree-capitate
-                else if (lastCheckedBlockState == null
-                        || TECuttingUtils.isValidTreeCapitateStartBlock(lastCheckedBlockState)) {
-                    TECuttingUtils.FindWoodResult findWoodResult = TECuttingUtils.findWood(worldIn, pos);
-                    List<BlockPos> wood = findWoodResult.wood();
-                    List<BlockPos> leaves = findWoodResult.leaves();
-                    wood.remove(pos);
-                    wood.stream()
-                            .filter(p -> tryUseEnergy(stack, TechExtensionsConfig.metaToolCost.get()))
-                            .forEach(pos1 -> ToolsUtil.breakBlock(
-                                    stack, worldIn, pos1, entityLiving, TechExtensionsConfig.metaToolCost.get()));
-                    leaves.remove(pos);
-                    leaves.forEach(pos1 -> ToolsUtil.breakBlock(stack, worldIn, pos1, entityLiving, 0));
-                }
-                // Otherwise, fallback to AOE 3x3
-                else {
-                    TEMiningUtils.mineAoe3x3(stack, worldIn, playerIn, pos, entityLiving);
+                // blockIn is the state of the block being mined, so it tells us which smart behaviour applies
+                if (TEMiningUtils.isValidVeinMineStartBlock(blockIn)) {
+                    breakAll(stack, worldIn, entityLiving, TEMiningUtils.findVein(worldIn, pos), cost);
+                } else if (TECuttingUtils.isValidTreeCapitateStartBlock(blockIn)) {
+                    TECuttingUtils.FindWoodResult tree = TECuttingUtils.findWood(worldIn, pos);
+                    breakAll(stack, worldIn, entityLiving, tree.wood(), cost);
+                    // Leaves are free to break
+                    breakAll(stack, worldIn, entityLiving, tree.leaves(), 0);
+                } else {
+                    TEMiningUtils.mineAoe3x3(stack, worldIn, pos, entityLiving);
                 }
             }
         }
@@ -156,21 +136,27 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
         return true;
     }
 
+    /** Breaks every position with the tool. {@code ToolsUtil.breakBlock} charges the energy and skips when out. */
+    private static void breakAll(
+            ItemStack stack, Level world, LivingEntity miner, List<BlockPos> positions, int costPerBlock) {
+        for (BlockPos target : positions) {
+            ToolsUtil.breakBlock(stack, world, target, miner, costPerBlock);
+        }
+    }
+
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost.get())
                 && target.level() instanceof ServerLevel serverWorld) {
-            target.hurtServer(serverWorld, serverWorld.damageSources().playerAttack((Player) attacker), 8F);
+            // Mobs can wield the tool too (picked up, or handed over by the Vacuum Gun)
+            DamageSource source = attacker instanceof Player player
+                    ? serverWorld.damageSources().playerAttack(player)
+                    : serverWorld.damageSources().mobAttack(attacker);
+            target.hurtServer(serverWorld, source, 8F);
         }
     }
 
     // Item
-    @Override
-    public boolean canDestroyBlock(ItemStack stack, BlockState state, Level world, BlockPos pos, LivingEntity miner) {
-        lastCheckedBlockState = state;
-        return super.canDestroyBlock(stack, state, world, pos, miner);
-    }
-
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
         final ItemStack stack = player.getItemInHand(interactionHand);

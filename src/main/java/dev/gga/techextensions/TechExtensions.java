@@ -2,8 +2,12 @@ package dev.gga.techextensions;
 
 import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
+import dev.gga.techextensions.entity.BubbleTrapEntity;
 import dev.gga.techextensions.init.TEContent;
+import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
 import dev.gga.techextensions.particle.TEParticleTypes;
+import dev.gga.techextensions.utils.ItemAnimationManager;
+import dev.gga.techextensions.utils.TEMiningUtils;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,5 +27,10 @@ public class TechExtensions implements ModInitializer {
         TEContent.register();
         TEDataComponentTypes.init();
         TEParticleTypes.init();
+        // Server tickers: in-flight animations must keep running even when nobody holds the item anymore
+        ItemAnimationManager.init();
+        ShrinkRayItem.initTicking();
+        TEMiningUtils.init();
+        BubbleTrapEntity.init();
     }
 }

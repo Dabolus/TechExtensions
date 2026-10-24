@@ -69,6 +69,9 @@ import techreborn.init.TRContent;
 /**
  * Contains all vacuum and blow action logic for the `VacuumGunItem`.
  * Separated from the Item class to keep it focused on Item lifecycle.
+ *
+ * Vacuumed items go into the gun right away: the flying item display is purely visual, so nothing is lost
+ * if the gun is moved, the player logs out or the server stops while an animation is in flight.
  */
 final class VacuumGunActions {
 
@@ -98,8 +101,6 @@ final class VacuumGunActions {
 
         BlockHitResult blockHit = world.clip(new ClipContext(
                 eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty()));
-        BlockHitResult fluidHit = world.clip(new ClipContext(
-                eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, CollisionContext.empty()));
 
         Vec3 entityEnd = blockHit.getType() != HitResult.Type.MISS ? blockHit.getLocation() : endPos;
         TEAimingUtils.EntityHit entityHit = TEAimingUtils.traceEntity(
@@ -120,6 +121,10 @@ final class VacuumGunActions {
         if (hitEntity instanceof ItemEntity itemEntity) {
             return vacuumItem(world, player, gunStack, itemEntity, eyePos);
         }
+
+        // Entities take priority, so fluids are only traced when none was hit
+        BlockHitResult fluidHit = world.clip(new ClipContext(
+                eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, CollisionContext.empty()));
         if (fluidHit.getType() != HitResult.Type.MISS && vacuumFluid(world, player, gunStack, fluidHit, eyePos)) {
             return true;
         }
@@ -133,6 +138,8 @@ final class VacuumGunActions {
 
     private static boolean vacuumMob(
             ServerLevel world, Player player, ItemStack gunStack, LivingEntity living, Vec3 eyePos) {
+        Vec3 mobPos = living.position().add(0, living.getBbHeight() / 2, 0);
+
         // First, try to strip equipped items one at a time
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             ItemStack equipped = living.getItemBySlot(slot);
@@ -140,9 +147,8 @@ final class VacuumGunActions {
 
             ItemStack stripped = equipped.copy();
             living.setItemSlot(slot, ItemStack.EMPTY);
+            insertOrDrop(player, gunStack, stripped);
 
-            Vec3 mobPos = living.position().add(0, living.getBbHeight() / 2, 0);
-            List<Vec3> trail = List.of(mobPos, eyePos);
             world.playSound(
                     null,
                     living.blockPosition(),
@@ -150,16 +156,11 @@ final class VacuumGunActions {
                     SoundSource.PLAYERS,
                     1.0F,
                     1.0F);
-            ItemAnimationManager.schedule(world, trail, stripped, () -> {
-                insertOrDrop(player, gunStack, stripped);
-                world.playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 1.0F);
-            });
+            animateToPlayer(world, player, mobPos, eyePos, stripped, 1.0F);
             return true;
         }
 
         // Second, if no equipped items, vacuum the mob itself as a spawn egg (if possible)
-        Vec3 mobPos = living.position().add(0, living.getBbHeight() / 2, 0);
-        List<Vec3> trail = List.of(mobPos, eyePos);
         Optional<Holder<Item>> eggHolder = SpawnEggItem.byId(living.getType());
         if (eggHolder.isPresent()) {
             ItemStack eggStack = new ItemStack(eggHolder.get());
@@ -172,10 +173,8 @@ final class VacuumGunActions {
                 eggStack.set(DataComponents.CUSTOM_NAME, living.getCustomName());
             }
             living.discard();
-            ItemAnimationManager.schedule(world, trail, eggStack, () -> {
-                insertOrDrop(player, gunStack, eggStack);
-                world.playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 0.8F);
-            });
+            insertOrDrop(player, gunStack, eggStack);
+            animateToPlayer(world, player, mobPos, eyePos, eggStack, 0.8F);
         } else {
             Vec3 pullDir = eyePos.subtract(living.position()).normalize().scale(1.5);
             living.push(pullDir.x, pullDir.y, pullDir.z);
@@ -187,19 +186,17 @@ final class VacuumGunActions {
     private static boolean vacuumItem(
             ServerLevel world, Player player, ItemStack gunStack, ItemEntity itemEntity, Vec3 eyePos) {
         Vec3 itemPos = itemEntity.position();
-        List<Vec3> trail = List.of(itemPos, eyePos);
         ItemStack itemStack = itemEntity.getItem().copy();
         itemEntity.discard();
-        ItemAnimationManager.schedule(world, trail, itemStack, () -> {
-            insertOrDrop(player, gunStack, itemStack);
-            world.playSound(
-                    null,
-                    player.blockPosition(),
-                    SoundEvents.ITEM_PICKUP,
-                    SoundSource.PLAYERS,
-                    0.2F,
-                    ((world.getRandom().nextFloat() - world.getRandom().nextFloat()) * 0.7F + 1.0F) * 2.0F);
-        });
+        insertOrDrop(player, gunStack, itemStack);
+
+        float pitch = ((world.getRandom().nextFloat() - world.getRandom().nextFloat()) * 0.7F + 1.0F) * 2.0F;
+        ItemAnimationManager.schedule(
+                world,
+                List.of(itemPos, eyePos),
+                itemStack,
+                () -> world.playSound(
+                        null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, pitch));
         return true;
     }
 
@@ -220,13 +217,14 @@ final class VacuumGunActions {
         if (bucketSlot < 0) return false;
 
         inventory.getItem(bucketSlot).shrink(1);
+        ItemStack leftover = VacuumGunItem.insertIntoInventory(inventory, filledBucket);
         inventory.setChanged();
+        if (!leftover.isEmpty()) {
+            player.drop(leftover, false);
+        }
         world.setBlock(fluidPos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         world.playSound(null, fluidPos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
-        Vec3 fluidCenter = Vec3.atCenterOf(fluidPos);
-        List<Vec3> trail = List.of(fluidCenter, eyePos);
-        ItemStack finalBucket = filledBucket;
-        ItemAnimationManager.schedule(world, trail, filledBucket, () -> insertOrDrop(player, gunStack, finalBucket));
+        ItemAnimationManager.schedule(world, List.of(Vec3.atCenterOf(fluidPos), eyePos), filledBucket, () -> {});
         return true;
     }
 
@@ -236,23 +234,24 @@ final class VacuumGunActions {
         BlockState state = world.getBlockState(target);
         if (state.isAir() || state.is(Blocks.BEDROCK) || state.getDestroySpeed(world, target) < 0) return false;
 
-        Vec3 blockCenter = Vec3.atCenterOf(target);
-        List<Vec3> trail = List.of(blockCenter, eyePos);
         List<ItemStack> drops = Block.getDrops(state, world, target, world.getBlockEntity(target), player, gunStack);
         world.destroyBlock(target, false);
-        ItemStack displayItem = drops.isEmpty() ? ItemStack.EMPTY : drops.getFirst();
-        if (!displayItem.isEmpty()) {
-            ItemAnimationManager.schedule(world, trail, displayItem, () -> {
-                Container inv = VacuumGunItem.getInventory(gunStack);
-                for (ItemStack drop : drops) {
-                    ItemStack leftover = VacuumGunItem.insertIntoInventory(inv, drop);
-                    if (!leftover.isEmpty()) {
-                        player.drop(leftover, false);
-                    }
-                }
-            });
+        insertAllOrDrop(player, gunStack, drops);
+        if (!drops.isEmpty()) {
+            ItemAnimationManager.schedule(world, List.of(Vec3.atCenterOf(target), eyePos), drops.getFirst(), () -> {});
         }
         return true;
+    }
+
+    /** Plays the "flying to the player" visual and the pickup sound on arrival. */
+    private static void animateToPlayer(
+            ServerLevel world, Player player, Vec3 from, Vec3 to, ItemStack displayItem, float pitch) {
+        ItemAnimationManager.schedule(
+                world,
+                List.of(from, to),
+                displayItem,
+                () -> world.playSound(
+                        null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, pitch));
     }
 
     // Blow mode
@@ -312,14 +311,15 @@ final class VacuumGunActions {
         if (item instanceof FlintAndSteelItem) {
             return () -> blowFlintAndSteel(world, player, takenItem, tr);
         }
-        // Pre-resolve entity along the parabolic trajectory before the animation starts
-        // (entity is captured now so it won't be missed if it moves during flight)
+        if (item instanceof BlockItem blockItem) {
+            // Blocks are placed, never handed to an entity, so no entity lookup is needed
+            return () -> blowBlock(world, player, takenItem, tr, blockItem);
+        }
+        // Pre-resolve the entity along the parabolic trajectory before the animation starts
+        // (it is captured now so it won't be missed if it moves during the flight)
         LivingEntity trajectoryTarget = findEntityAlongPath(world, player, tr.path());
         if (item instanceof ShearsItem) {
             return () -> blowShears(world, player, takenItem, tr, trajectoryTarget);
-        }
-        if (item instanceof BlockItem blockItem) {
-            return () -> blowBlock(world, player, takenItem, tr, blockItem);
         }
         if (takenItem.has(DataComponents.EQUIPPABLE)) {
             return () -> blowEquippable(world, player, takenItem, tr, trajectoryTarget);
@@ -599,17 +599,35 @@ final class VacuumGunActions {
     }
 
     /**
-     * Finds the nearest `LivingEntity` along a parabolic trajectory path.
-     * Used by blow actions that target entities (equippable, shears, etc.).
+     * Finds the nearest `LivingEntity` along a parabolic trajectory path (the first one, in flight order,
+     * whose bounding box comes within a block of a path point). Used by blow actions that target entities
+     * (equippable, shears, etc.). One entity query covers the whole path.
      */
     @Nullable
     private static LivingEntity findEntityAlongPath(ServerLevel world, Player player, List<Vec3> path) {
+        if (path.isEmpty()) return null;
+
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        for (Vec3 point : path) {
+            minX = Math.min(minX, point.x);
+            minY = Math.min(minY, point.y);
+            minZ = Math.min(minZ, point.z);
+            maxX = Math.max(maxX, point.x);
+            maxY = Math.max(maxY, point.y);
+            maxZ = Math.max(maxZ, point.z);
+        }
+        AABB pathBounds = new AABB(minX - 1.0, minY - 1.0, minZ - 1.0, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
+        List<LivingEntity> mobs =
+                world.getEntitiesOfClass(LivingEntity.class, pathBounds, e -> e.isAlive() && e != player);
+        if (mobs.isEmpty()) return null;
+
         for (Vec3 point : path) {
             AABB searchBox =
                     new AABB(point.x - 1.0, point.y - 1.0, point.z - 1.0, point.x + 1.0, point.y + 1.0, point.z + 1.0);
-            List<LivingEntity> mobs =
-                    world.getEntitiesOfClass(LivingEntity.class, searchBox, e -> e.isAlive() && e != player);
-            if (!mobs.isEmpty()) return mobs.getFirst();
+            for (LivingEntity mob : mobs) {
+                if (mob.getBoundingBox().intersects(searchBox)) return mob;
+            }
         }
         return null;
     }
@@ -622,10 +640,18 @@ final class VacuumGunActions {
     }
 
     private static void insertOrDrop(Player player, ItemStack gunStack, ItemStack stack) {
+        insertAllOrDrop(player, gunStack, List.of(stack));
+    }
+
+    /** Inserts the stacks into the gun, building its container once; whatever does not fit is dropped. */
+    private static void insertAllOrDrop(Player player, ItemStack gunStack, List<ItemStack> stacks) {
+        if (stacks.isEmpty()) return;
         Container inv = VacuumGunItem.getInventory(gunStack);
-        ItemStack leftover = VacuumGunItem.insertIntoInventory(inv, stack);
-        if (!leftover.isEmpty()) {
-            player.drop(leftover, false);
+        for (ItemStack stack : stacks) {
+            ItemStack leftover = VacuumGunItem.insertIntoInventory(inv, stack);
+            if (!leftover.isEmpty()) {
+                player.drop(leftover, false);
+            }
         }
     }
 

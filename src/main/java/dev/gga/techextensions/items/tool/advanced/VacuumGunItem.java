@@ -4,7 +4,6 @@ import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.menu.VacuumGunMenu;
-import dev.gga.techextensions.utils.ItemAnimationManager;
 import dev.gga.techextensions.utils.TECacheUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
@@ -18,15 +17,12 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
 import reborncore.api.blockentity.IUpgrade;
 import reborncore.api.blockentity.IUpgradeable;
 import reborncore.common.powerSystem.RcEnergyItem;
@@ -83,12 +79,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         }
     }
 
-    // Tick & item overrides
-
-    @Override
-    public void inventoryTick(ItemStack stack, ServerLevel world, Entity entity, @Nullable EquipmentSlot slot) {
-        ItemAnimationManager.tick(world);
-    }
+    // Item overrides
 
     @Override
     public boolean allowComponentsUpdateAnimation(
@@ -231,7 +222,8 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
      */
     public static ItemStack insertIntoInventory(Container inventory, ItemStack stack) {
         ItemStack remaining = stack.copy();
-        // First pass: merge into existing matching stacks
+        // First pass: merge into existing matching stacks, saving the container once at the end
+        boolean merged = false;
         for (int i = 0; i < INVENTORY_SIZE && !remaining.isEmpty(); i++) {
             ItemStack slot = inventory.getItem(i);
             if (!slot.isEmpty() && ItemStack.isSameItemSameComponents(slot, remaining)) {
@@ -240,9 +232,12 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 if (toAdd > 0) {
                     slot.grow(toAdd);
                     remaining.shrink(toAdd);
-                    inventory.setChanged();
+                    merged = true;
                 }
             }
+        }
+        if (merged) {
+            inventory.setChanged();
         }
         // Second pass: place into empty slots
         for (int i = 0; i < INVENTORY_SIZE && !remaining.isEmpty(); i++) {
@@ -289,12 +284,12 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 VacuumGunItem::updateCache);
     }
 
-    private static int getEnergyCapacityFromCache(ItemStack stack) {
+    private static long getEnergyCapacityFromCache(ItemStack stack) {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:energy_capacity",
-                TechExtensionsConfig.vacuumGunCharge.get(),
-                tag -> tag.getInt("cache:energy_capacity"),
+                (long) TechExtensionsConfig.vacuumGunCharge.get(),
+                tag -> tag.getLong("cache:energy_capacity"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
     }

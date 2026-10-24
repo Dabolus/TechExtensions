@@ -2,13 +2,13 @@ package dev.gga.techextensions.items.tool.advanced;
 
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.utils.TECleaningUtils;
+import dev.gga.techextensions.utils.TENbtUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -24,6 +24,8 @@ import net.minecraft.world.level.Level;
 public class SoapItem extends Item {
     /** Ticks of continuous use required before the block is cleaned. */
     private static final int CLEAN_THRESHOLD_TICKS = 20;
+
+    private static final String TARGET_POS_KEY = "soap_target_pos";
 
     public SoapItem(String name) {
         super(TEItemSettings.item(name).durability(64));
@@ -42,9 +44,7 @@ public class SoapItem extends Item {
 
         // Store target block pos in item NBT so onUseTick knows where to act
         ItemStack stack = context.getItemInHand();
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.putLong("soap_target_pos", pos.asLong());
-        });
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.putLong(TARGET_POS_KEY, pos.asLong()));
 
         if (context.getPlayer() != null) {
             context.getPlayer().startUsingItem(context.getHand());
@@ -93,8 +93,8 @@ public class SoapItem extends Item {
                 if (TECleaningUtils.cleanBlock(level, targetPos)) {
                     level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
 
-                    // Damage the soap
-                    stack.hurtAndBreak(1, entity, EquipmentSlot.MAINHAND);
+                    // Damage the soap in whichever hand is using it
+                    stack.hurtAndBreak(1, entity, entity.getUsedItemHand());
                 }
             }
             // Stop using
@@ -112,17 +112,16 @@ public class SoapItem extends Item {
     // --- NBT helpers ---
 
     private static BlockPos getTargetPos(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = customData.copyTag();
-        if (tag.contains("soap_target_pos")) {
-            return BlockPos.of(tag.getLong("soap_target_pos").orElse(0L));
+        CompoundTag tag = TENbtUtils.view(stack);
+        if (tag.contains(TARGET_POS_KEY)) {
+            return BlockPos.of(tag.getLongOr(TARGET_POS_KEY, 0L));
         }
         return null;
     }
 
     private static void clearTargetPos(ItemStack stack) {
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-            tag.remove("soap_target_pos");
-        });
+        if (TENbtUtils.view(stack).contains(TARGET_POS_KEY)) {
+            CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.remove(TARGET_POS_KEY));
+        }
     }
 }

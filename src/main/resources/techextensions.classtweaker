@@ -2,3 +2,5 @@ classTweaker	v2	official
 
 # Lets the item GUIs treat the upgrade slots drawn outside the screen bounds as "inside" (hasClickedOutside)
 accessible method net/minecraft/client/gui/screens/inventory/AbstractContainerScreen getHoveredSlot (DD)Lnet/minecraft/world/inventory/Slot;
+# Lets TENbtUtils read item custom data without copying the whole tag on every access
+accessible field net/minecraft/world/item/component/CustomData tag Lnet/minecraft/nbt/CompoundTag;
