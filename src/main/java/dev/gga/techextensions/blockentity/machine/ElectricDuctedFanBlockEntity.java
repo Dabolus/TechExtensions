@@ -153,7 +153,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
             // Add to entity's current motion
             Vec3 currentMotion = entity.getDeltaMovement();
             entity.setDeltaMovement(currentMotion.add(pushVelocity));
-            entity.hurtMarked = true; // Force motion sync to client
+            entity.syncVelocity = true; // Force motion sync to client
 
             // Reset fall distance for upward fans to prevent fall damage
             if (facing == Direction.UP) {

@@ -126,7 +126,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
         // Set the new velocity and mark it as changed to sync with the client
         playerEntity.setDeltaMovement(vx, vy, vz);
-        playerEntity.hurtMarked = true;
+        playerEntity.syncVelocity = true;
 
         // Reduce fall damage by resetting fall distance when jetpack is active
         if (!playerEntity.onGround()) {

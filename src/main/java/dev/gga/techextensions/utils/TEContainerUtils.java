@@ -19,6 +19,6 @@ public final class TEContainerUtils {
         if (slot == 0) {
             return contents.copyOne();
         }
-        return contents.allItemsCopyStream().skip(slot).findFirst().orElse(ItemStack.EMPTY);
+        return contents.itemCopies().skip(slot).findFirst().orElse(ItemStack.EMPTY);
     }
 }

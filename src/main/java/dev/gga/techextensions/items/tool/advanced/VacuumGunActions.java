@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Prediction;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
@@ -220,7 +221,7 @@ final class VacuumGunActions {
         ItemStack leftover = VacuumGunItem.insertIntoInventory(inventory, filledBucket);
         inventory.setChanged();
         if (!leftover.isEmpty()) {
-            player.drop(leftover, false);
+            player.drop(leftover, false, Prediction.SERVER_ONLY);
         }
         world.setBlock(fluidPos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         world.playSound(null, fluidPos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
@@ -650,7 +651,7 @@ final class VacuumGunActions {
         for (ItemStack stack : stacks) {
             ItemStack leftover = VacuumGunItem.insertIntoInventory(inv, stack);
             if (!leftover.isEmpty()) {
-                player.drop(leftover, false);
+                player.drop(leftover, false, Prediction.SERVER_ONLY);
             }
         }
     }

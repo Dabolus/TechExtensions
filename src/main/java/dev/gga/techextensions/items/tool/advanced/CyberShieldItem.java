@@ -287,7 +287,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
         if (directEntity instanceof Projectile projectile) {
             Entity attacker = source.getEntity();
             if (attacker != null) {
-                projectile.deflect(ProjectileDeflection.REVERSE, defender, EntityReference.of(defender), true);
+                projectile.deflect(ProjectileDeflection.REVERSE, defender, EntityReference.of(defender), true, 1.0);
                 projectile.setDeltaMovement(
                         projectile.getDeltaMovement().normalize().scale(1.5));
             }

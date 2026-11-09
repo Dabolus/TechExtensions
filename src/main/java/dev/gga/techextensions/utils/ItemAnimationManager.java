@@ -120,7 +120,7 @@ public final class ItemAnimationManager {
             this.display = new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world);
             this.display.setItemStack(displayItem.copy());
             this.display.setNoGravity(true);
-            this.display.setInvulnerable(true);
+            this.display.setPermanentlyInvulnerable(true);
             this.display.setPos(start.x, start.y, start.z);
             this.display.addTag(DISPLAY_TAG);
         }

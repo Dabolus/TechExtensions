@@ -399,7 +399,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 // Clean the block once the threshold is met
                 if (progress >= TechExtensionsConfig.bubbleGunCleanDuration.get()) {
                     if (TECleaningUtils.cleanBlock(level, hitPos)) {
-                        level.playSound(null, hitPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
+                        level.playSound(null, hitPos, SoundEvents.AXE_SCRAPE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
                         soapDamage = 1;
                     }
                     // Reset progress after cleaning

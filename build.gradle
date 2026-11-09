@@ -135,7 +135,7 @@ publishMods {
     curseforge {
         projectId = "1430902"
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-        minecraftVersions.add("26.2")
+        minecraftVersions.add("26.3")
         client = true
         server = true
         requires("fabric-api", "techreborn")
@@ -144,7 +144,7 @@ publishMods {
     modrinth {
         projectId = "So3gzRK5"
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-        minecraftVersions.add("26.2")
+        minecraftVersions.add("26.3")
         requires("fabric-api", "techreborn")
         optional("jei", "lambdynamiclights")
     }

@@ -74,7 +74,7 @@ public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, B
         // the default overload triggering a white outline silhouette.
         // Translucency comes from the texture's own alpha channel.
         collector.submitModel(
-                this.model, state, poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY, 0, null);
+                this.model, state, poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
 
         poseStack.popPose();
 

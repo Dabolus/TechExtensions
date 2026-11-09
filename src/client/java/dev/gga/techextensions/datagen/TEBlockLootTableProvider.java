@@ -2,6 +2,7 @@ package dev.gga.techextensions.datagen;
 
 import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
 import dev.gga.techextensions.init.TEContent;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider;
@@ -12,8 +13,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
-import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.predicates.MatchBlock;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 
 public class TEBlockLootTableProvider extends FabricBlockLootSubProvider {
     public TEBlockLootTableProvider(
@@ -28,28 +29,18 @@ public class TEBlockLootTableProvider extends FabricBlockLootSubProvider {
                 TEContent.ELECTRIC_DUCTED_FAN,
                 LootTable.lootTable()
                         .withPool(LootPool.lootPool()
-                                .setRolls(ConstantValue.exactly(1.0f))
+                                .setRolls(ContextIntProviders.exactly(1))
                                 .when(ExplosionCondition.survivesExplosion())
                                 .add(LootItem.lootTableItem(TEContent.ELECTRIC_DUCTED_FAN)
-                                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(1.0f))
-                                                .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(
-                                                                TEContent.ELECTRIC_DUCTED_FAN)
-                                                        .setProperties(StatePropertiesPredicate.Builder.properties()
-                                                                .hasProperty(ElectricDuctedFanBlock.FANS, 1))))
-                                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(2.0f))
-                                                .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(
-                                                                TEContent.ELECTRIC_DUCTED_FAN)
-                                                        .setProperties(StatePropertiesPredicate.Builder.properties()
-                                                                .hasProperty(ElectricDuctedFanBlock.FANS, 2))))
-                                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(3.0f))
-                                                .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(
-                                                                TEContent.ELECTRIC_DUCTED_FAN)
-                                                        .setProperties(StatePropertiesPredicate.Builder.properties()
-                                                                .hasProperty(ElectricDuctedFanBlock.FANS, 3))))
-                                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(4.0f))
-                                                .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(
-                                                                TEContent.ELECTRIC_DUCTED_FAN)
-                                                        .setProperties(StatePropertiesPredicate.Builder.properties()
-                                                                .hasProperty(ElectricDuctedFanBlock.FANS, 4)))))));
+                                        .apply(
+                                                List.of(1, 2, 3, 4),
+                                                fans -> SetItemCountFunction.setCount(ContextIntProviders.exactly(fans))
+                                                        .when(MatchBlock.blockMatches(
+                                                                blocks,
+                                                                TEContent.ELECTRIC_DUCTED_FAN,
+                                                                StatePropertiesPredicate.Builder.properties()
+                                                                        .hasProperty(
+                                                                                ElectricDuctedFanBlock.FANS,
+                                                                                fans)))))));
     }
 }

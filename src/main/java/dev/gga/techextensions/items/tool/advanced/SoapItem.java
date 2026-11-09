@@ -91,7 +91,7 @@ public class SoapItem extends Item {
             BlockPos targetPos = getTargetPos(stack);
             if (targetPos != null) {
                 if (TECleaningUtils.cleanBlock(level, targetPos)) {
-                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
 
                     // Damage the soap in whichever hand is using it
                     stack.hurtAndBreak(1, entity, entity.getUsedItemHand());
