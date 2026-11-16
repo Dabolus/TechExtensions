@@ -13,8 +13,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
-import net.minecraft.world.level.storage.loot.predicates.MatchBlock;
-import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
+import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 public class TEBlockLootTableProvider extends FabricBlockLootSubProvider {
     public TEBlockLootTableProvider(
@@ -29,18 +29,22 @@ public class TEBlockLootTableProvider extends FabricBlockLootSubProvider {
                 TEContent.ELECTRIC_DUCTED_FAN,
                 LootTable.lootTable()
                         .withPool(LootPool.lootPool()
-                                .setRolls(ContextIntProviders.exactly(1))
+                                .setRolls(ConstantValue.exactly(1.0f))
                                 .when(ExplosionCondition.survivesExplosion())
                                 .add(LootItem.lootTableItem(TEContent.ELECTRIC_DUCTED_FAN)
                                         .apply(
                                                 List.of(1, 2, 3, 4),
-                                                fans -> SetItemCountFunction.setCount(ContextIntProviders.exactly(fans))
-                                                        .when(MatchBlock.blockMatches(
-                                                                blocks,
-                                                                TEContent.ELECTRIC_DUCTED_FAN,
-                                                                StatePropertiesPredicate.Builder.properties()
-                                                                        .hasProperty(
-                                                                                ElectricDuctedFanBlock.FANS,
-                                                                                fans)))))));
+                                                fans -> SetItemCountFunction.setCount(ConstantValue.exactly(fans))
+                                                        .when(
+                                                                LootItemBlockStatePropertyCondition
+                                                                        .hasBlockStateProperties(
+                                                                                TEContent.ELECTRIC_DUCTED_FAN)
+                                                                        .setProperties(
+                                                                                StatePropertiesPredicate.Builder
+                                                                                        .properties()
+                                                                                        .hasProperty(
+                                                                                                ElectricDuctedFanBlock
+                                                                                                        .FANS,
+                                                                                                fans)))))));
     }
 }

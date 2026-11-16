@@ -34,8 +34,8 @@
 		"minecraft": "${minecraftDependency}",
 		"java": ">=25",
 		"fabric-api": "*",
-		"techreborn": ">=6.2.1",
-		"reborncore": ">=6.2.1"
+		"techreborn": ">=6.1.0",
+		"reborncore": ">=6.1.0"
 	},
 	"accessWidener": "techextensions.classtweaker"
 }
