@@ -8,7 +8,7 @@ plugins {
 	id 'me.modmuss50.mod-publish-plugin' version "${publish_plugin_version}"
 }
 
-version = project.mod_version
+version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 // Spotless + Palantir Java Format to keep styling consistent
@@ -73,9 +73,10 @@ dependencies {
 
 processResources {
 	inputs.property "version", project.version
+	inputs.property "minecraftDependency", project.minecraft_dependency
 
 	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
+		expand "version": inputs.properties.version, "minecraftDependency": inputs.properties.minecraftDependency
 	}
 }
 
@@ -119,9 +120,13 @@ publishing {
 	}
 }
 
+// The GitHub release (one per mod version, with the jars of every supported Minecraft version)
+// is created by the release workflow, so only CurseForge and Modrinth are configured here.
+def publishMinecraftVersions = project.publish_minecraft_versions.split(",")*.trim()
+
 publishMods {
     file = jar.archiveFile
-    version = project.mod_version
+    version = project.version.toString()
     changelog = providers.environmentVariable("CHANGELOG").orElse("").map { it.isBlank() ? "See the commit history for the list of changes." : it }
     type = providers.environmentVariable("RELEASE_CHANNEL").orElse("stable").map { value ->
         switch (value) {
@@ -135,7 +140,7 @@ publishMods {
     curseforge {
         projectId = "1430902"
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-        minecraftVersions.add("26.3")
+        minecraftVersions.addAll(publishMinecraftVersions)
         client = true
         server = true
         requires("fabric-api", "techreborn")
@@ -144,13 +149,8 @@ publishMods {
     modrinth {
         projectId = "So3gzRK5"
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-        minecraftVersions.add("26.3")
+        minecraftVersions.addAll(publishMinecraftVersions)
         requires("fabric-api", "techreborn")
         optional("jei", "lambdynamiclights")
-    }
-    github {
-        repository = "Dabolus/TechExtensions"
-        accessToken = providers.environmentVariable("GITHUB_TOKEN")
-        commitish = "main"
     }
 }

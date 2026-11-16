@@ -1,3 +1,6 @@
+# Releases the current mod version for every supported Minecraft version in parallel.
+# Each supported Minecraft version lives on its own branch (named after the version):
+# keep the matrix below in sync when adding or dropping a version.
 name: release
 on:
   workflow_dispatch:
@@ -13,20 +16,17 @@ on:
         default: stable
 
 jobs:
-  release:
+  prepare:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+    outputs:
+      mod_version: ${{ steps.version.outputs.mod_version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
     steps:
       - name: checkout repository
         uses: actions/checkout@v7
-      - name: setup jdk
-        uses: actions/setup-java@v6
-        with:
-          java-version: "25"
-          distribution: "microsoft"
-      - name: setup gradle
-        uses: gradle/actions/setup-gradle@v6
+      - name: read mod version
+        id: version
+        run: echo "mod_version=$(sed -n 's/^mod_version=//p' gradle.properties)" >> "$GITHUB_OUTPUT"
       - name: changelog
         uses: FabricMC/fabric-action-scripts@v3
         id: changelog
@@ -34,15 +34,102 @@ jobs:
         with:
           context: changelog
           workflow_id: release.yml
+
+  # Build every branch before publishing anything, so a broken branch can't cause a partial release
+  build:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix: &versions
+        include:
+          - { minecraft: "26.3", java: "25" }
+          - { minecraft: "26.2", java: "25" }
+          - { minecraft: "26.1.2", java: "25" }
+          - { minecraft: "1.21.10", java: "21" }
+          - { minecraft: "1.21.4", java: "21" }
+          - { minecraft: "1.21.1", java: "21" }
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.minecraft }}
+      - name: check mod version
+        run: |
+          branch_version="$(sed -n 's/^mod_version=//p' gradle.properties)"
+          if [ "$branch_version" != "${{ needs.prepare.outputs.mod_version }}" ]; then
+            echo "::error::Branch ${{ matrix.minecraft }} has mod_version=$branch_version, expected ${{ needs.prepare.outputs.mod_version }}"
+            exit 1
+          fi
+      - name: setup jdk
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: "microsoft"
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v6
       - name: run datagen
         run: ./gradlew runDatagen
       - name: build
         run: ./gradlew build
+      - name: capture jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: jar-${{ matrix.minecraft }}
+          path: build/libs/techextensions-${{ needs.prepare.outputs.mod_version }}+${{ matrix.minecraft }}.jar
+          if-no-files-found: error
+
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix: *versions
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.minecraft }}
+      - name: setup jdk
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: "microsoft"
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: run datagen
+        run: ./gradlew runDatagen
       - name: publish
-        run: ./gradlew publishMods
+        run: ./gradlew build publishCurseforge publishModrinth
         env:
           RELEASE_CHANNEL: ${{ github.event.inputs.channel }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+          CHANGELOG: ${{ needs.prepare.outputs.changelog }}
+
+  github-release:
+    needs: [prepare, build, publish]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: download jars
+        uses: actions/download-artifact@v8
+        with:
+          pattern: jar-*
+          path: jars
+          merge-multiple: true
+      - name: create release
+        run: |
+          notes="${CHANGELOG:-See the commit history for the list of changes.}"
+          prerelease=""
+          if [ "$CHANNEL" != "stable" ]; then prerelease="--prerelease"; fi
+          gh release create "$VERSION" jars/*.jar \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --notes "$notes" \
+            $prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.mod_version }}
+          CHANNEL: ${{ github.event.inputs.channel }}
+          CHANGELOG: ${{ needs.prepare.outputs.changelog }}
