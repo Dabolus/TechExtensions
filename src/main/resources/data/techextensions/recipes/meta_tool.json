@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " OD",
+    " CE",
+    "S  "
+  ],
+  "key": {
+    "D": {
+      "item": "techreborn:industrial_drill"
+    },
+    "C": {
+      "item": "techreborn:industrial_chainsaw"
+    },
+    "S": {
+      "item": "techreborn:nanosaber"
+    },
+    "O": {
+      "item": "techreborn:omni_tool"
+    },
+    "E": {
+      "item": "techreborn:energy_flow_chip"
+    }
+  },
+  "result": {
+    "item": "techextensions:meta_tool"
+  }
+}

@@ -6,6 +6,7 @@ import dev.gga.techextensions.init.TEBlockEntities;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEInitUtils;
 import dev.gga.techextensions.init.TEItemSettings;
+import dev.gga.techextensions.items.TEEnergyItem;
 import dev.gga.techextensions.items.armor.ElectricJetpackItem;
 import dev.gga.techextensions.items.tool.advanced.BubbleGunItem;
 import dev.gga.techextensions.items.tool.advanced.CyberShieldItem;
@@ -20,9 +21,7 @@ import dev.gga.techextensions.menu.VacuumGunMenu;
 import java.util.HashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.flag.FeatureFlags;
@@ -33,7 +32,7 @@ import net.minecraft.world.level.block.Block;
 import org.apache.commons.lang3.Validate;
 
 public class ModRegistry {
-    private static final HashMap<Object, Identifier> objIdentMap = new HashMap<>();
+    private static final HashMap<Object, ResourceLocation> objIdentMap = new HashMap<>();
 
     public static void register() {
         registerBlocks();
@@ -43,11 +42,11 @@ public class ModRegistry {
         registerEntityTypes();
     }
 
-    public static void registerMenu(MenuType<?> menu, Identifier name) {
+    public static void registerMenu(MenuType<?> menu, ResourceLocation name) {
         Registry.register(BuiltInRegistries.MENU, name, menu);
     }
 
-    public static void registerBlock(Block block, Identifier name) {
+    public static void registerBlock(Block block, ResourceLocation name) {
         Registry.register(BuiltInRegistries.BLOCK, name, block);
     }
 
@@ -56,7 +55,7 @@ public class ModRegistry {
         registerBlock(block, objIdentMap.get(block));
     }
 
-    public static void registerItem(Item item, Identifier name) {
+    public static void registerItem(Item item, ResourceLocation name) {
         Registry.register(BuiltInRegistries.ITEM, name, item);
     }
 
@@ -91,6 +90,9 @@ public class ModRegistry {
                         TEInitUtils.setup(new ResonanceScannerItem("resonance_scanner"), "resonance_scanner"));
         registerItem(TEContent.VACUUM_GUN = TEInitUtils.setup(new VacuumGunItem("vacuum_gun"), "vacuum_gun"));
 
+        // Their capacity grows with the Energy Storage upgrades, which 1.20.1 RebornCore can't tell
+        TEEnergyItem.registerEnergyStorage(TEContent.BUBBLE_GUN, TEContent.RESONANCE_SCANNER, TEContent.VACUUM_GUN);
+
         TechExtensions.LOGGER.debug("TechExtension's Items Loaded");
     }
 
@@ -101,18 +103,17 @@ public class ModRegistry {
     private static void registerMenus() {
         registerMenu(
                 TEContent.BUBBLE_GUN_MENU = new MenuType<>(BubbleGunMenu::new, FeatureFlags.VANILLA_SET),
-                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_gun"));
+                new ResourceLocation(TechExtensions.MOD_ID, "bubble_gun"));
         registerMenu(
                 TEContent.RESONANCE_SCANNER_MENU = new MenuType<>(ResonanceScannerMenu::new, FeatureFlags.VANILLA_SET),
-                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "resonance_scanner"));
+                new ResourceLocation(TechExtensions.MOD_ID, "resonance_scanner"));
         registerMenu(
                 TEContent.VACUUM_GUN_MENU = new MenuType<>(VacuumGunMenu::new, FeatureFlags.VANILLA_SET),
-                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "vacuum_gun"));
+                new ResourceLocation(TechExtensions.MOD_ID, "vacuum_gun"));
     }
 
     private static void registerEntityTypes() {
-        Identifier id = Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_trap");
-        ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
+        ResourceLocation id = new ResourceLocation(TechExtensions.MOD_ID, "bubble_trap");
         TEContent.BUBBLE_TRAP_ENTITY = Registry.register(
                 BuiltInRegistries.ENTITY_TYPE,
                 id,
@@ -120,10 +121,10 @@ public class ModRegistry {
                         .sized(1.0F, 1.0F)
                         .clientTrackingRange(10)
                         .updateInterval(1)
-                        .build(key));
+                        .build(id.toString()));
     }
 
-    public static void registerIdent(Object object, Identifier identifier) {
+    public static void registerIdent(Object object, ResourceLocation identifier) {
         objIdentMap.put(object, identifier);
     }
 }

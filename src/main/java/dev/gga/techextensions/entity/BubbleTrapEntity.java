@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -23,8 +23,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,7 +57,7 @@ public class BubbleTrapEntity extends Entity {
     }
 
     public static boolean isTrapped(Entity entity) {
-        return entity.entityTags().contains(TRAPPED_TAG);
+        return entity.getTags().contains(TRAPPED_TAG);
     }
 
     /** Entities that loaded with the trapped tag, checked a tick later once their bubble had a chance to load too. */
@@ -104,8 +102,8 @@ public class BubbleTrapEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(DATA_TRAPPED_ID, -1);
+    protected void defineSynchedData() {
+        this.entityData.define(DATA_TRAPPED_ID, -1);
     }
 
     /**
@@ -162,7 +160,7 @@ public class BubbleTrapEntity extends Entity {
             return;
         }
 
-        double floatSpeed = TechExtensionsConfig.bubbleGunBubbleFloatSpeed.get();
+        double floatSpeed = TechExtensionsConfig.bubbleGunBubbleFloatSpeed;
         if (trapped instanceof ServerPlayer player) {
             // Players are client-authoritative, so levitation moves them and the bubble follows
             this.setPos(player.getX(), player.getY(), player.getZ());
@@ -206,17 +204,15 @@ public class BubbleTrapEntity extends Entity {
         }
 
         // Check if float duration is exceeded
-        if (floatTicks >= TechExtensionsConfig.bubbleGunBubbleFloatDuration.get()) {
+        if (floatTicks >= TechExtensionsConfig.bubbleGunBubbleFloatDuration) {
             pop();
         }
     }
 
     private void applyLevitation(ServerPlayer player) {
-        int remaining = Math.max(1, TechExtensionsConfig.bubbleGunBubbleFloatDuration.get() - floatTicks);
+        int remaining = Math.max(1, TechExtensionsConfig.bubbleGunBubbleFloatDuration - floatTicks);
         int amplifier = Math.max(
-                0,
-                (int) Math.round(TechExtensionsConfig.bubbleGunBubbleFloatSpeed.get() / LEVITATION_SPEED_PER_LEVEL)
-                        - 1);
+                0, (int) Math.round(TechExtensionsConfig.bubbleGunBubbleFloatSpeed / LEVITATION_SPEED_PER_LEVEL) - 1);
         player.addEffect(new MobEffectInstance(MobEffects.LEVITATION, remaining, amplifier, false, false, false));
         appliedLevitation = true;
     }
@@ -285,16 +281,16 @@ public class BubbleTrapEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
-        this.floatTicks = input.getIntOr("FloatTicks", 0);
-        this.trappedUuid = input.read("Trapped", UUIDUtil.CODEC).orElse(null);
+    protected void readAdditionalSaveData(CompoundTag tag) {
+        this.floatTicks = tag.getInt("FloatTicks");
+        this.trappedUuid = tag.hasUUID("Trapped") ? tag.getUUID("Trapped") : null;
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
-        output.putInt("FloatTicks", this.floatTicks);
+    protected void addAdditionalSaveData(CompoundTag tag) {
+        tag.putInt("FloatTicks", this.floatTicks);
         if (this.trappedUuid != null) {
-            output.store("Trapped", UUIDUtil.CODEC, this.trappedUuid);
+            tag.putUUID("Trapped", this.trappedUuid);
         }
     }
 
@@ -309,7 +305,7 @@ public class BubbleTrapEntity extends Entity {
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    public boolean hurt(DamageSource source, float amount) {
         return false;
     }
 }

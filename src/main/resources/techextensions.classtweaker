@@ -1,6 +1,8 @@
-classTweaker	v2	official
+classTweaker	v2	named
 
 # Lets the item GUIs treat the upgrade slots drawn outside the screen bounds as "inside" (hasClickedOutside)
-accessible method net/minecraft/client/gui/screens/inventory/AbstractContainerScreen getHoveredSlot (DD)Lnet/minecraft/world/inventory/Slot;
-# Lets TENbtUtils read item custom data without copying the whole tag on every access
-accessible field net/minecraft/world/item/component/CustomData tag Lnet/minecraft/nbt/CompoundTag;
+accessible method net/minecraft/client/gui/screens/inventory/AbstractContainerScreen findSlot (DD)Lnet/minecraft/world/inventory/Slot;
+# Lets the Vacuum Gun animations set the item shown by their item displays (private in 1.20.1)
+accessible method net/minecraft/world/entity/Display$ItemDisplay setItemStack (Lnet/minecraft/world/item/ItemStack;)V
+# Lets the Cyber Shield keep the potion of the arrows it reflects
+accessible method net/minecraft/world/entity/projectile/AbstractArrow getPickupItem ()Lnet/minecraft/world/item/ItemStack;

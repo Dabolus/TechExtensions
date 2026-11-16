@@ -2,59 +2,98 @@ package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
 import java.util.EnumMap;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import java.util.function.Supplier;
+import net.minecraft.Util;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.TagKey;
-import net.minecraft.util.Util;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.equipment.ArmorMaterial;
-import net.minecraft.world.item.equipment.ArmorType;
-import net.minecraft.world.item.equipment.EquipmentAsset;
-import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.crafting.Ingredient;
 
 public class TEArmorMaterials {
-    private static final TagKey<Item> EMPTY =
-            TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "empty"));
+    /** Durability multiplier, applied per armor type through {@link #getDurability(ArmorItem.Type, int)}. */
+    public static final int ELECTRIC_JETPACK_DURABILITY = 33;
+
+    /** Durability of each armor type per multiplier point, as in vanilla materials. */
+    private static final EnumMap<ArmorItem.Type, Integer> UNIT_DURABILITY =
+            Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
+                map.put(ArmorItem.Type.BOOTS, 13);
+                map.put(ArmorItem.Type.LEGGINGS, 15);
+                map.put(ArmorItem.Type.CHESTPLATE, 16);
+                map.put(ArmorItem.Type.HELMET, 11);
+            });
 
     public static final ArmorMaterial ELECTRIC_JETPACK = register(
             "electric_jetpack",
-            Util.make(new EnumMap<>(ArmorType.class), map -> {
-                map.put(ArmorType.BOOTS, 0);
-                map.put(ArmorType.LEGGINGS, 0);
-                map.put(ArmorType.CHESTPLATE, 5);
-                map.put(ArmorType.HELMET, 0);
-                map.put(ArmorType.BODY, 0);
+            ELECTRIC_JETPACK_DURABILITY,
+            Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
+                map.put(ArmorItem.Type.BOOTS, 0);
+                map.put(ArmorItem.Type.LEGGINGS, 0);
+                map.put(ArmorItem.Type.CHESTPLATE, 5);
+                map.put(ArmorItem.Type.HELMET, 0);
             }),
             10,
             SoundEvents.ARMOR_EQUIP_TURTLE,
             0.0f,
             0.0f,
-            33,
-            EMPTY);
+            () -> Ingredient.EMPTY);
+
+    public static int getDurability(ArmorItem.Type type, int multiplier) {
+        return UNIT_DURABILITY.get(type) * multiplier;
+    }
 
     private static ArmorMaterial register(
             String id,
-            EnumMap<ArmorType, Integer> defense,
+            int durability,
+            EnumMap<ArmorItem.Type, Integer> defense,
             int enchantability,
-            Holder<SoundEvent> equipSound,
+            SoundEvent equipSound,
             float toughness,
             float knockbackResistance,
-            int durability,
-            TagKey<Item> repairIngredient) {
-        ResourceKey<EquipmentAsset> asset =
-                ResourceKey.create(EquipmentAssets.ROOT_ID, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, id));
-        return new ArmorMaterial(
-                durability,
-                defense,
-                enchantability,
-                equipSound,
-                toughness,
-                knockbackResistance,
-                repairIngredient,
-                asset);
+            Supplier<Ingredient> repairIngredient) {
+        // A namespaced name resolves to <namespace>:textures/models/armor/<path>_layer_1.png (Fabric API)
+        String name = new ResourceLocation(TechExtensions.MOD_ID, id).toString();
+        return new ArmorMaterial() {
+            @Override
+            public int getDurabilityForType(ArmorItem.Type type) {
+                return getDurability(type, durability);
+            }
+
+            @Override
+            public int getDefenseForType(ArmorItem.Type type) {
+                return defense.get(type);
+            }
+
+            @Override
+            public int getEnchantmentValue() {
+                return enchantability;
+            }
+
+            @Override
+            public SoundEvent getEquipSound() {
+                return equipSound;
+            }
+
+            @Override
+            public Ingredient getRepairIngredient() {
+                return repairIngredient.get();
+            }
+
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public float getToughness() {
+                return toughness;
+            }
+
+            @Override
+            public float getKnockbackResistance() {
+                return knockbackResistance;
+            }
+        };
     }
 }

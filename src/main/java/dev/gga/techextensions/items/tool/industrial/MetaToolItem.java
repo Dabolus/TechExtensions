@@ -1,10 +1,13 @@
 package dev.gga.techextensions.items.tool.industrial;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.init.TEToolMaterials;
+import dev.gga.techextensions.items.TEEnergyItem;
 import dev.gga.techextensions.utils.TECuttingUtils;
 import dev.gga.techextensions.utils.TEItemsUtils;
 import dev.gga.techextensions.utils.TEMiningUtils;
@@ -12,56 +15,91 @@ import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.enchantment.EnchantmentCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import reborncore.api.IToolHandler;
-import reborncore.common.powerSystem.RcEnergyItem;
 import reborncore.common.powerSystem.RcEnergyTier;
 import reborncore.common.util.ItemUtils;
-import techreborn.utils.TRItemUtils;
 import techreborn.utils.ToolsUtil;
 
-public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
+public class MetaToolItem extends Item implements TEEnergyItem, IToolHandler {
     public enum MetaToolMode {
         INACTIVE,
         AOE_3x3,
         SMART, // Vein-mining for ores, tree-capitating for logs/leaves, 3x3 otherwise
     }
 
+    private final Multimap<Attribute, AttributeModifier> attributeModifiers;
+
     public MetaToolItem(String name) {
-        super(TEItemSettings.unbreakable(name)
-                .tool(TEToolMaterials.META_TOOL, TEContent.BlockTags.META_TOOL_MINEABLE, 3f, 1f, 0.0F));
+        // Not a TieredItem: its getTier() clashes with RcEnergyItem's in Mojang mappings
+        super(TEItemSettings.unbreakable(name).durability(TEToolMaterials.META_TOOL.getUses()));
+        // Same modifiers as a DiggerItem with 3 attack damage and 1 attack speed
+        attributeModifiers = ImmutableMultimap.of(
+                Attributes.ATTACK_DAMAGE,
+                new AttributeModifier(
+                        BASE_ATTACK_DAMAGE_UUID,
+                        "Tool modifier",
+                        3f + TEToolMaterials.META_TOOL.getAttackDamageBonus(),
+                        AttributeModifier.Operation.ADDITION),
+                Attributes.ATTACK_SPEED,
+                new AttributeModifier(
+                        BASE_ATTACK_SPEED_UUID, "Tool modifier", 1f, AttributeModifier.Operation.ADDITION));
+    }
+
+    @Override
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
+        return slot == EquipmentSlot.MAINHAND ? attributeModifiers : super.getDefaultAttributeModifiers(slot);
+    }
+
+    /**
+     * Whether `category` holds enchantments the Meta Tool takes besides the durability ones: mining and weapon ones.
+     * It is neither a `DiggerItem` nor a `SwordItem`, and 1.20.1 has no enchantable item tags, so mixins ask this.
+     */
+    public static boolean canEnchant(Item item, EnchantmentCategory category) {
+        return item instanceof MetaToolItem
+                && (category == EnchantmentCategory.DIGGER || category == EnchantmentCategory.WEAPON);
+    }
+
+    // No tool component before 1.20.5: it mines and drops its blocks like a Netherite tool would
+    @Override
+    public boolean isCorrectToolForDrops(BlockState state) {
+        return state.is(TEContent.BlockTags.META_TOOL_MINEABLE);
     }
 
     private MetaToolMode getCurrentMode(ItemStack stack) {
-        if (!TRItemUtils.isActive(stack) || stack.get(TEDataComponentTypes.TOOL_MODE) == null) {
+        if (!ItemUtils.isActive(stack) || TEDataComponentTypes.getToolMode(stack) == null) {
             return MetaToolMode.INACTIVE;
         }
-        int currentModeOrdinal = stack.get(TEDataComponentTypes.TOOL_MODE);
+        int currentModeOrdinal = TEDataComponentTypes.getToolMode(stack);
         return MetaToolMode.values()[currentModeOrdinal];
     }
 
     private void switchMode(ItemStack stack, int cost, Player entity) {
-        TRItemUtils.checkActive(stack, cost, entity);
-        if (!TRItemUtils.isActive(stack)) {
-            TRItemUtils.switchActive(stack, cost, entity);
-            stack.set(TEDataComponentTypes.TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
+        ItemUtils.checkActive(stack, cost, entity);
+        if (!ItemUtils.isActive(stack)) {
+            ItemUtils.switchActive(stack, cost, entity);
+            TEDataComponentTypes.setToolMode(stack, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                serverPlayerEntity.sendSystemMessage(
+                serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -74,10 +112,10 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             MetaToolMode[] metaToolModes = MetaToolMode.values();
             int currentModeOrdinal = getCurrentMode(stack).ordinal();
             int nextMode = (currentModeOrdinal + 1) % metaToolModes.length;
-            stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
+            TEDataComponentTypes.setToolMode(stack, nextMode);
             // If we cycled back to INACTIVE, turn off the tool
             if (nextMode == MetaToolMode.INACTIVE.ordinal()) {
-                TRItemUtils.switchActive(stack, cost, entity);
+                ItemUtils.switchActive(stack, cost, entity);
             }
             if (entity instanceof ServerPlayer serverPlayerEntity) {
                 String modeTranslationKey = switch (metaToolModes[nextMode]) {
@@ -85,7 +123,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     case AOE_3x3 -> "techextensions.message.meta_tool.mode_aoe_3x3";
                     case SMART -> "techextensions.message.meta_tool.mode_smart";
                 };
-                serverPlayerEntity.sendSystemMessage(
+                serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -99,17 +137,16 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // MiningToolItem
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
-        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost.get()) {
-            return TEToolMaterials.META_TOOL.speed();
+        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost) {
+            return TEToolMaterials.META_TOOL.getSpeed();
         }
-        Tool toolComponent = stack.get(DataComponents.TOOL);
-        return toolComponent != null ? toolComponent.defaultMiningSpeed() : 1.0F;
+        return 1.0F;
     }
 
     @Override
     public boolean mineBlock(
             ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
-        int cost = TechExtensionsConfig.metaToolCost.get();
+        int cost = TechExtensionsConfig.metaToolCost;
         if (!(entityLiving instanceof Player)) {
             tryUseEnergy(stack, cost);
             return true;
@@ -145,26 +182,27 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     }
 
     @Override
-    public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost.get())
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost)
                 && target.level() instanceof ServerLevel serverWorld) {
             // Mobs can wield the tool too (picked up, or handed over by the Vacuum Gun)
             DamageSource source = attacker instanceof Player player
                     ? serverWorld.damageSources().playerAttack(player)
                     : serverWorld.damageSources().mobAttack(attacker);
-            target.hurtServer(serverWorld, source, 8F);
+            target.hurt(source, 8F);
         }
+        return true;
     }
 
     // Item
     @Override
-    public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
         final ItemStack stack = player.getItemInHand(interactionHand);
         if (player.isShiftKeyDown()) {
-            switchMode(stack, TechExtensionsConfig.metaToolCost.get(), player);
-            return InteractionResult.SUCCESS;
+            switchMode(stack, TechExtensionsConfig.metaToolCost, player);
+            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
-        return InteractionResult.PASS;
+        return InteractionResultHolder.pass(stack);
     }
 
     @Override
@@ -192,6 +230,16 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     }
 
     @Override
+    public int getEnchantmentValue() {
+        return TEToolMaterials.META_TOOL.getEnchantmentValue();
+    }
+
+    @Override
+    public boolean isValidRepairItem(ItemStack stack, ItemStack repairCandidate) {
+        return TEToolMaterials.META_TOOL.getRepairIngredient().test(repairCandidate);
+    }
+
+    @Override
     public int getBarWidth(ItemStack stack) {
         return ItemUtils.getPowerForDurabilityBar(stack);
     }
@@ -209,7 +257,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.metaToolCharge.get();
+        return TechExtensionsConfig.metaToolCharge;
     }
 
     @Override

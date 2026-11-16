@@ -1,32 +1,18 @@
 package dev.gga.techextensions.init;
 
-import dev.gga.techextensions.TechExtensions;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.Unit;
+import net.fabricmc.fabric.api.item.v1.CustomDamageHandler;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.component.TooltipDisplay;
 
 public class TEItemSettings {
-    public static final TooltipDisplay UNBREAKABLE_HIDE =
-            new TooltipDisplay(false, new LinkedHashSet<>(Set.of(DataComponents.UNBREAKABLE)));
+    /** 1.20.1 has no unbreakable component: the damage is cancelled instead, which also hides the tooltip line. */
+    private static final CustomDamageHandler NO_DAMAGE = (stack, amount, entity, breakCallback) -> 0;
 
     public static Item.Properties item(String name) {
-        return new Item.Properties().setId(key(name));
+        return new FabricItemSettings();
     }
 
     public static Item.Properties unbreakable(String name) {
-        return item(name)
-                .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                .component(DataComponents.TOOLTIP_DISPLAY, UNBREAKABLE_HIDE);
-    }
-
-    public static ResourceKey<Item> key(String name) {
-        return ResourceKey.create(
-                BuiltInRegistries.ITEM.key(), Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
+        return new FabricItemSettings().customDamage(NO_DAMAGE);
     }
 }

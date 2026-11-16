@@ -4,9 +4,6 @@ import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Applies saturation or hunger effects to living entities that have been
  * resized by the Shrink Ray. The effect persists as long as the ray's scale
- * modifier changes the entity's size, with a level proportional to the
+ * changes the entity's size, with a level proportional to the
  * magnitude of the size change.
  */
 @Mixin(LivingEntity.class)
@@ -34,25 +31,11 @@ public abstract class ShrinkRayEffectMixin {
             return;
         }
 
-        AttributeInstance scaleAttr = self.getAttribute(Attributes.SCALE);
-        if (scaleAttr == null) {
-            return;
-        }
+        // The size change the ray applied, independent of other scale changes such as the baby one
+        double ratio = ShrinkRayItem.getSizeRatio(self);
 
-        // Quick check: does this entity have the shrink ray's scale modifier?
-        AttributeModifier modifier = scaleAttr.getModifier(ShrinkRayItem.SHRINK_RAY_SCALE_MODIFIER_ID);
-        if (modifier == null) {
-            return;
-        }
-
-        // The ray's modifier multiplies the scale by (1 + amount): that is exactly the size change it applied,
-        // independent of the base scale or of other modifiers such as the baby one
-        double ratio = 1.0D + modifier.amount();
-
+        // Quick check: was this entity resized by the shrink ray? Restoring the size already removes the effects
         if (Math.abs(ratio - 1.0D) < 0.001D) {
-            // Entity is at its natural scale (restored), remove both effects
-            self.removeEffect(MobEffects.SATURATION);
-            self.removeEffect(MobEffects.HUNGER);
             return;
         }
 

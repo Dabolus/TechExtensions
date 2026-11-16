@@ -2,6 +2,7 @@ package dev.gga.techextensions.items.tool.advanced;
 
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEItemSettings;
+import dev.gga.techextensions.items.TEEnergyItem;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import dev.gga.techextensions.utils.TECacheUtils;
 import dev.gga.techextensions.utils.TEContainerUtils;
@@ -11,7 +12,6 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.util.Arrays;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,33 +19,28 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import reborncore.api.blockentity.IUpgrade;
 import reborncore.api.blockentity.IUpgradeable;
-import reborncore.common.powerSystem.RcEnergyItem;
 import reborncore.common.powerSystem.RcEnergyTier;
 import reborncore.common.util.ItemUtils;
 import techreborn.config.TechRebornConfig;
 import techreborn.init.TRContent;
 import techreborn.items.UpgradeItem;
-import techreborn.utils.TRItemUtils;
 
-public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgradeable {
+public class ResonanceScannerItem extends Item implements TEEnergyItem, IUpgradeable {
     /** Index 0: the block to look for */
     public static final int TARGET_SLOT = 0;
     /** Functional item slots (just the target) */
@@ -99,7 +94,11 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
 
     // Item
     @Override
-    public void inventoryTick(ItemStack stack, ServerLevel worldIn, Entity entityIn, @Nullable EquipmentSlot slot) {
+    public void inventoryTick(ItemStack stack, Level level, Entity entityIn, int slot, boolean selected) {
+        // Called on both sides in 1.20.1, the logic below is server-only
+        if (!(level instanceof ServerLevel worldIn)) {
+            return;
+        }
         if (!(entityIn instanceof ServerPlayer playerIn)) {
             return;
         }
@@ -110,8 +109,8 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         }
         // Compute cost based on items in target stack and overclocker upgrades
         long scanCost = getScanCost(stack);
-        TRItemUtils.checkActive(stack, (int) scanCost, entityIn);
-        if (!TRItemUtils.isActive(stack)) {
+        ItemUtils.checkActive(stack, (int) scanCost, entityIn);
+        if (!ItemUtils.isActive(stack)) {
             // Scanner not active, remove any existing NBT data (display off)
             resetDistancePercent(stack);
             return;
@@ -141,12 +140,9 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         double distance = playerIn.position().distanceTo(Vec3.atCenterOf(foundPos));
         double estimatedDistancePercent = estimateDistancePercent(distance / (double) effectiveRange);
         // Write the current estimated distance to NBT for screen tinting
-        CustomData.update(
-                DataComponents.CUSTOM_DATA,
-                stack,
-                tag -> tag.putDouble(DISTANCE_PERCENT_KEY, estimatedDistancePercent));
+        TENbtUtils.update(stack, tag -> tag.putDouble(DISTANCE_PERCENT_KEY, estimatedDistancePercent));
         // Display message to player
-        playerIn.sendSystemMessage(
+        playerIn.displayClientMessage(
                 Component.translatable(
                                 "techextensions.message.resonance_scanner.block_in_range",
                                 Component.literal(item.getName(targetStack).getString())
@@ -167,7 +163,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
     }
 
     @Override
-    public boolean allowComponentsUpdateAnimation(
+    public boolean allowNbtUpdateAnimation(
             Player player, InteractionHand hand, ItemStack oldStack, ItemStack newStack) {
         // Avoid animation when updating NBT data
         return false;
@@ -175,7 +171,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
 
     @Override
     public long getStoredEnergy(ItemStack stack) {
-        return Math.min(RcEnergyItem.super.getStoredEnergy(stack), getEnergyCapacity(stack));
+        return Math.min(TEEnergyItem.super.getStoredEnergy(stack), getEnergyCapacity(stack));
     }
 
     @Override
@@ -205,22 +201,22 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
     }
 
     @Override
-    public InteractionResult use(final Level world, final Player player, final InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(final Level world, final Player player, final InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
-            TRItemUtils.switchActive(stack, 1, player);
-            return InteractionResult.SUCCESS;
+            ItemUtils.switchActive(stack, 1, player);
+            return InteractionResultHolder.sidedSuccess(stack, world.isClientSide());
         }
         if (!world.isClientSide()) {
             player.openMenu(new SimpleMenuProvider(
                     (syncId, inventory, _p) -> new ResonanceScannerMenu(syncId, inventory), stack.getHoverName()));
         }
-        return InteractionResult.CONSUME;
+        return InteractionResultHolder.consume(stack);
     }
 
     @Override
     public void onUseTick(Level world, LivingEntity entity, ItemStack stack, int i) {
-        TRItemUtils.checkActive(stack, (int) getScanCost(stack), entity);
+        ItemUtils.checkActive(stack, (int) getScanCost(stack), entity);
     }
 
     // IUpgradeable
@@ -234,14 +230,14 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return null; // Cannot be implemented for Item
     }
 
-    /** Returns a container (target + upgrades) backed by the stack's `DataComponents.CONTAINER` data. */
+    /** Returns a container (target + upgrades) backed by the stack's NBT. */
     public static Container getInventory(ItemStack stack) {
         SimpleContainer container = new SimpleContainer(TOTAL_SLOTS) {
             @Override
             public void setChanged() {
                 super.setChanged();
                 // Save every slot by index, so upgrades never slide into the target slot
-                stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(this.getItems()));
+                TEContainerUtils.save(stack, this.items);
                 updateCache(stack, this);
             }
         };
@@ -250,9 +246,8 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
             return container;
         }
 
-        ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
-        if (contents != null) {
-            contents.copyInto(container.getItems());
+        if (TEContainerUtils.hasItems(stack)) {
+            TEContainerUtils.load(stack, container.items);
             migrateCompactedUpgrade(container);
         }
 
@@ -276,7 +271,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
 
     private static void resetDistancePercent(ItemStack stack) {
         if (TENbtUtils.view(stack).contains(DISTANCE_PERCENT_KEY)) {
-            CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.remove(DISTANCE_PERCENT_KEY));
+            TENbtUtils.update(stack, tag -> tag.remove(DISTANCE_PERCENT_KEY));
         }
     }
 
@@ -294,10 +289,10 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         final ItemStack targetStack = inventory.getItem(TARGET_SLOT);
         final int scanCooldown = computeScanCooldown(overclockers);
         final long scanCost = computeScanCost(targetStack, overclockers);
-        final long energyCapacity = TechExtensionsConfig.resonanceScannerCharge.get()
-                + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
+        final long energyCapacity = TechExtensionsConfig.resonanceScannerCharge
+                + (long) (energyStorage * TechRebornConfig.energyStoragePower);
 
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+        TENbtUtils.update(stack, tag -> {
             tag.putInt(SCAN_COOLDOWN_CACHE_KEY, scanCooldown);
             tag.putLong(SCAN_COST_CACHE_KEY, scanCost);
             tag.putLong(ENERGY_CAPACITY_CACHE_KEY, energyCapacity);
@@ -308,7 +303,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return TECacheUtils.getCachedValue(
                 stack,
                 SCAN_COOLDOWN_CACHE_KEY,
-                TechExtensionsConfig.resonanceScannerScanCooldown.get(),
+                TechExtensionsConfig.resonanceScannerScanCooldown,
                 tag -> tag.getInt(SCAN_COOLDOWN_CACHE_KEY),
                 ResonanceScannerItem::getInventory,
                 ResonanceScannerItem::updateCache);
@@ -318,7 +313,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return TECacheUtils.getCachedValue(
                 stack,
                 SCAN_COST_CACHE_KEY,
-                TechExtensionsConfig.resonanceScannerBaseCost.get(),
+                TechExtensionsConfig.resonanceScannerBaseCost,
                 tag -> tag.getLong(SCAN_COST_CACHE_KEY),
                 ResonanceScannerItem::getInventory,
                 ResonanceScannerItem::updateCache);
@@ -328,7 +323,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return TECacheUtils.getCachedValue(
                 stack,
                 ENERGY_CAPACITY_CACHE_KEY,
-                (long) TechExtensionsConfig.resonanceScannerCharge.get(),
+                (long) TechExtensionsConfig.resonanceScannerCharge,
                 tag -> tag.getLong(ENERGY_CAPACITY_CACHE_KEY),
                 ResonanceScannerItem::getInventory,
                 ResonanceScannerItem::updateCache);
@@ -354,25 +349,24 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
     }
 
     public static int computeScanCooldown(int overclockerUpgrades) {
-        double speedMultiplier = TechRebornConfig.overclockerSpeed.get() * overclockerUpgrades;
-        double cooldown = TechExtensionsConfig.resonanceScannerScanCooldown.get() * (1.0 - speedMultiplier);
+        double speedMultiplier = TechRebornConfig.overclockerSpeed * overclockerUpgrades;
+        double cooldown = TechExtensionsConfig.resonanceScannerScanCooldown * (1.0 - speedMultiplier);
         return Math.max(1, (int) Math.round(cooldown));
     }
 
     public static long computeScanCost(ItemStack targetStack, int overclockerUpgrades) {
         int itemsInStack = targetStack.isEmpty() ? 0 : targetStack.getCount();
-        long stackScanCost = TechExtensionsConfig.resonanceScannerBaseCost.get()
-                + (itemsInStack * TechExtensionsConfig.resonanceScannerPerItemCost.get());
-        double powerMultiplier = Math.pow(1f + TechRebornConfig.overclockerPower.get(), overclockerUpgrades);
+        long stackScanCost = TechExtensionsConfig.resonanceScannerBaseCost
+                + (itemsInStack * TechExtensionsConfig.resonanceScannerPerItemCost);
+        double powerMultiplier = Math.pow(1f + TechRebornConfig.overclockerPower, overclockerUpgrades);
         return Math.round(stackScanCost * powerMultiplier);
     }
 
     public static long computeEffectiveRange(ItemStack targetStack) {
         return targetStack.isEmpty()
                 ? 0
-                : Math.round(TechExtensionsConfig.resonanceScannerBaseRange.get()
-                        + (TechExtensionsConfig.resonanceScannerRangeMultiplier.get()
-                                * Math.log(targetStack.getCount())));
+                : Math.round(TechExtensionsConfig.resonanceScannerBaseRange
+                        + (TechExtensionsConfig.resonanceScannerRangeMultiplier * Math.log(targetStack.getCount())));
     }
 
     /** Walks a cylinder along the player's view line and returns the first matching block. */

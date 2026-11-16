@@ -3,58 +3,43 @@ package dev.gga.techextensions.client.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.entity.BubbleTrapEntity;
-import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
 /**
  * Renders a semi-transparent bubble cube around the trapped entity.
  */
-public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, BubbleTrapEntityRenderState> {
-    private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "textures/entity/bubble_trap.png");
+public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity> {
+    private static final ResourceLocation TEXTURE =
+            new ResourceLocation(TechExtensions.MOD_ID, "textures/entity/bubble_trap.png");
 
     private final BubbleTrapModel model;
 
     public BubbleTrapEntityRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
-        this.model = new BubbleTrapModel(ctx.bakeLayer(BubbleTrapModel.LAYER_LOCATION), RenderTypes::entityTranslucent);
+        this.model = new BubbleTrapModel(ctx.bakeLayer(BubbleTrapModel.LAYER_LOCATION), RenderType::entityTranslucent);
     }
 
     @Override
-    public BubbleTrapEntityRenderState createRenderState() {
-        return new BubbleTrapEntityRenderState();
+    public ResourceLocation getTextureLocation(BubbleTrapEntity entity) {
+        return TEXTURE;
     }
 
     @Override
-    public void extractRenderState(BubbleTrapEntity entity, BubbleTrapEntityRenderState state, float partialTick) {
-        super.extractRenderState(entity, state, partialTick);
-        Entity trapped = entity.getTrappedEntity();
-        if (trapped != null) {
-            state.hasTrappedEntity = true;
-            // Add padding so bubble is slightly larger than the entity
-            state.trappedWidth = trapped.getBbWidth() + 0.4F;
-            state.trappedHeight = trapped.getBbHeight() + 0.4F;
-        } else {
-            state.hasTrappedEntity = false;
-            state.trappedWidth = 1.0F;
-            state.trappedHeight = 1.0F;
-        }
-    }
-
-    @Override
-    public void submit(
-            BubbleTrapEntityRenderState state,
+    public void render(
+            BubbleTrapEntity entity,
+            float yaw,
+            float partialTick,
             PoseStack poseStack,
-            SubmitNodeCollector collector,
-            CameraRenderState camera) {
-        if (!state.hasTrappedEntity) {
+            MultiBufferSource buffers,
+            int packedLight) {
+        Entity trapped = entity.getTrappedEntity();
+        if (trapped == null) {
             return;
         }
 
@@ -63,21 +48,28 @@ public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, B
         // Shift down by half the padding so the bubble is centered around the entity
         poseStack.translate(0.0, -0.2, 0.0);
 
-        // Scale the 16x16x16 cube model to match the trapped entity's dimensions
-        float scaleX = state.trappedWidth;
-        float scaleY = state.trappedHeight;
-        float scaleZ = state.trappedWidth;
+        // Scale the 16x16x16 cube model to match the trapped entity's dimensions, with padding so the bubble is
+        // slightly larger than the entity
+        float scaleX = trapped.getBbWidth() + 0.4F;
+        float scaleY = trapped.getBbHeight() + 0.4F;
+        float scaleZ = trapped.getBbWidth() + 0.4F;
         poseStack.scale(scaleX, scaleY, scaleZ);
 
         RenderType renderType = this.model.renderType(TEXTURE);
-        // Render with the bubble texture; pass 0 for outline color to avoid
-        // the default overload triggering a white outline silhouette.
-        // Translucency comes from the texture's own alpha channel.
-        collector.submitModel(
-                this.model, state, poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+        // Render with the bubble texture. Translucency comes from the texture's own alpha channel.
+        this.model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, 0.0F);
+        this.model.renderToBuffer(
+                poseStack,
+                buffers.getBuffer(renderType),
+                packedLight,
+                OverlayTexture.NO_OVERLAY,
+                1.0F,
+                1.0F,
+                1.0F,
+                1.0F);
 
         poseStack.popPose();
 
-        super.submit(state, poseStack, collector, camera);
+        super.render(entity, yaw, partialTick, poseStack, buffers, packedLight);
     }
 }

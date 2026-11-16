@@ -4,7 +4,6 @@ import dev.gga.techextensions.init.TEItemSettings;
 import dev.gga.techextensions.utils.TECleaningUtils;
 import dev.gga.techextensions.utils.TENbtUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -12,8 +11,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
-import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
@@ -44,27 +42,27 @@ public class SoapItem extends Item {
 
         // Store target block pos in item NBT so onUseTick knows where to act
         ItemStack stack = context.getItemInHand();
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.putLong(TARGET_POS_KEY, pos.asLong()));
+        TENbtUtils.update(stack, tag -> tag.putLong(TARGET_POS_KEY, pos.asLong()));
 
         if (context.getPlayer() != null) {
             context.getPlayer().startUsingItem(context.getHand());
 
             // Play a wet/soapy sound when starting to clean
             if (!level.isClientSide()) {
-                level.playSound(null, pos, SoundEvents.SPONGE_ABSORB, SoundSource.PLAYERS, 0.7F, 1.4F);
+                level.playSound(null, pos, SoundEvents.SLIME_SQUISH_SMALL, SoundSource.PLAYERS, 0.7F, 1.4F);
             }
         }
         return InteractionResult.CONSUME;
     }
 
     @Override
-    public int getUseDuration(ItemStack stack, LivingEntity entity) {
+    public int getUseDuration(ItemStack stack) {
         return 32; // ~1.6 seconds total hold time
     }
 
     @Override
-    public ItemUseAnimation getUseAnimation(ItemStack stack) {
-        return ItemUseAnimation.BRUSH;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BRUSH;
     }
 
     @Override
@@ -73,7 +71,7 @@ public class SoapItem extends Item {
             return;
         }
 
-        int usedTicks = getUseDuration(stack, entity) - remainingUseTicks;
+        int usedTicks = getUseDuration(stack) - remainingUseTicks;
 
         // Play brushing sound periodically
         if (usedTicks > 0 && usedTicks % 6 == 0) {
@@ -91,10 +89,10 @@ public class SoapItem extends Item {
             BlockPos targetPos = getTargetPos(stack);
             if (targetPos != null) {
                 if (TECleaningUtils.cleanBlock(level, targetPos)) {
-                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
 
                     // Damage the soap in whichever hand is using it
-                    stack.hurtAndBreak(1, entity, entity.getUsedItemHand());
+                    stack.hurtAndBreak(1, entity, e -> e.broadcastBreakEvent(e.getUsedItemHand()));
                 }
             }
             // Stop using
@@ -104,9 +102,9 @@ public class SoapItem extends Item {
     }
 
     @Override
-    public boolean releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
         clearTargetPos(stack);
-        return super.releaseUsing(stack, level, entity, timeLeft);
+        super.releaseUsing(stack, level, entity, timeLeft);
     }
 
     // --- NBT helpers ---
@@ -114,14 +112,14 @@ public class SoapItem extends Item {
     private static BlockPos getTargetPos(ItemStack stack) {
         CompoundTag tag = TENbtUtils.view(stack);
         if (tag.contains(TARGET_POS_KEY)) {
-            return BlockPos.of(tag.getLongOr(TARGET_POS_KEY, 0L));
+            return BlockPos.of(tag.getLong(TARGET_POS_KEY));
         }
         return null;
     }
 
     private static void clearTargetPos(ItemStack stack) {
         if (TENbtUtils.view(stack).contains(TARGET_POS_KEY)) {
-            CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.remove(TARGET_POS_KEY));
+            TENbtUtils.update(stack, tag -> tag.remove(TARGET_POS_KEY));
         }
     }
 }

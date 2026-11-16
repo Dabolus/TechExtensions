@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PTP",
+    "TCT",
+    "PTP"
+  ],
+  "key": {
+    "P": {
+      "item": "techreborn:carbon_plate"
+    },
+    "C": {
+      "item": "techreborn:electronic_circuit"
+    },
+    "T": {
+      "tag": "c:titanium_plates"
+    }
+  },
+  "result": {
+    "item": "techextensions:electric_ducted_fan",
+    "count": 2
+  }
+}

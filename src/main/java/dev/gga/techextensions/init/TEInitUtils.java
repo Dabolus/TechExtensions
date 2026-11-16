@@ -2,46 +2,20 @@ package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.events.ModRegistry;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.Util;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class TEInitUtils {
+    // No translation key check here: before 1.21.2 the key comes from the registry, so it can't mismatch, and
+    // reading it before registration would cache a wrong one.
     public static <I extends Item> I setup(I item, String name) {
-        ModRegistry.registerIdent(item, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
-
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            String expect =
-                    Util.makeDescriptionId("item", Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
-            String actual = item.getDescriptionId();
-
-            if (!expect.equals(actual)) {
-                // This happens when the item settings registry key does not match key used to register the item
-                throw new IllegalStateException(
-                        "Item translation key mismatch: expected " + expect + ", got " + actual);
-            }
-        }
-
+        ModRegistry.registerIdent(item, new ResourceLocation(TechExtensions.MOD_ID, name));
         return item;
     }
 
     public static <B extends Block> B setup(B block, String name) {
-        ModRegistry.registerIdent(block, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
-
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            String expect =
-                    Util.makeDescriptionId("block", Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name));
-            String actual = block.getDescriptionId();
-
-            if (!expect.equals(actual)) {
-                // This happens when the block settings registry key does not match key used to register the block
-                throw new IllegalStateException(
-                        "Block translation key mismatch: expected " + expect + ", got " + actual);
-            }
-        }
-
+        ModRegistry.registerIdent(block, new ResourceLocation(TechExtensions.MOD_ID, name));
         return block;
     }
 

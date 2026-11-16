@@ -2,15 +2,14 @@ package dev.gga.techextensions.blockentity;
 
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.blockentity.machine.ElectricDuctedFanBlockEntity;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -19,27 +18,25 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import reborncore.api.blockentity.IMachineGuiHandler;
-import reborncore.common.network.BlockPosPayload;
 import reborncore.common.screen.BuiltScreenHandler;
 import reborncore.common.screen.BuiltScreenHandlerProvider;
 
-public record TEGuiType<T extends BlockEntity>(Identifier identifier, MenuType<BuiltScreenHandler> screenHandlerType)
-        implements IMachineGuiHandler {
+public record TEGuiType<T extends BlockEntity>(
+        ResourceLocation identifier, MenuType<BuiltScreenHandler> screenHandlerType) implements IMachineGuiHandler {
 
     public static final TEGuiType<ElectricDuctedFanBlockEntity> ELECTRIC_DUCTED_FAN = register("electric_ducted_fan");
 
     private static <T extends BlockEntity> TEGuiType<T> register(String path) {
-        var id = Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, path);
+        var id = new ResourceLocation(TechExtensions.MOD_ID, path);
         var screenHandlerType = Registry.register(
-                BuiltInRegistries.MENU,
-                id,
-                new ExtendedMenuType<>(getScreenHandlerFactory(id), ScreenHandlerData.PACKET_CODEC));
+                BuiltInRegistries.MENU, id, new ExtendedScreenHandlerType<>(getScreenHandlerFactory(id)));
         return new TEGuiType<>(id, screenHandlerType);
     }
 
-    private static ExtendedMenuType.ExtendedFactory<BuiltScreenHandler, ScreenHandlerData> getScreenHandlerFactory(
-            Identifier identifier) {
-        return (syncId, playerInventory, payload) -> {
+    private static ExtendedScreenHandlerType.ExtendedFactory<BuiltScreenHandler> getScreenHandlerFactory(
+            ResourceLocation identifier) {
+        return (syncId, playerInventory, buf) -> {
+            ScreenHandlerData payload = ScreenHandlerData.read(buf);
             if (!payload.isWithinDistance(playerInventory.player, 16)) {
                 throw new IllegalStateException("Player cannot use this block entity as its too far away");
             }
@@ -49,7 +46,7 @@ public record TEGuiType<T extends BlockEntity>(Identifier identifier, MenuType<B
                     ((BuiltScreenHandlerProvider) blockEntity).createScreenHandler(syncId, playerInventory.player);
 
             //noinspection unchecked
-            screenHandler.setType((MenuType<BuiltScreenHandler>) BuiltInRegistries.MENU.getValue(identifier));
+            screenHandler.setType((MenuType<BuiltScreenHandler>) BuiltInRegistries.MENU.get(identifier));
             return screenHandler;
         };
     }
@@ -57,10 +54,10 @@ public record TEGuiType<T extends BlockEntity>(Identifier identifier, MenuType<B
     @Override
     public void open(Player player, BlockPos pos, Level world) {
         if (!world.isClientSide()) {
-            player.openMenu(new ExtendedMenuProvider<ScreenHandlerData>() {
+            player.openMenu(new ExtendedScreenHandlerFactory() {
                 @Override
-                public ScreenHandlerData getScreenOpeningData(ServerPlayer player) {
-                    return new ScreenHandlerData(pos);
+                public void writeScreenOpeningData(ServerPlayer player, FriendlyByteBuf buf) {
+                    new ScreenHandlerData(pos).write(buf);
                 }
 
                 @Override
@@ -80,8 +77,17 @@ public record TEGuiType<T extends BlockEntity>(Identifier identifier, MenuType<B
         }
     }
 
-    record ScreenHandlerData(BlockPos pos) implements BlockPosPayload {
-        public static final StreamCodec<RegistryFriendlyByteBuf, ScreenHandlerData> PACKET_CODEC =
-                StreamCodec.composite(BlockPos.STREAM_CODEC, ScreenHandlerData::pos, ScreenHandlerData::new);
+    record ScreenHandlerData(BlockPos pos) {
+        static ScreenHandlerData read(FriendlyByteBuf buf) {
+            return new ScreenHandlerData(buf.readBlockPos());
+        }
+
+        void write(FriendlyByteBuf buf) {
+            buf.writeBlockPos(pos);
+        }
+
+        boolean isWithinDistance(Player player, double distance) {
+            return pos.closerToCenterThan(player.position(), distance);
+        }
     }
 }

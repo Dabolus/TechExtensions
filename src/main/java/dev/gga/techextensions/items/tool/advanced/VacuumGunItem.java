@@ -3,10 +3,12 @@ package dev.gga.techextensions.items.tool.advanced;
 import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEItemSettings;
+import dev.gga.techextensions.items.TEEnergyItem;
 import dev.gga.techextensions.menu.VacuumGunMenu;
 import dev.gga.techextensions.utils.TECacheUtils;
+import dev.gga.techextensions.utils.TEContainerUtils;
+import dev.gga.techextensions.utils.TENbtUtils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,25 +16,22 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import reborncore.api.blockentity.IUpgrade;
 import reborncore.api.blockentity.IUpgradeable;
-import reborncore.common.powerSystem.RcEnergyItem;
 import reborncore.common.powerSystem.RcEnergyTier;
 import reborncore.common.util.ItemUtils;
 import techreborn.config.TechRebornConfig;
 import techreborn.init.TRContent;
 import techreborn.items.UpgradeItem;
 
-public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
+public class VacuumGunItem extends Item implements TEEnergyItem, IUpgradeable {
     public enum VacuumGunMode {
         VACUUM,
         BLOW,
@@ -52,7 +51,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
     // Mode handling
 
     public static VacuumGunMode getCurrentMode(ItemStack stack) {
-        Integer mode = stack.get(TEDataComponentTypes.TOOL_MODE);
+        Integer mode = TEDataComponentTypes.getToolMode(stack);
         if (mode == null) {
             return VacuumGunMode.VACUUM;
         }
@@ -63,14 +62,14 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
     private void switchMode(ItemStack stack, Player entity) {
         VacuumGunMode[] modes = VacuumGunMode.values();
         int nextMode = (getCurrentMode(stack).ordinal() + 1) % modes.length;
-        stack.set(TEDataComponentTypes.TOOL_MODE, nextMode);
+        TEDataComponentTypes.setToolMode(stack, nextMode);
         if (entity instanceof ServerPlayer serverPlayer) {
             String modeTranslationKey = switch (modes[nextMode]) {
                 case VACUUM -> "techextensions.message.vacuum_gun.mode_vacuum";
                 case BLOW -> "techextensions.message.vacuum_gun.mode_blow";
                 case INSPECT -> "techextensions.message.vacuum_gun.mode_inspect";
             };
-            serverPlayer.sendSystemMessage(
+            serverPlayer.displayClientMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
@@ -82,14 +81,14 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
     // Item overrides
 
     @Override
-    public boolean allowComponentsUpdateAnimation(
+    public boolean allowNbtUpdateAnimation(
             Player player, InteractionHand hand, ItemStack oldStack, ItemStack newStack) {
         return false;
     }
 
     @Override
     public long getStoredEnergy(ItemStack stack) {
-        return Math.min(RcEnergyItem.super.getStoredEnergy(stack), getEnergyCapacity(stack));
+        return Math.min(TEEnergyItem.super.getStoredEnergy(stack), getEnergyCapacity(stack));
     }
 
     @Override
@@ -122,28 +121,28 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
     // Interaction
 
     @Override
-    public InteractionResult use(final Level world, final Player player, final InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(final Level world, final Player player, final InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
 
         if (player.isShiftKeyDown()) {
             switchMode(stack, player);
-            return InteractionResult.CONSUME;
+            return InteractionResultHolder.consume(stack);
         }
 
         if (world.isClientSide()) {
-            return InteractionResult.CONSUME;
+            return InteractionResultHolder.consume(stack);
         }
 
         ServerLevel serverLevel = (ServerLevel) world;
 
-        if (player.getCooldowns().isOnCooldown(stack)) {
-            return InteractionResult.PASS;
+        if (player.getCooldowns().isOnCooldown(this)) {
+            return InteractionResultHolder.pass(stack);
         }
 
-        long cost = TechExtensionsConfig.vacuumGunCostPerAction.get();
+        long cost = TechExtensionsConfig.vacuumGunCostPerAction;
         if (getStoredEnergy(stack) < cost) {
             world.playSound(null, player.blockPosition(), SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 1.0F, 1.2F);
-            return InteractionResult.FAIL;
+            return InteractionResultHolder.fail(stack);
         }
 
         VacuumGunMode mode = getCurrentMode(stack);
@@ -159,10 +158,10 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
         if (didAction) {
             tryUseEnergy(stack, cost);
-            player.getCooldowns().addCooldown(stack, getCooldown(stack));
+            player.getCooldowns().addCooldown(this, getCooldown(stack));
         }
 
-        return InteractionResult.CONSUME;
+        return InteractionResultHolder.consume(stack);
     }
 
     // IUpgradeable
@@ -191,14 +190,14 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
     /**
      * Returns a 7-slot container (5 inventory + 2 upgrades) backed by the
-     * stack's `DataComponents.CONTAINER` data.
+     * stack's NBT.
      */
     public static Container getInventory(ItemStack stack) {
         SimpleContainer container = new SimpleContainer(TOTAL_SLOTS) {
             @Override
             public void setChanged() {
                 super.setChanged();
-                stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(this.getItems()));
+                TEContainerUtils.save(stack, this.items);
                 updateCache(stack, this);
             }
         };
@@ -207,9 +206,8 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
             return container;
         }
 
-        ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
-        if (contents != null) {
-            contents.copyInto(container.getItems());
+        if (TEContainerUtils.hasItems(stack)) {
+            TEContainerUtils.load(stack, container.items);
         }
 
         return container;
@@ -226,7 +224,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         boolean merged = false;
         for (int i = 0; i < INVENTORY_SIZE && !remaining.isEmpty(); i++) {
             ItemStack slot = inventory.getItem(i);
-            if (!slot.isEmpty() && ItemStack.isSameItemSameComponents(slot, remaining)) {
+            if (!slot.isEmpty() && ItemStack.isSameItemSameTags(slot, remaining)) {
                 int canFit = slot.getMaxStackSize() - slot.getCount();
                 int toAdd = Math.min(remaining.getCount(), canFit);
                 if (toAdd > 0) {
@@ -265,10 +263,10 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         }
 
         final int cooldown = computeCooldown(overclockers);
-        final long energyCapacity = TechExtensionsConfig.vacuumGunCharge.get()
-                + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
+        final long energyCapacity =
+                TechExtensionsConfig.vacuumGunCharge + (long) (energyStorage * TechRebornConfig.energyStoragePower);
 
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+        TENbtUtils.update(stack, tag -> {
             tag.putInt("cache:cooldown", cooldown);
             tag.putLong("cache:energy_capacity", energyCapacity);
         });
@@ -278,7 +276,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:cooldown",
-                TechExtensionsConfig.vacuumGunCooldown.get(),
+                TechExtensionsConfig.vacuumGunCooldown,
                 tag -> tag.getInt("cache:cooldown"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
@@ -288,15 +286,15 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:energy_capacity",
-                (long) TechExtensionsConfig.vacuumGunCharge.get(),
+                (long) TechExtensionsConfig.vacuumGunCharge,
                 tag -> tag.getLong("cache:energy_capacity"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
     }
 
     public static int computeCooldown(int overclockerUpgrades) {
-        double speedMultiplier = TechRebornConfig.overclockerSpeed.get() * overclockerUpgrades;
-        double cooldown = TechExtensionsConfig.vacuumGunCooldown.get() * (1.0 - speedMultiplier);
+        double speedMultiplier = TechRebornConfig.overclockerSpeed * overclockerUpgrades;
+        double cooldown = TechExtensionsConfig.vacuumGunCooldown * (1.0 - speedMultiplier);
         return (int) Math.round(cooldown);
     }
 }

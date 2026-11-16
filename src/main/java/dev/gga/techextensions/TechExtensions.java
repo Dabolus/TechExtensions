@@ -1,10 +1,10 @@
 package dev.gga.techextensions;
 
-import dev.gga.techextensions.component.TEDataComponentTypes;
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.entity.BubbleTrapEntity;
 import dev.gga.techextensions.init.TEContent;
 import dev.gga.techextensions.items.tool.advanced.ShrinkRayItem;
+import dev.gga.techextensions.network.PlayerInputPayload;
 import dev.gga.techextensions.particle.TEParticleTypes;
 import dev.gga.techextensions.utils.ItemAnimationManager;
 import dev.gga.techextensions.utils.TEMiningUtils;
@@ -25,12 +25,12 @@ public class TechExtensions implements ModInitializer {
         // Config must be loaded first: items capture their energy capacity from it on construction
         TechExtensionsConfig.init();
         TEContent.register();
-        TEDataComponentTypes.init();
         TEParticleTypes.init();
         // Server tickers: in-flight animations must keep running even when nobody holds the item anymore
         ItemAnimationManager.init();
         ShrinkRayItem.initTicking();
         TEMiningUtils.init();
         BubbleTrapEntity.init();
+        PlayerInputPayload.init();
     }
 }

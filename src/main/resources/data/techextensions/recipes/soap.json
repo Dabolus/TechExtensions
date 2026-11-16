@@ -1,0 +1,25 @@
+{
+  "type": "techreborn:blast_furnace",
+  "heat": 1000,
+  "ingredients": [
+    {
+      "fluid": "techreborn:oil",
+      "holder": "techreborn:cell"
+    },
+    {
+      "fluid": "techreborn:sodium",
+      "holder": "techreborn:cell"
+    }
+  ],
+  "results": [
+    {
+      "item": "techextensions:soap"
+    },
+    {
+      "count": 2,
+      "item": "techreborn:cell"
+    }
+  ],
+  "power": 128,
+  "time": 800
+}

@@ -26,8 +26,7 @@ public class TETooltipHandler implements ItemTooltipCallback {
     }
 
     @Override
-    public void getTooltip(
-            ItemStack stack, Item.TooltipContext tooltipContext, TooltipFlag tooltipType, List<Component> lines) {
+    public void getTooltip(ItemStack stack, TooltipFlag tooltipType, List<Component> lines) {
         Item item = stack.getItem();
 
         // Can currently be executed by a ForkJoinPool.commonPool-worker when REI is in async search mode
@@ -46,7 +45,7 @@ public class TETooltipHandler implements ItemTooltipCallback {
         }
 
         if (item instanceof BubbleGunItem) {
-            // Show contained soap info (reads only the soap slot of the container component)
+            // Show contained soap info (reads only the soap slot of the inventory NBT)
             ItemStack soapStack = BubbleGunItem.getSoap(stack);
             if (!soapStack.isEmpty() && soapStack.getItem() instanceof SoapItem) {
                 int soapRemaining = soapStack.getMaxDamage() - soapStack.getDamageValue();
@@ -60,7 +59,7 @@ public class TETooltipHandler implements ItemTooltipCallback {
 
             // Show water level
             long waterAmount = BubbleGunItem.getWaterAmount(stack);
-            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
             lines.add(Component.translatable(
                             "techextensions.tooltip.bubble_gun.water_level",
                             TEFormatUtils.formatNumber(waterAmount),

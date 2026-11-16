@@ -1,5 +1,4 @@
 {
-  "render_type": "cutout",
   "textures": {
     "front": "techextensions:block/electric_ducted_fan_front",
     "side": "techextensions:block/electric_ducted_fan_side",

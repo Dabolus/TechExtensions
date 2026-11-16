@@ -1,25 +1,26 @@
 package dev.gga.techextensions.utils;
 
-import net.minecraft.core.component.DataComponents;
+import java.util.function.Consumer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
-/**
- * Read-only access to item custom data without copying the tag on every read. The backing field is opened
- * by the class tweaker; see {@code techextensions.classtweaker}.
- */
+/** Access to the stack's NBT tag, which holds every custom value before 1.20.5. */
 public final class TENbtUtils {
     private static final CompoundTag EMPTY = new CompoundTag();
 
     private TENbtUtils() {}
 
     /**
-     * Returns the stack's custom data tag for reading. This is the live component value: never mutate it, use
-     * {@link CustomData#update} or {@link CustomData#set} to write.
+     * Returns the stack's tag for reading, without creating one. This is the live tag (or a shared empty one):
+     * never mutate it, use {@link #update} to write.
      */
     public static CompoundTag view(ItemStack stack) {
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        return data == null ? EMPTY : data.tag;
+        CompoundTag tag = stack.getTag();
+        return tag == null ? EMPTY : tag;
+    }
+
+    /** Mutates the stack's tag, creating it when missing. */
+    public static void update(ItemStack stack, Consumer<CompoundTag> updater) {
+        updater.accept(stack.getOrCreateTag());
     }
 }

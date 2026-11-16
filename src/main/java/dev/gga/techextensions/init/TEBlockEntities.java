@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityT
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -22,12 +22,12 @@ public class TEBlockEntities {
             BiFunction<BlockPos, BlockState, T> supplier, String name, Block... blocks) {
         Validate.isTrue(blocks.length > 0, "no blocks for blockEntity entity type!");
         return register(
-                Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, name),
+                new ResourceLocation(TechExtensions.MOD_ID, name),
                 FabricBlockEntityTypeBuilder.create(supplier::apply, blocks));
     }
 
     public static <T extends BlockEntity> BlockEntityType<T> register(
-            Identifier id, FabricBlockEntityTypeBuilder<T> builder) {
+            ResourceLocation id, FabricBlockEntityTypeBuilder<T> builder) {
         return Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, id, builder.build());
     }
 

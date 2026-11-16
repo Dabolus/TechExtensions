@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "dev.gga.techextensions.mixin.client",
+  "compatibilityLevel": "JAVA_17",
+  "client": ["CyberShieldFirstPersonMixin", "RcEnergyTooltipMixin"],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EBC",
+    "  P"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:dispenser"
+    },
+    "C": {
+      "item": "techreborn:cell"
+    },
+    "E": {
+      "item": "techreborn:energy_crystal"
+    },
+    "P": {
+      "tag": "c:steel_plates"
+    }
+  },
+  "result": {
+    "item": "techextensions:bubble_gun"
+  }
+}

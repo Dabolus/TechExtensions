@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -42,9 +42,7 @@ public final class ItemAnimationManager {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> finishAll());
         // Displays saved mid-flight by a crash are no longer tracked: remove them when their chunk loads
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            if (entity instanceof Display.ItemDisplay
-                    && entity.entityTags().contains(DISPLAY_TAG)
-                    && !isTracked(entity)) {
+            if (entity instanceof Display.ItemDisplay && entity.getTags().contains(DISPLAY_TAG) && !isTracked(entity)) {
                 ORPHANS.add(entity);
             }
         });
@@ -116,11 +114,11 @@ public final class ItemAnimationManager {
             this.totalLength = total;
             this.durationTicks = Math.max(1, (int) Math.ceil(total / SPEED));
 
-            Vec3 start = path.getFirst();
-            this.display = new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world);
+            Vec3 start = path.get(0);
+            this.display = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, world);
             this.display.setItemStack(displayItem.copy());
             this.display.setNoGravity(true);
-            this.display.setPermanentlyInvulnerable(true);
+            this.display.setInvulnerable(true);
             this.display.setPos(start.x, start.y, start.z);
             this.display.addTag(DISPLAY_TAG);
         }
@@ -165,7 +163,7 @@ public final class ItemAnimationManager {
         /** Position along the waypoints; `progress` ranges from 0.0 (first point) to 1.0 (last point). */
         Vec3 interpolate(double progress) {
             if (path.size() < 2) {
-                return path.getFirst();
+                return path.get(0);
             }
             double targetDist = totalLength * Mth.clamp(progress, 0.0, 1.0);
             for (int i = 1; i < path.size(); i++) {
@@ -176,7 +174,7 @@ public final class ItemAnimationManager {
                     return path.get(i - 1).lerp(path.get(i), segProgress);
                 }
             }
-            return path.getLast();
+            return path.get(path.size() - 1);
         }
     }
 }
