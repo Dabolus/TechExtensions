@@ -400,8 +400,11 @@ final class VacuumGunActions {
         boolean used = false;
 
         if (hitState.getBlock() instanceof TntBlock) {
-            TntBlock.prime(world, hitBlock);
-            used = true;
+            // Like vanilla flint and steel: only consume the TNT block if it was actually primed
+            if (TntBlock.prime(world, hitBlock)) {
+                world.setBlock(hitBlock, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+                used = true;
+            }
         } else if (hitState.is(Blocks.CAMPFIRE) || hitState.is(Blocks.SOUL_CAMPFIRE)) {
             if (CampfireBlock.canLight(hitState)) {
                 world.setBlock(hitBlock, hitState.setValue(CampfireBlock.LIT, true), Block.UPDATE_ALL);
