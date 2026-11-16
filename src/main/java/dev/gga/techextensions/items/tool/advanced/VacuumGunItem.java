@@ -14,7 +14,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -70,7 +70,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 case BLOW -> "techextensions.message.vacuum_gun.mode_blow";
                 case INSPECT -> "techextensions.message.vacuum_gun.mode_inspect";
             };
-            serverPlayer.sendSystemMessage(
+            serverPlayer.displayClientMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
@@ -122,28 +122,28 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
     // Interaction
 
     @Override
-    public InteractionResult use(final Level world, final Player player, final InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(final Level world, final Player player, final InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
 
         if (player.isShiftKeyDown()) {
             switchMode(stack, player);
-            return InteractionResult.CONSUME;
+            return InteractionResultHolder.consume(stack);
         }
 
         if (world.isClientSide()) {
-            return InteractionResult.CONSUME;
+            return InteractionResultHolder.consume(stack);
         }
 
         ServerLevel serverLevel = (ServerLevel) world;
 
-        if (player.getCooldowns().isOnCooldown(stack)) {
-            return InteractionResult.PASS;
+        if (player.getCooldowns().isOnCooldown(this)) {
+            return InteractionResultHolder.pass(stack);
         }
 
-        long cost = TechExtensionsConfig.vacuumGunCostPerAction.get();
+        long cost = TechExtensionsConfig.vacuumGunCostPerAction;
         if (getStoredEnergy(stack) < cost) {
             world.playSound(null, player.blockPosition(), SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 1.0F, 1.2F);
-            return InteractionResult.FAIL;
+            return InteractionResultHolder.fail(stack);
         }
 
         VacuumGunMode mode = getCurrentMode(stack);
@@ -159,10 +159,10 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
         if (didAction) {
             tryUseEnergy(stack, cost);
-            player.getCooldowns().addCooldown(stack, getCooldown(stack));
+            player.getCooldowns().addCooldown(this, getCooldown(stack));
         }
 
-        return InteractionResult.CONSUME;
+        return InteractionResultHolder.consume(stack);
     }
 
     // IUpgradeable
@@ -265,8 +265,8 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         }
 
         final int cooldown = computeCooldown(overclockers);
-        final long energyCapacity = TechExtensionsConfig.vacuumGunCharge.get()
-                + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
+        final long energyCapacity =
+                TechExtensionsConfig.vacuumGunCharge + (long) (energyStorage * TechRebornConfig.energyStoragePower);
 
         CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
             tag.putInt("cache:cooldown", cooldown);
@@ -278,7 +278,7 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:cooldown",
-                TechExtensionsConfig.vacuumGunCooldown.get(),
+                TechExtensionsConfig.vacuumGunCooldown,
                 tag -> tag.getInt("cache:cooldown"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
@@ -288,15 +288,15 @@ public class VacuumGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 "cache:energy_capacity",
-                (long) TechExtensionsConfig.vacuumGunCharge.get(),
+                (long) TechExtensionsConfig.vacuumGunCharge,
                 tag -> tag.getLong("cache:energy_capacity"),
                 VacuumGunItem::getInventory,
                 VacuumGunItem::updateCache);
     }
 
     public static int computeCooldown(int overclockerUpgrades) {
-        double speedMultiplier = TechRebornConfig.overclockerSpeed.get() * overclockerUpgrades;
-        double cooldown = TechExtensionsConfig.vacuumGunCooldown.get() * (1.0 - speedMultiplier);
+        double speedMultiplier = TechRebornConfig.overclockerSpeed * overclockerUpgrades;
+        double cooldown = TechExtensionsConfig.vacuumGunCooldown * (1.0 - speedMultiplier);
         return (int) Math.round(cooldown);
     }
 }

@@ -87,5 +87,15 @@
     "fixed": {
       "rotation": [0, -180, 0]
     }
-  }
+  },
+  "overrides": [
+    {
+      "predicate": { "techextensions:blocking": 1 },
+      "model": "techextensions:item/cyber_shield_blocking_standard"
+    },
+    {
+      "predicate": { "techextensions:blocking": 1, "techextensions:tool_mode": 1 },
+      "model": "techextensions:item/cyber_shield_blocking_perma_parry"
+    }
+  ]
 }

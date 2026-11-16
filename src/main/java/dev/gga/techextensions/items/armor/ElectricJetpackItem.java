@@ -2,10 +2,11 @@ package dev.gga.techextensions.items.armor;
 
 import dev.gga.techextensions.config.TechExtensionsConfig;
 import dev.gga.techextensions.init.TEArmorMaterials;
+import dev.gga.techextensions.network.PlayerInputPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.phys.Vec3;
 import reborncore.api.items.ArmorBlockEntityTicker;
 import reborncore.common.powerSystem.RcEnergyTier;
@@ -15,8 +16,9 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
     public ElectricJetpackItem(String name) {
         super(
                 TEArmorMaterials.ELECTRIC_JETPACK,
-                ArmorType.CHESTPLATE,
-                TechExtensionsConfig.electricJetpackCharge.get(),
+                ArmorItem.Type.CHESTPLATE,
+                TEArmorMaterials.ELECTRIC_JETPACK_DURABILITY,
+                TechExtensionsConfig.electricJetpackCharge,
                 RcEnergyTier.HIGH,
                 name);
     }
@@ -34,22 +36,21 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
             return;
         }
         long storedEnergy = getStoredEnergy(stack);
-        long flyingCost = TechExtensionsConfig.electricJetpackFlyingCost.get();
+        long flyingCost = TechExtensionsConfig.electricJetpackFlyingCost;
         if (storedEnergy <= flyingCost) {
             return;
         }
 
-        // Config values are read once per tick: every ConfigValue.get() takes a lock
-        long sprintCost = TechExtensionsConfig.electricJetpackSprintCost.get();
-        long hoverCost = TechExtensionsConfig.electricJetpackHoverCost.get();
-        double verticalThrust = TechExtensionsConfig.electricJetpackVerticalThrust.get();
-        double horizontalThrust = TechExtensionsConfig.electricJetpackHorizontalThrust.get();
-        double maxVerticalSpeed = TechExtensionsConfig.electricJetpackMaxVerticalSpeed.get();
-        double maxHorizontalSpeed = TechExtensionsConfig.electricJetpackMaxHorizontalSpeed.get();
-        double horizontalDrag = TechExtensionsConfig.electricJetpackHorizontalDrag.get();
-        double verticalDrag = TechExtensionsConfig.electricJetpackVerticalDrag.get();
-        double hoverStrength = TechExtensionsConfig.electricJetpackHoverStrength.get();
-        double sprintThrust = TechExtensionsConfig.electricJetpackSprintThrust.get();
+        long sprintCost = TechExtensionsConfig.electricJetpackSprintCost;
+        long hoverCost = TechExtensionsConfig.electricJetpackHoverCost;
+        double verticalThrust = TechExtensionsConfig.electricJetpackVerticalThrust;
+        double horizontalThrust = TechExtensionsConfig.electricJetpackHorizontalThrust;
+        double maxVerticalSpeed = TechExtensionsConfig.electricJetpackMaxVerticalSpeed;
+        double maxHorizontalSpeed = TechExtensionsConfig.electricJetpackMaxHorizontalSpeed;
+        double horizontalDrag = TechExtensionsConfig.electricJetpackHorizontalDrag;
+        double verticalDrag = TechExtensionsConfig.electricJetpackVerticalDrag;
+        double hoverStrength = TechExtensionsConfig.electricJetpackHoverStrength;
+        double sprintThrust = TechExtensionsConfig.electricJetpackSprintThrust;
 
         Vec3 currentVelocity = playerEntity.getDeltaMovement();
         double vx = currentVelocity.x;
@@ -62,17 +63,17 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
         // Check if player is pressing jump (space) to thrust upward
         // Allow takeoff from ground OR continued thrust in air
-        if (serverPlayer.getLastClientInput().jump()) {
+        if (PlayerInputPayload.lastInput(serverPlayer).jump()) {
             // Apply vertical thrust, capped
             vy = Math.min(vy + verticalThrust, maxVerticalSpeed);
 
             // Apply horizontal thrust based on movement input
-            float forwardInput = serverPlayer.getLastClientInput().forward()
+            float forwardInput = PlayerInputPayload.lastInput(serverPlayer).forward()
                     ? 1.0f
-                    : (serverPlayer.getLastClientInput().backward() ? -1.0f : 0.0f);
-            float strafeInput = serverPlayer.getLastClientInput().left()
+                    : (PlayerInputPayload.lastInput(serverPlayer).backward() ? -1.0f : 0.0f);
+            float strafeInput = PlayerInputPayload.lastInput(serverPlayer).left()
                     ? 1.0f
-                    : (serverPlayer.getLastClientInput().right() ? -1.0f : 0.0f);
+                    : (PlayerInputPayload.lastInput(serverPlayer).right() ? -1.0f : 0.0f);
 
             // Movement direction based on player's yaw
             double yawRad = Math.toRadians(playerEntity.getYRot());
@@ -96,7 +97,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
             isThrusting = true;
         }
         // Hover mode when sneaking in the air
-        else if (serverPlayer.getLastClientInput().shift() && !playerEntity.onGround()) {
+        else if (PlayerInputPayload.lastInput(serverPlayer).shift() && !playerEntity.onGround()) {
             // Counteract gravity to hover, with a slow descent
             vy = Math.max(vy + hoverStrength, -0.1);
             isHovering = true;
@@ -126,7 +127,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
         // Set the new velocity and mark it as changed to sync with the client
         playerEntity.setDeltaMovement(vx, vy, vz);
-        playerEntity.syncVelocity = true;
+        playerEntity.hurtMarked = true;
 
         // Reduce fall damage by resetting fall distance when jetpack is active
         if (!playerEntity.onGround()) {

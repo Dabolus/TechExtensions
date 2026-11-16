@@ -12,7 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
@@ -63,8 +63,8 @@ public class SoapItem extends Item {
     }
 
     @Override
-    public ItemUseAnimation getUseAnimation(ItemStack stack) {
-        return ItemUseAnimation.BRUSH;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BRUSH;
     }
 
     @Override
@@ -91,10 +91,10 @@ public class SoapItem extends Item {
             BlockPos targetPos = getTargetPos(stack);
             if (targetPos != null) {
                 if (TECleaningUtils.cleanBlock(level, targetPos)) {
-                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
 
                     // Damage the soap in whichever hand is using it
-                    stack.hurtAndBreak(1, entity, entity.getUsedItemHand());
+                    stack.hurtAndBreak(1, entity, LivingEntity.getSlotForHand(entity.getUsedItemHand()));
                 }
             }
             // Stop using
@@ -104,9 +104,9 @@ public class SoapItem extends Item {
     }
 
     @Override
-    public boolean releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
         clearTargetPos(stack);
-        return super.releaseUsing(stack, level, entity, timeLeft);
+        super.releaseUsing(stack, level, entity, timeLeft);
     }
 
     // --- NBT helpers ---
@@ -114,7 +114,7 @@ public class SoapItem extends Item {
     private static BlockPos getTargetPos(ItemStack stack) {
         CompoundTag tag = TENbtUtils.view(stack);
         if (tag.contains(TARGET_POS_KEY)) {
-            return BlockPos.of(tag.getLongOr(TARGET_POS_KEY, 0L));
+            return BlockPos.of(tag.getLong(TARGET_POS_KEY));
         }
         return null;
     }

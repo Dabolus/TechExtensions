@@ -5,10 +5,18 @@
     "  P"
   ],
   "key": {
-    "B": "minecraft:dispenser",
-    "C": "techreborn:cell",
-    "E": "techreborn:energy_crystal",
-    "P": "#c:plates/steel"
+    "B": {
+      "item": "minecraft:dispenser"
+    },
+    "C": {
+      "item": "techreborn:cell"
+    },
+    "E": {
+      "item": "techreborn:energy_crystal"
+    },
+    "P": {
+      "tag": "c:plates/steel"
+    }
   },
   "result": {
     "id": "techextensions:bubble_gun"

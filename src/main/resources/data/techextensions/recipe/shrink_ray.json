@@ -5,10 +5,18 @@
     "  P"
   ],
   "key": {
-    "B": "minecraft:beacon",
-    "C": "techreborn:fusion_coil",
-    "D": "techreborn:data_storage_chip",
-    "P": "techreborn:iridium_alloy_plate"
+    "B": {
+      "item": "minecraft:beacon"
+    },
+    "C": {
+      "item": "techreborn:fusion_coil"
+    },
+    "D": {
+      "item": "techreborn:data_storage_chip"
+    },
+    "P": {
+      "item": "techreborn:iridium_alloy_plate"
+    }
   },
   "result": {
     "id": "techextensions:shrink_ray"

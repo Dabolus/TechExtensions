@@ -3,7 +3,7 @@ package dev.gga.techextensions.client.gui;
 import dev.gga.techextensions.blockentity.machine.ElectricDuctedFanBlockEntity;
 import dev.gga.techextensions.blocks.machine.ElectricDuctedFanBlock;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import reborncore.client.gui.GuiBase;
@@ -19,8 +19,8 @@ public class GuiElectricDuctedFan extends GuiBase<BuiltScreenHandler> {
     }
 
     @Override
-    protected void extractLabels(GuiGraphicsExtractor drawContext, int mouseX, int mouseY) {
-        super.extractLabels(drawContext, mouseX, mouseY);
+    protected void renderLabels(GuiGraphics drawContext, int mouseX, int mouseY) {
+        super.renderLabels(drawContext, mouseX, mouseY);
         final Layer layer = Layer.FOREGROUND;
 
         long stored = blockEntity.getEnergy();

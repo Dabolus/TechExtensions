@@ -6,11 +6,21 @@
     "S  "
   ],
   "key": {
-    "D": "techreborn:industrial_drill",
-    "C": "techreborn:industrial_chainsaw",
-    "S": "techreborn:nanosaber",
-    "O": "techreborn:omni_tool",
-    "E": "techreborn:energy_flow_chip"
+    "D": {
+      "item": "techreborn:industrial_drill"
+    },
+    "C": {
+      "item": "techreborn:industrial_chainsaw"
+    },
+    "S": {
+      "item": "techreborn:nanosaber"
+    },
+    "O": {
+      "item": "techreborn:omni_tool"
+    },
+    "E": {
+      "item": "techreborn:energy_flow_chip"
+    }
   },
   "result": {
     "id": "techextensions:meta_tool"

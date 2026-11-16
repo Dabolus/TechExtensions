@@ -18,9 +18,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -43,8 +45,13 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     }
 
     public MetaToolItem(String name) {
+        // Not a TieredItem: its getTier() clashes with RcEnergyItem's in Mojang mappings
         super(TEItemSettings.unbreakable(name)
-                .tool(TEToolMaterials.META_TOOL, TEContent.BlockTags.META_TOOL_MINEABLE, 3f, 1f, 0.0F));
+                .durability(TEToolMaterials.META_TOOL.getUses())
+                .component(
+                        DataComponents.TOOL,
+                        TEToolMaterials.META_TOOL.createToolProperties(TEContent.BlockTags.META_TOOL_MINEABLE))
+                .attributes(DiggerItem.createAttributes(TEToolMaterials.META_TOOL, 3f, 1f)));
     }
 
     private MetaToolMode getCurrentMode(ItemStack stack) {
@@ -61,7 +68,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             TRItemUtils.switchActive(stack, cost, entity);
             stack.set(TEDataComponentTypes.TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                serverPlayerEntity.sendSystemMessage(
+                serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -85,7 +92,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     case AOE_3x3 -> "techextensions.message.meta_tool.mode_aoe_3x3";
                     case SMART -> "techextensions.message.meta_tool.mode_smart";
                 };
-                serverPlayerEntity.sendSystemMessage(
+                serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -99,8 +106,8 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // MiningToolItem
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
-        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost.get()) {
-            return TEToolMaterials.META_TOOL.speed();
+        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost) {
+            return TEToolMaterials.META_TOOL.getSpeed();
         }
         Tool toolComponent = stack.get(DataComponents.TOOL);
         return toolComponent != null ? toolComponent.defaultMiningSpeed() : 1.0F;
@@ -109,7 +116,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     @Override
     public boolean mineBlock(
             ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
-        int cost = TechExtensionsConfig.metaToolCost.get();
+        int cost = TechExtensionsConfig.metaToolCost;
         if (!(entityLiving instanceof Player)) {
             tryUseEnergy(stack, cost);
             return true;
@@ -145,26 +152,27 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     }
 
     @Override
-    public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost.get())
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost)
                 && target.level() instanceof ServerLevel serverWorld) {
             // Mobs can wield the tool too (picked up, or handed over by the Vacuum Gun)
             DamageSource source = attacker instanceof Player player
                     ? serverWorld.damageSources().playerAttack(player)
                     : serverWorld.damageSources().mobAttack(attacker);
-            target.hurtServer(serverWorld, source, 8F);
+            target.hurt(source, 8F);
         }
+        return true;
     }
 
     // Item
     @Override
-    public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
         final ItemStack stack = player.getItemInHand(interactionHand);
         if (player.isShiftKeyDown()) {
-            switchMode(stack, TechExtensionsConfig.metaToolCost.get(), player);
-            return InteractionResult.SUCCESS;
+            switchMode(stack, TechExtensionsConfig.metaToolCost, player);
+            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
-        return InteractionResult.PASS;
+        return InteractionResultHolder.pass(stack);
     }
 
     @Override
@@ -192,6 +200,16 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     }
 
     @Override
+    public int getEnchantmentValue() {
+        return TEToolMaterials.META_TOOL.getEnchantmentValue();
+    }
+
+    @Override
+    public boolean isValidRepairItem(ItemStack stack, ItemStack repairCandidate) {
+        return TEToolMaterials.META_TOOL.getRepairIngredient().test(repairCandidate);
+    }
+
+    @Override
     public int getBarWidth(ItemStack stack) {
         return ItemUtils.getPowerForDurabilityBar(stack);
     }
@@ -209,7 +227,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.metaToolCharge.get();
+        return TechExtensionsConfig.metaToolCharge;
     }
 
     @Override

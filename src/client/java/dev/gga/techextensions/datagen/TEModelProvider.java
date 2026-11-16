@@ -1,18 +1,19 @@
 package dev.gga.techextensions.datagen;
 
-import dev.gga.techextensions.client.tint.ResonanceScannerScreenTintSource;
 import dev.gga.techextensions.init.TEContent;
 import java.util.function.Consumer;
-import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
-import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
-import net.minecraft.client.data.models.BlockModelGenerators;
-import net.minecraft.client.data.models.ItemModelGenerators;
-import net.minecraft.client.data.models.model.ModelTemplates;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
+import net.minecraft.data.models.BlockModelGenerators;
+import net.minecraft.data.models.ItemModelGenerators;
+import net.minecraft.data.models.model.ModelLocationUtils;
+import net.minecraft.data.models.model.ModelTemplates;
+import net.minecraft.data.models.model.TextureMapping;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 
 public class TEModelProvider extends FabricModelProvider {
-    public TEModelProvider(FabricPackOutput output) {
+    public TEModelProvider(FabricDataOutput output) {
         super(output);
     }
 
@@ -33,9 +34,12 @@ public class TEModelProvider extends FabricModelProvider {
         add(TEContent.ELECTRIC_DUCTED_FAN, toGenerated);
         add(TEContent.ELECTRIC_JETPACK, toGenerated);
         add(TEContent.META_TOOL, toHandheld);
+        // The screen layer (tint index 1) is colored by ResonanceScannerScreenTintSource
         add(
                 TEContent.RESONANCE_SCANNER,
-                (info) -> itemModelGenerators.generateItemWithTintedOverlay(
-                        info.asItem(), "_screen", new ResonanceScannerScreenTintSource()));
+                (info) -> itemModelGenerators.generateLayeredItem(
+                        ModelLocationUtils.getModelLocation(info.asItem()),
+                        TextureMapping.getItemTexture(info.asItem()),
+                        TextureMapping.getItemTexture(info.asItem(), "_screen")));
     }
 }

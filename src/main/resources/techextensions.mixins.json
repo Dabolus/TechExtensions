@@ -1,8 +1,8 @@
 {
   "required": true,
   "package": "dev.gga.techextensions.mixin",
-  "compatibilityLevel": "JAVA_25",
-  "mixins": ["ShrinkRayEffectMixin", "CyberShieldParryMixin"],
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["ShrinkRayEffectMixin", "CyberShieldParryMixin", "CyberShieldDisableMixin"],
   "injectors": {
     "defaultRequire": 1
   },

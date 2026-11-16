@@ -2,59 +2,58 @@ package dev.gga.techextensions.init;
 
 import dev.gga.techextensions.TechExtensions;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.function.Supplier;
+import net.minecraft.Util;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.TagKey;
-import net.minecraft.util.Util;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.equipment.ArmorMaterial;
-import net.minecraft.world.item.equipment.ArmorType;
-import net.minecraft.world.item.equipment.EquipmentAsset;
-import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.crafting.Ingredient;
 
 public class TEArmorMaterials {
-    private static final TagKey<Item> EMPTY =
-            TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "empty"));
+    /** Durability multiplier, applied per armor type through {@link ArmorItem.Type#getDurability(int)}. */
+    public static final int ELECTRIC_JETPACK_DURABILITY = 33;
 
-    public static final ArmorMaterial ELECTRIC_JETPACK = register(
+    public static final Holder<ArmorMaterial> ELECTRIC_JETPACK = register(
             "electric_jetpack",
-            Util.make(new EnumMap<>(ArmorType.class), map -> {
-                map.put(ArmorType.BOOTS, 0);
-                map.put(ArmorType.LEGGINGS, 0);
-                map.put(ArmorType.CHESTPLATE, 5);
-                map.put(ArmorType.HELMET, 0);
-                map.put(ArmorType.BODY, 0);
+            Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
+                map.put(ArmorItem.Type.BOOTS, 0);
+                map.put(ArmorItem.Type.LEGGINGS, 0);
+                map.put(ArmorItem.Type.CHESTPLATE, 5);
+                map.put(ArmorItem.Type.HELMET, 0);
+                map.put(ArmorItem.Type.BODY, 0);
             }),
             10,
             SoundEvents.ARMOR_EQUIP_TURTLE,
             0.0f,
             0.0f,
-            33,
-            EMPTY);
+            () -> Ingredient.EMPTY);
 
-    private static ArmorMaterial register(
+    private static Holder<ArmorMaterial> register(
             String id,
-            EnumMap<ArmorType, Integer> defense,
+            EnumMap<ArmorItem.Type, Integer> defense,
             int enchantability,
             Holder<SoundEvent> equipSound,
             float toughness,
             float knockbackResistance,
-            int durability,
-            TagKey<Item> repairIngredient) {
-        ResourceKey<EquipmentAsset> asset =
-                ResourceKey.create(EquipmentAssets.ROOT_ID, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, id));
-        return new ArmorMaterial(
-                durability,
-                defense,
-                enchantability,
-                equipSound,
-                toughness,
-                knockbackResistance,
-                repairIngredient,
-                asset);
+            Supplier<Ingredient> repairIngredient) {
+        ResourceLocation location = ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, id);
+        // The layer id resolves to textures/models/armor/<id>_layer_1.png
+        return Registry.registerForHolder(
+                BuiltInRegistries.ARMOR_MATERIAL,
+                location,
+                new ArmorMaterial(
+                        defense,
+                        enchantability,
+                        equipSound,
+                        repairIngredient,
+                        List.of(new ArmorMaterial.Layer(location)),
+                        toughness,
+                        knockbackResistance));
     }
 }

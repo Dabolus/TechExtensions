@@ -6,11 +6,21 @@
     "PCP"
   ],
   "key": {
-    "T": "techreborn:frequency_transmitter",
-    "D": "techreborn:digital_display",
-    "B": "techreborn:lithium_ion_battery",
-    "C": "techreborn:advanced_circuit",
-    "P": "#c:plates/invar"
+    "T": {
+      "item": "techreborn:frequency_transmitter"
+    },
+    "D": {
+      "item": "techreborn:digital_display"
+    },
+    "B": {
+      "item": "techreborn:lithium_ion_battery"
+    },
+    "C": {
+      "item": "techreborn:advanced_circuit"
+    },
+    "P": {
+      "tag": "c:plates/invar"
+    }
   },
   "result": {
     "id": "techextensions:resonance_scanner"

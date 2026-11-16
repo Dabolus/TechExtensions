@@ -15,13 +15,13 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
@@ -62,7 +62,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
      */
     private record AttributeModifierInfo(
             Holder<Attribute> attribute,
-            Identifier modifierId,
+            ResourceLocation modifierId,
             double multiplyDelta,
             AttributeModifier.Operation operation) {
 
@@ -73,7 +73,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 AttributeModifier.Operation operation) {
             this(
                     attribute,
-                    Identifier.fromNamespaceAndPath(
+                    ResourceLocation.fromNamespaceAndPath(
                             TechExtensions.MOD_ID, "shrink_ray_" + modifierName + "_adjustment"),
                     multiplyDelta,
                     operation);
@@ -91,7 +91,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
     private static final AttributeModifierInfo SCALE_MODIFIER_INFO =
             new AttributeModifierInfo(Attributes.SCALE, "scale", 1.0D);
-    public static final Identifier SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId();
+    public static final ResourceLocation SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId();
 
     private static final List<AttributeModifierInfo> ATTRIBUTE_MODIFIER_INFO = List.of(
             new AttributeModifierInfo(Attributes.ATTACK_DAMAGE, "attack_damage", 0.8D),
@@ -179,7 +179,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 case ENLARGE -> "techextensions.message.shrink_ray.mode_enlarge";
                 case RESTORE -> "techextensions.message.shrink_ray.mode_restore";
             };
-            serverPlayerEntity.sendSystemMessage(
+            serverPlayerEntity.displayClientMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
@@ -206,7 +206,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.shrinkRayCharge.get();
+        return TechExtensionsConfig.shrinkRayCharge;
     }
 
     @Override
@@ -220,18 +220,18 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
     }
 
     @Override
-    public InteractionResult use(final Level world, final Player player, final InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(final Level world, final Player player, final InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
             switchMode(stack, player);
-            return InteractionResult.SUCCESS;
+            return InteractionResultHolder.sidedSuccess(stack, world.isClientSide());
         }
         if (!(world instanceof ServerLevel serverLevel)) {
-            return InteractionResult.PASS;
+            return InteractionResultHolder.pass(stack);
         }
         // Not enough energy, no-op
-        if (!tryUseEnergy(stack, TechExtensionsConfig.shrinkRayCost.get())) {
-            return InteractionResult.SUCCESS;
+        if (!tryUseEnergy(stack, TechExtensionsConfig.shrinkRayCost)) {
+            return InteractionResultHolder.sidedSuccess(stack, world.isClientSide());
         }
         // Raycast for entities along the player's look vector
         final double range = player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) * 8.0D;
@@ -261,7 +261,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
         if (closestEntity instanceof LivingEntity living) {
             final AttributeInstance scaleAttr = living.getAttribute(Attributes.SCALE);
             if (scaleAttr == null) {
-                return InteractionResult.PASS;
+                return InteractionResultHolder.pass(stack);
             }
             final double currentScale = scaleAttr.getValue();
             final double naturalScale = naturalScale(scaleAttr);
@@ -281,10 +281,10 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 case RESTORE -> naturalScale;
             };
             SHRINK_TASKS.put(living, new ShrinkTask(currentScale, targetScale, naturalScale));
-            return InteractionResult.SUCCESS;
+            return InteractionResultHolder.sidedSuccess(stack, world.isClientSide());
         }
 
-        return InteractionResult.PASS;
+        return InteractionResultHolder.pass(stack);
     }
 
     /** The entity's scale without this ray's modifier (base scale plus any other modifier, e.g. babies). */

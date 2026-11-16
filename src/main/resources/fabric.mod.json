@@ -27,15 +27,19 @@
 		]
 	},
 	"mixins": [
-		"techextensions.mixins.json"
+		"techextensions.mixins.json",
+		{
+			"config": "techextensions.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "${minecraftDependency}",
-		"java": ">=25",
+		"java": ">=21",
 		"fabric-api": "*",
-		"techreborn": ">=6.2.1",
-		"reborncore": ">=6.2.1"
+		"techreborn": ">=5.11.19",
+		"reborncore": ">=5.11.19"
 	},
 	"accessWidener": "techextensions.classtweaker"
 }

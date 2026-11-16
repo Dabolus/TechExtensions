@@ -6,7 +6,6 @@ import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SonicBoomParticle;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.util.RandomSource;
 
 public class ShrinkRayParticle extends SonicBoomParticle {
     protected ShrinkRayParticle(ClientLevel clientLevel, double d, double e, double f, double g, SpriteSet spriteSet) {
@@ -30,8 +29,7 @@ public class ShrinkRayParticle extends SonicBoomParticle {
                 double f,
                 double g,
                 double h,
-                double i,
-                RandomSource randomSource) {
+                double i) {
             return new ShrinkRayParticle(clientLevel, d, e, f, g, this.sprites);
         }
     }

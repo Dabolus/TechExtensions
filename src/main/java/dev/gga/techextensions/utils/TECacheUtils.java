@@ -1,6 +1,5 @@
 package dev.gga.techextensions.utils;
 
-import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import net.minecraft.nbt.CompoundTag;
@@ -30,7 +29,7 @@ public final class TECacheUtils {
             ItemStack stack,
             String key,
             T defaultValue,
-            Function<CompoundTag, Optional<T>> extractor,
+            Function<CompoundTag, T> extractor,
             Function<ItemStack, Container> inventoryGetter,
             BiConsumer<ItemStack, Container> cacheUpdater) {
         if (stack == null) {
@@ -38,9 +37,10 @@ public final class TECacheUtils {
         }
         CompoundTag tag = TENbtUtils.view(stack);
         if (tag.contains(key)) {
-            return extractor.apply(tag).orElse(defaultValue);
+            return extractor.apply(tag);
         }
         cacheUpdater.accept(stack, inventoryGetter.apply(stack));
-        return extractor.apply(TENbtUtils.view(stack)).orElse(defaultValue);
+        tag = TENbtUtils.view(stack);
+        return tag.contains(key) ? extractor.apply(tag) : defaultValue;
     }
 }
