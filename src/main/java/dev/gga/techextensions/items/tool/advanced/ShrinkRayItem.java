@@ -15,7 +15,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -62,7 +62,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
      */
     private record AttributeModifierInfo(
             Holder<Attribute> attribute,
-            Identifier modifierId,
+            ResourceLocation modifierId,
             double multiplyDelta,
             AttributeModifier.Operation operation) {
 
@@ -73,7 +73,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 AttributeModifier.Operation operation) {
             this(
                     attribute,
-                    Identifier.fromNamespaceAndPath(
+                    ResourceLocation.fromNamespaceAndPath(
                             TechExtensions.MOD_ID, "shrink_ray_" + modifierName + "_adjustment"),
                     multiplyDelta,
                     operation);
@@ -91,7 +91,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
 
     private static final AttributeModifierInfo SCALE_MODIFIER_INFO =
             new AttributeModifierInfo(Attributes.SCALE, "scale", 1.0D);
-    public static final Identifier SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId();
+    public static final ResourceLocation SHRINK_RAY_SCALE_MODIFIER_ID = SCALE_MODIFIER_INFO.modifierId();
 
     private static final List<AttributeModifierInfo> ATTRIBUTE_MODIFIER_INFO = List.of(
             new AttributeModifierInfo(Attributes.ATTACK_DAMAGE, "attack_damage", 0.8D),
@@ -179,7 +179,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
                 case ENLARGE -> "techextensions.message.shrink_ray.mode_enlarge";
                 case RESTORE -> "techextensions.message.shrink_ray.mode_restore";
             };
-            serverPlayerEntity.sendSystemMessage(
+            serverPlayerEntity.displayClientMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
@@ -206,7 +206,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.shrinkRayCharge.get();
+        return TechExtensionsConfig.shrinkRayCharge;
     }
 
     @Override
@@ -230,7 +230,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
             return InteractionResult.PASS;
         }
         // Not enough energy, no-op
-        if (!tryUseEnergy(stack, TechExtensionsConfig.shrinkRayCost.get())) {
+        if (!tryUseEnergy(stack, TechExtensionsConfig.shrinkRayCost)) {
             return InteractionResult.SUCCESS;
         }
         // Raycast for entities along the player's look vector

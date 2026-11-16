@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'java-library'
 	id 'idea'
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
 	id 'com.diffplug.spotless' version "${spotless_version}"
 	id 'me.modmuss50.mod-publish-plugin' version "${publish_plugin_version}"
@@ -57,18 +57,21 @@ fabricApi {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	implementation "TechReborn:TechReborn-${project.tech_reborn_version}"
+	modImplementation "TechReborn:TechReborn-${project.tech_reborn_version}"
 
 	// We provide LambDynamicLights configuration, even if we don't directly depend on it
-	localRuntime "dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${project.lambdynamiclights_version}"
+	modLocalRuntime("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${project.lambdynamiclights_version}") {
+		// Optional Mod Menu integration, not published on the repositories above for this version
+		exclude group: "com.terraformersmc"
+	}
 
-	// To easily check and debug recipes in-game
-	localRuntime "mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}"
+	// JEI (used on other branches to check recipes in-game) has no Fabric build for 1.21.4
 }
 
 processResources {
@@ -81,7 +84,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = 21
 }
 
 java {
@@ -90,8 +93,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {

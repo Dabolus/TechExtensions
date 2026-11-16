@@ -32,10 +32,10 @@
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "${minecraftDependency}",
-		"java": ">=25",
+		"java": ">=21",
 		"fabric-api": "*",
-		"techreborn": ">=6.2.1",
-		"reborncore": ">=6.2.1"
+		"techreborn": ">=5.12.9",
+		"reborncore": ">=5.12.9"
 	},
 	"accessWidener": "techextensions.classtweaker"
 }

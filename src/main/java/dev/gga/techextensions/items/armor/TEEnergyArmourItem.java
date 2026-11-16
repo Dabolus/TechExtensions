@@ -15,7 +15,7 @@ public abstract class TEEnergyArmourItem extends Item implements RcEnergyItem {
 
     public TEEnergyArmourItem(
             ArmorMaterial material, ArmorType slot, long maxCharge, RcEnergyTier energyTier, String name) {
-        super(TEItemSettings.unbreakable(name).stacksTo(1).humanoidArmor(material, slot));
+        super(material.humanoidProperties(TEItemSettings.unbreakable(name).stacksTo(1), slot));
         this.maxCharge = maxCharge;
         this.energyTier = energyTier;
     }

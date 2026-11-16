@@ -3,28 +3,26 @@ package dev.gga.techextensions.client.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.entity.BubbleTrapEntity;
-import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
 /**
  * Renders a semi-transparent bubble cube around the trapped entity.
  */
 public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, BubbleTrapEntityRenderState> {
-    private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "textures/entity/bubble_trap.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "textures/entity/bubble_trap.png");
 
     private final BubbleTrapModel model;
 
     public BubbleTrapEntityRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
-        this.model = new BubbleTrapModel(ctx.bakeLayer(BubbleTrapModel.LAYER_LOCATION), RenderTypes::entityTranslucent);
+        this.model = new BubbleTrapModel(ctx.bakeLayer(BubbleTrapModel.LAYER_LOCATION), RenderType::entityTranslucent);
     }
 
     @Override
@@ -49,11 +47,8 @@ public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, B
     }
 
     @Override
-    public void submit(
-            BubbleTrapEntityRenderState state,
-            PoseStack poseStack,
-            SubmitNodeCollector collector,
-            CameraRenderState camera) {
+    public void render(
+            BubbleTrapEntityRenderState state, PoseStack poseStack, MultiBufferSource buffers, int packedLight) {
         if (!state.hasTrappedEntity) {
             return;
         }
@@ -70,14 +65,12 @@ public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, B
         poseStack.scale(scaleX, scaleY, scaleZ);
 
         RenderType renderType = this.model.renderType(TEXTURE);
-        // Render with the bubble texture; pass 0 for outline color to avoid
-        // the default overload triggering a white outline silhouette.
-        // Translucency comes from the texture's own alpha channel.
-        collector.submitModel(
-                this.model, state, poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+        // Render with the bubble texture. Translucency comes from the texture's own alpha channel.
+        this.model.setupAnim(state);
+        this.model.renderToBuffer(poseStack, buffers.getBuffer(renderType), packedLight, OverlayTexture.NO_OVERLAY);
 
         poseStack.popPose();
 
-        super.submit(state, poseStack, collector, camera);
+        super.render(state, poseStack, buffers, packedLight);
     }
 }

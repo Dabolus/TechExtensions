@@ -16,7 +16,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
         super(
                 TEArmorMaterials.ELECTRIC_JETPACK,
                 ArmorType.CHESTPLATE,
-                TechExtensionsConfig.electricJetpackCharge.get(),
+                TechExtensionsConfig.electricJetpackCharge,
                 RcEnergyTier.HIGH,
                 name);
     }
@@ -34,22 +34,21 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
             return;
         }
         long storedEnergy = getStoredEnergy(stack);
-        long flyingCost = TechExtensionsConfig.electricJetpackFlyingCost.get();
+        long flyingCost = TechExtensionsConfig.electricJetpackFlyingCost;
         if (storedEnergy <= flyingCost) {
             return;
         }
 
-        // Config values are read once per tick: every ConfigValue.get() takes a lock
-        long sprintCost = TechExtensionsConfig.electricJetpackSprintCost.get();
-        long hoverCost = TechExtensionsConfig.electricJetpackHoverCost.get();
-        double verticalThrust = TechExtensionsConfig.electricJetpackVerticalThrust.get();
-        double horizontalThrust = TechExtensionsConfig.electricJetpackHorizontalThrust.get();
-        double maxVerticalSpeed = TechExtensionsConfig.electricJetpackMaxVerticalSpeed.get();
-        double maxHorizontalSpeed = TechExtensionsConfig.electricJetpackMaxHorizontalSpeed.get();
-        double horizontalDrag = TechExtensionsConfig.electricJetpackHorizontalDrag.get();
-        double verticalDrag = TechExtensionsConfig.electricJetpackVerticalDrag.get();
-        double hoverStrength = TechExtensionsConfig.electricJetpackHoverStrength.get();
-        double sprintThrust = TechExtensionsConfig.electricJetpackSprintThrust.get();
+        long sprintCost = TechExtensionsConfig.electricJetpackSprintCost;
+        long hoverCost = TechExtensionsConfig.electricJetpackHoverCost;
+        double verticalThrust = TechExtensionsConfig.electricJetpackVerticalThrust;
+        double horizontalThrust = TechExtensionsConfig.electricJetpackHorizontalThrust;
+        double maxVerticalSpeed = TechExtensionsConfig.electricJetpackMaxVerticalSpeed;
+        double maxHorizontalSpeed = TechExtensionsConfig.electricJetpackMaxHorizontalSpeed;
+        double horizontalDrag = TechExtensionsConfig.electricJetpackHorizontalDrag;
+        double verticalDrag = TechExtensionsConfig.electricJetpackVerticalDrag;
+        double hoverStrength = TechExtensionsConfig.electricJetpackHoverStrength;
+        double sprintThrust = TechExtensionsConfig.electricJetpackSprintThrust;
 
         Vec3 currentVelocity = playerEntity.getDeltaMovement();
         double vx = currentVelocity.x;
@@ -126,7 +125,7 @@ public class ElectricJetpackItem extends TEEnergyArmourItem implements ArmorBloc
 
         // Set the new velocity and mark it as changed to sync with the client
         playerEntity.setDeltaMovement(vx, vy, vz);
-        playerEntity.syncVelocity = true;
+        playerEntity.hurtMarked = true;
 
         // Reduce fall damage by resetting fall distance when jetpack is active
         if (!playerEntity.onGround()) {

@@ -5,18 +5,14 @@ import dev.gga.techextensions.utils.ItemAnimationManager;
 import dev.gga.techextensions.utils.TEAimingUtils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -39,7 +35,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileItem;
 import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.item.component.TypedEntityData;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.ClipContext;
@@ -56,7 +52,6 @@ import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -97,7 +92,7 @@ final class VacuumGunActions {
     static boolean performVacuum(ServerLevel world, Player player, ItemStack gunStack) {
         Vec3 eyePos = player.getEyePosition(1.0F);
         Vec3 lookDir = player.getViewVector(1.0F).normalize();
-        double range = TechExtensionsConfig.vacuumGunRange.get();
+        double range = TechExtensionsConfig.vacuumGunRange;
         Vec3 endPos = eyePos.add(lookDir.scale(range));
 
         BlockHitResult blockHit = world.clip(new ClipContext(
@@ -162,14 +157,12 @@ final class VacuumGunActions {
         }
 
         // Second, if no equipped items, vacuum the mob itself as a spawn egg (if possible)
-        Optional<Holder<Item>> eggHolder = SpawnEggItem.byId(living.getType());
-        if (eggHolder.isPresent()) {
-            ItemStack eggStack = new ItemStack(eggHolder.get());
-            TagValueOutput output =
-                    TagValueOutput.createWithContext(ProblemReporter.DISCARDING, world.registryAccess());
-            living.saveWithoutId(output);
-            CompoundTag entityTag = output.buildResult();
-            eggStack.set(DataComponents.ENTITY_DATA, TypedEntityData.of(living.getType(), entityTag));
+        SpawnEggItem egg = SpawnEggItem.byId(living.getType());
+        if (egg != null) {
+            ItemStack eggStack = new ItemStack(egg);
+            CompoundTag entityTag = living.saveWithoutId(new CompoundTag());
+            entityTag.putString("id", EntityType.getKey(living.getType()).toString());
+            eggStack.set(DataComponents.ENTITY_DATA, CustomData.of(entityTag));
             if (living.hasCustomName()) {
                 eggStack.set(DataComponents.CUSTOM_NAME, living.getCustomName());
             }
@@ -221,7 +214,7 @@ final class VacuumGunActions {
         ItemStack leftover = VacuumGunItem.insertIntoInventory(inventory, filledBucket);
         inventory.setChanged();
         if (!leftover.isEmpty()) {
-            player.drop(leftover, false, Prediction.SERVER_ONLY);
+            player.drop(leftover, false);
         }
         world.setBlock(fluidPos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         world.playSound(null, fluidPos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
@@ -297,7 +290,7 @@ final class VacuumGunActions {
         Item item = takenItem.getItem();
         Item nukeItem = TRContent.NUKE.asItem();
 
-        if (item == Items.TNT || (TechRebornConfig.nukeEnabled.get() && item == nukeItem)) {
+        if (item == Items.TNT || (TechRebornConfig.nukeEnabled && item == nukeItem)) {
             return () -> blowExplosive(world, player, takenItem, tr);
         }
         if (item instanceof SpawnEggItem) {
@@ -362,15 +355,15 @@ final class VacuumGunActions {
 
     private static void blowSpawnEgg(ServerLevel world, Player player, ItemStack takenItem, TrajectoryResult tr) {
         SpawnEggItem spawnEgg = (SpawnEggItem) takenItem.getItem();
-        EntityType<?> entityType = spawnEgg.getType(takenItem);
+        EntityType<?> entityType = spawnEgg.getType(world.registryAccess(), takenItem);
         if (entityType == null) return;
         BlockPos target = tr.adjacentPos();
-        TypedEntityData<?> savedData = takenItem.get(DataComponents.ENTITY_DATA);
+        CustomData savedData = takenItem.get(DataComponents.ENTITY_DATA);
         if (savedData != null) {
             Entity entity = entityType.create(world, EntitySpawnReason.LOAD);
             if (entity != null) {
                 savedData.loadInto(entity);
-                entity.snapTo(
+                entity.moveTo(
                         target.getX() + 0.5, target.getY(), target.getZ() + 0.5, entity.getYRot(), entity.getXRot());
                 world.addFreshEntity(entity);
             }
@@ -400,11 +393,10 @@ final class VacuumGunActions {
         boolean used = false;
 
         if (hitState.getBlock() instanceof TntBlock) {
-            // Like vanilla flint and steel: only consume the TNT block if it was actually primed
-            if (TntBlock.prime(world, hitBlock)) {
-                world.setBlock(hitBlock, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-                used = true;
-            }
+            // 1.21.4 has no tntExplodes game rule, so priming always succeeds
+            TntBlock.explode(world, hitBlock);
+            world.setBlock(hitBlock, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+            used = true;
         } else if (hitState.is(Blocks.CAMPFIRE) || hitState.is(Blocks.SOUL_CAMPFIRE)) {
             if (CampfireBlock.canLight(hitState)) {
                 world.setBlock(hitBlock, hitState.setValue(CampfireBlock.LIT, true), Block.UPDATE_ALL);
@@ -437,7 +429,7 @@ final class VacuumGunActions {
         if (hitState.getBlock() instanceof BeehiveBlock beehiveBlock
                 && hitState.hasProperty(BlockStateProperties.LEVEL_HONEY)
                 && hitState.getValue(BlockStateProperties.LEVEL_HONEY) >= 5) {
-            BeehiveBlock.dropHoneycomb(world, shearsItem, hitState, world.getBlockEntity(hitBlock), player, hitBlock);
+            BeehiveBlock.dropHoneycomb(world, hitBlock);
             beehiveBlock.releaseBeesAndResetHoneyLevel(
                     world, hitState, hitBlock, player, BeehiveBlockEntity.BeeReleaseStatus.BEE_RELEASED);
             world.gameEvent(player, GameEvent.SHEAR, hitBlock);
@@ -654,7 +646,7 @@ final class VacuumGunActions {
         for (ItemStack stack : stacks) {
             ItemStack leftover = VacuumGunItem.insertIntoInventory(inv, stack);
             if (!leftover.isEmpty()) {
-                player.drop(leftover, false, Prediction.SERVER_ONLY);
+                player.drop(leftover, false);
             }
         }
     }

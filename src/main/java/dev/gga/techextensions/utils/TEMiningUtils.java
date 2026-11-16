@@ -35,9 +35,8 @@ public final class TEMiningUtils {
         // Consider it an ore if it has a tag that starts with ores/
         return ORE_CACHE.computeIfAbsent(
                 state.getBlock(),
-                block -> state.typeHolder()
-                        .tags()
-                        .anyMatch(tag -> tag.location().getPath().startsWith("ores/")));
+                block ->
+                        state.getTags().anyMatch(tag -> tag.location().getPath().startsWith("ores/")));
     }
 
     public static boolean isValidVeinMineStartBlock(BlockState state) {
@@ -51,8 +50,7 @@ public final class TEMiningUtils {
     public static void mineAoe3x3(ItemStack stack, Level worldIn, BlockPos pos, LivingEntity entityLiving) {
         for (BlockPos additionalPos : ToolsUtil.getAOEMiningBlocks(worldIn, pos, entityLiving, 1)) {
             if (shouldBreak(worldIn, pos, additionalPos)) {
-                ToolsUtil.breakBlock(
-                        stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost.get());
+                ToolsUtil.breakBlock(stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost);
             }
         }
     }

@@ -91,10 +91,10 @@ public class SoapItem extends Item {
             BlockPos targetPos = getTargetPos(stack);
             if (targetPos != null) {
                 if (TECleaningUtils.cleanBlock(level, targetPos)) {
-                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.playSound(null, targetPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
 
                     // Damage the soap in whichever hand is using it
-                    stack.hurtAndBreak(1, entity, entity.getUsedItemHand());
+                    stack.hurtAndBreak(1, entity, LivingEntity.getSlotForHand(entity.getUsedItemHand()));
                 }
             }
             // Stop using
@@ -114,7 +114,7 @@ public class SoapItem extends Item {
     private static BlockPos getTargetPos(ItemStack stack) {
         CompoundTag tag = TENbtUtils.view(stack);
         if (tag.contains(TARGET_POS_KEY)) {
-            return BlockPos.of(tag.getLongOr(TARGET_POS_KEY, 0L));
+            return BlockPos.of(tag.getLong(TARGET_POS_KEY));
         }
         return null;
     }

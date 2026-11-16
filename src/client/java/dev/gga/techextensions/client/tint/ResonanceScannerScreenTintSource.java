@@ -30,7 +30,7 @@ public record ResonanceScannerScreenTintSource() implements ItemTintSource {
         if (!tag.contains(ResonanceScannerItem.DISTANCE_PERCENT_KEY)) {
             return OFF_SCREEN_COLOR;
         }
-        double blockDistancePercent = tag.getDoubleOr(ResonanceScannerItem.DISTANCE_PERCENT_KEY, 1.0);
+        double blockDistancePercent = tag.getDouble(ResonanceScannerItem.DISTANCE_PERCENT_KEY);
         // HSB Logic: 0.05 (Far/Red) -> 0.3 (Close/Green)
         float hue = 0.05f + (float) (0.25 * (1.0 - blockDistancePercent));
         return Mth.hsvToArgb(hue, 1.0f, 0.8f, 255);

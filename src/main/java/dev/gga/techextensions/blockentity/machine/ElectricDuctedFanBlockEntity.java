@@ -55,8 +55,8 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
         if (world == null || !(state.getBlock() instanceof ElectricDuctedFanBlock)) {
             return;
         }
-        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
-        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
+        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost;
+        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost;
         long stored = getEnergy();
         boolean shouldProcess = world.isClientSide() ? ElectricDuctedFanBlock.isActive(state) : (stored > minCost);
         if (shouldProcess) {
@@ -93,8 +93,8 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
 
     /** Ratio (0.0 to 1.0) of the energy the fan can burn this tick, between the min and max operation cost. */
     public static double computePowerRatio(long storedEnergy) {
-        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost.get();
-        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost.get();
+        long minCost = TechExtensionsConfig.electricDuctedFanMinEnergyCost;
+        long maxCost = TechExtensionsConfig.electricDuctedFanMaxEnergyCost;
         if (maxCost <= minCost) {
             return 1.0;
         }
@@ -153,7 +153,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
             // Add to entity's current motion
             Vec3 currentMotion = entity.getDeltaMovement();
             entity.setDeltaMovement(currentMotion.add(pushVelocity));
-            entity.syncVelocity = true; // Force motion sync to client
+            entity.hurtMarked = true; // Force motion sync to client
 
             // Reset fall distance for upward fans to prevent fall damage
             if (facing == Direction.UP) {
@@ -279,7 +279,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
 
     @Override
     public long getBaseMaxPower() {
-        return TechExtensionsConfig.electricDuctedFanMaxEnergy.get();
+        return TechExtensionsConfig.electricDuctedFanMaxEnergy;
     }
 
     @Override
@@ -300,7 +300,7 @@ public class ElectricDuctedFanBlockEntity extends PowerAcceptorBlockEntity
 
     @Override
     public long getBaseMaxInput() {
-        return TechExtensionsConfig.electricDuctedFanMaxInput.get();
+        return TechExtensionsConfig.electricDuctedFanMaxInput;
     }
 
     // MachineBaseBlockEntity

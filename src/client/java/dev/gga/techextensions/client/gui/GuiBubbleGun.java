@@ -5,17 +5,19 @@ import dev.gga.techextensions.items.tool.advanced.BubbleGunItem;
 import dev.gga.techextensions.menu.BubbleGunMenu;
 import dev.gga.techextensions.utils.TEFormatUtils;
 import java.util.List;
-import java.util.Optional;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.block.FluidModel;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,20 +68,15 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
         ItemStack gunStack = findGunStack();
         hasGun = !gunStack.isEmpty();
         waterAmount = hasGun ? BubbleGunItem.getWaterAmount(gunStack) : 0;
-        maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+        maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
 
         Minecraft mc = Minecraft.getInstance();
-        FluidModel fluidModel = mc.getModelManager().getFluidStateModelSet().get(Fluids.WATER.defaultFluidState());
-        waterSprite = fluidModel != null && fluidModel.stillMaterial() != null
-                ? fluidModel.stillMaterial().sprite()
-                : null;
-        waterColor = fluidModel != null && fluidModel.tintSource() != null && mc.level != null && mc.player != null
-                ? fluidModel
-                        .tintSource()
-                        .colorInWorld(
-                                Fluids.WATER.defaultFluidState().createLegacyBlock(),
-                                mc.level,
-                                mc.player.blockPosition())
+        FluidRenderHandler fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER);
+        FluidState waterState = Fluids.WATER.defaultFluidState();
+        BlockPos pos = mc.player != null ? mc.player.blockPosition() : null;
+        waterSprite = fluidHandler != null ? fluidHandler.getFluidSprites(mc.level, pos, waterState)[0] : null;
+        waterColor = fluidHandler != null && mc.level != null && pos != null
+                ? fluidHandler.getFluidColor(mc.level, pos, waterState)
                 : 0xFFFFFF;
     }
 
@@ -97,13 +94,13 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float partialTicks) {
-        super.extractRenderState(drawContext, mouseX, mouseY, partialTicks);
+    public void render(GuiGraphics drawContext, int mouseX, int mouseY, float partialTicks) {
+        super.render(drawContext, mouseX, mouseY, partialTicks);
         drawTankTooltip(drawContext, mouseX, mouseY);
     }
 
     @Override
-    protected void extractItemContents(GuiGraphicsExtractor drawContext) {
+    protected void extractItemContents(GuiGraphics drawContext) {
         // Soap slot (top center)
         drawSlot(drawContext, 80, 17);
         // Water container input slot (left bottom)
@@ -115,8 +112,8 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
     }
 
     @Override
-    protected void extractLabels(GuiGraphicsExtractor drawContext, int mouseX, int mouseY) {
-        super.extractLabels(drawContext, mouseX, mouseY);
+    protected void renderLabels(GuiGraphics drawContext, int mouseX, int mouseY) {
+        super.renderLabels(drawContext, mouseX, mouseY);
         if (!hasGun) {
             return;
         }
@@ -131,7 +128,7 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
                 0xFF404040);
     }
 
-    private void drawWaterTank(GuiGraphicsExtractor drawContext, int x, int y, int width, int height) {
+    private void drawWaterTank(GuiGraphics drawContext, int x, int y, int width, int height) {
         // Draw tank background
         drawContext.fill(x, y, x + width, y + height, TANK_BG_COLOR);
 
@@ -154,13 +151,7 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
                         int rw = Math.min(spriteSize, innerWidth - ox);
                         int rh = Math.min(spriteSize, fillHeight - oy);
                         drawContext.blitSprite(
-                                RenderPipelines.GUI_TEXTURED,
-                                waterSprite,
-                                fillX + ox,
-                                fillBottom - oy - rh,
-                                rw,
-                                rh,
-                                color);
+                                RenderType::guiTextured, waterSprite, fillX + ox, fillBottom - oy - rh, rw, rh, color);
                     }
                 }
                 drawContext.disableScissor();
@@ -177,7 +168,7 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
         drawContext.fill(x + width - 1, y, x + width, y + height, TANK_BORDER_COLOR); // right
     }
 
-    private void drawTankTooltip(GuiGraphicsExtractor drawContext, int mouseX, int mouseY) {
+    private void drawTankTooltip(GuiGraphics drawContext, int mouseX, int mouseY) {
         int tankScreenX = leftPos + TANK_X;
         int tankScreenY = topPos + TANK_Y;
         if (mouseX >= tankScreenX
@@ -190,7 +181,7 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
                     Component.literal(TEFormatUtils.formatNumber(waterAmount) + " / "
                                     + TEFormatUtils.formatNumber(maxWater) + " mB")
                             .withStyle(ChatFormatting.GRAY));
-            drawContext.setTooltipForNextFrame(this.font, tooltip, Optional.empty(), mouseX, mouseY);
+            drawContext.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }
     }
 }
