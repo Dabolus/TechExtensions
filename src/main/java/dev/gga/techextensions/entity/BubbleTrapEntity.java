@@ -162,7 +162,7 @@ public class BubbleTrapEntity extends Entity {
             return;
         }
 
-        double floatSpeed = TechExtensionsConfig.bubbleGunBubbleFloatSpeed.get();
+        double floatSpeed = TechExtensionsConfig.bubbleGunBubbleFloatSpeed;
         if (trapped instanceof ServerPlayer player) {
             // Players are client-authoritative, so levitation moves them and the bubble follows
             this.setPos(player.getX(), player.getY(), player.getZ());
@@ -206,17 +206,15 @@ public class BubbleTrapEntity extends Entity {
         }
 
         // Check if float duration is exceeded
-        if (floatTicks >= TechExtensionsConfig.bubbleGunBubbleFloatDuration.get()) {
+        if (floatTicks >= TechExtensionsConfig.bubbleGunBubbleFloatDuration) {
             pop();
         }
     }
 
     private void applyLevitation(ServerPlayer player) {
-        int remaining = Math.max(1, TechExtensionsConfig.bubbleGunBubbleFloatDuration.get() - floatTicks);
+        int remaining = Math.max(1, TechExtensionsConfig.bubbleGunBubbleFloatDuration - floatTicks);
         int amplifier = Math.max(
-                0,
-                (int) Math.round(TechExtensionsConfig.bubbleGunBubbleFloatSpeed.get() / LEVITATION_SPEED_PER_LEVEL)
-                        - 1);
+                0, (int) Math.round(TechExtensionsConfig.bubbleGunBubbleFloatSpeed / LEVITATION_SPEED_PER_LEVEL) - 1);
         player.addEffect(new MobEffectInstance(MobEffects.LEVITATION, remaining, amplifier, false, false, false));
         appliedLevitation = true;
     }

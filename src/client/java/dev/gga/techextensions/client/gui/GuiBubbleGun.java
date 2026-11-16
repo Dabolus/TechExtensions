@@ -66,7 +66,7 @@ public class GuiBubbleGun extends AbstractUpgradeableItemScreen<BubbleGunMenu> {
         ItemStack gunStack = findGunStack();
         hasGun = !gunStack.isEmpty();
         waterAmount = hasGun ? BubbleGunItem.getWaterAmount(gunStack) : 0;
-        maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+        maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
 
         Minecraft mc = Minecraft.getInstance();
         FluidModel fluidModel = mc.getModelManager().getFluidStateModelSet().get(Fluids.WATER.defaultFluidState());

@@ -294,8 +294,8 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         final ItemStack targetStack = inventory.getItem(TARGET_SLOT);
         final int scanCooldown = computeScanCooldown(overclockers);
         final long scanCost = computeScanCost(targetStack, overclockers);
-        final long energyCapacity = TechExtensionsConfig.resonanceScannerCharge.get()
-                + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
+        final long energyCapacity = TechExtensionsConfig.resonanceScannerCharge
+                + (long) (energyStorage * TechRebornConfig.energyStoragePower);
 
         CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
             tag.putInt(SCAN_COOLDOWN_CACHE_KEY, scanCooldown);
@@ -308,7 +308,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return TECacheUtils.getCachedValue(
                 stack,
                 SCAN_COOLDOWN_CACHE_KEY,
-                TechExtensionsConfig.resonanceScannerScanCooldown.get(),
+                TechExtensionsConfig.resonanceScannerScanCooldown,
                 tag -> tag.getInt(SCAN_COOLDOWN_CACHE_KEY),
                 ResonanceScannerItem::getInventory,
                 ResonanceScannerItem::updateCache);
@@ -318,7 +318,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return TECacheUtils.getCachedValue(
                 stack,
                 SCAN_COST_CACHE_KEY,
-                TechExtensionsConfig.resonanceScannerBaseCost.get(),
+                TechExtensionsConfig.resonanceScannerBaseCost,
                 tag -> tag.getLong(SCAN_COST_CACHE_KEY),
                 ResonanceScannerItem::getInventory,
                 ResonanceScannerItem::updateCache);
@@ -328,7 +328,7 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
         return TECacheUtils.getCachedValue(
                 stack,
                 ENERGY_CAPACITY_CACHE_KEY,
-                (long) TechExtensionsConfig.resonanceScannerCharge.get(),
+                (long) TechExtensionsConfig.resonanceScannerCharge,
                 tag -> tag.getLong(ENERGY_CAPACITY_CACHE_KEY),
                 ResonanceScannerItem::getInventory,
                 ResonanceScannerItem::updateCache);
@@ -354,25 +354,24 @@ public class ResonanceScannerItem extends Item implements RcEnergyItem, IUpgrade
     }
 
     public static int computeScanCooldown(int overclockerUpgrades) {
-        double speedMultiplier = TechRebornConfig.overclockerSpeed.get() * overclockerUpgrades;
-        double cooldown = TechExtensionsConfig.resonanceScannerScanCooldown.get() * (1.0 - speedMultiplier);
+        double speedMultiplier = TechRebornConfig.overclockerSpeed * overclockerUpgrades;
+        double cooldown = TechExtensionsConfig.resonanceScannerScanCooldown * (1.0 - speedMultiplier);
         return Math.max(1, (int) Math.round(cooldown));
     }
 
     public static long computeScanCost(ItemStack targetStack, int overclockerUpgrades) {
         int itemsInStack = targetStack.isEmpty() ? 0 : targetStack.getCount();
-        long stackScanCost = TechExtensionsConfig.resonanceScannerBaseCost.get()
-                + (itemsInStack * TechExtensionsConfig.resonanceScannerPerItemCost.get());
-        double powerMultiplier = Math.pow(1f + TechRebornConfig.overclockerPower.get(), overclockerUpgrades);
+        long stackScanCost = TechExtensionsConfig.resonanceScannerBaseCost
+                + (itemsInStack * TechExtensionsConfig.resonanceScannerPerItemCost);
+        double powerMultiplier = Math.pow(1f + TechRebornConfig.overclockerPower, overclockerUpgrades);
         return Math.round(stackScanCost * powerMultiplier);
     }
 
     public static long computeEffectiveRange(ItemStack targetStack) {
         return targetStack.isEmpty()
                 ? 0
-                : Math.round(TechExtensionsConfig.resonanceScannerBaseRange.get()
-                        + (TechExtensionsConfig.resonanceScannerRangeMultiplier.get()
-                                * Math.log(targetStack.getCount())));
+                : Math.round(TechExtensionsConfig.resonanceScannerBaseRange
+                        + (TechExtensionsConfig.resonanceScannerRangeMultiplier * Math.log(targetStack.getCount())));
     }
 
     /** Walks a cylinder along the player's view line and returns the first matching block. */

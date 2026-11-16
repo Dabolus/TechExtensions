@@ -51,8 +51,7 @@ public final class TEMiningUtils {
     public static void mineAoe3x3(ItemStack stack, Level worldIn, BlockPos pos, LivingEntity entityLiving) {
         for (BlockPos additionalPos : ToolsUtil.getAOEMiningBlocks(worldIn, pos, entityLiving, 1)) {
             if (shouldBreak(worldIn, pos, additionalPos)) {
-                ToolsUtil.breakBlock(
-                        stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost.get());
+                ToolsUtil.breakBlock(stack, worldIn, additionalPos, entityLiving, TechExtensionsConfig.metaToolCost);
             }
         }
     }

@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -117,7 +117,7 @@ public final class ItemAnimationManager {
             this.durationTicks = Math.max(1, (int) Math.ceil(total / SPEED));
 
             Vec3 start = path.getFirst();
-            this.display = new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world);
+            this.display = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, world);
             this.display.setItemStack(displayItem.copy());
             this.display.setNoGravity(true);
             this.display.setInvulnerable(true);

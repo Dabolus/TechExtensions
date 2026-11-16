@@ -97,8 +97,8 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
 
     private static long blockCostPerTickForMode(CyberShieldMode mode) {
         return mode == CyberShieldMode.PERMA_PARRY
-                ? TechExtensionsConfig.cyberShieldPermaParryCostPerTick.get()
-                : TechExtensionsConfig.cyberShieldStandardCostPerTick.get();
+                ? TechExtensionsConfig.cyberShieldPermaParryCostPerTick
+                : TechExtensionsConfig.cyberShieldStandardCostPerTick;
     }
 
     public CyberShieldItem(String name) {
@@ -127,7 +127,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.cyberShieldCharge.get();
+        return TechExtensionsConfig.cyberShieldCharge;
     }
 
     @Override
@@ -224,7 +224,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
             DamageSource source) {
 
         // Check energy
-        if (shield.getStoredEnergy(shieldStack) < TechExtensionsConfig.cyberShieldPerfectParryCost.get()) return;
+        if (shield.getStoredEnergy(shieldStack) < TechExtensionsConfig.cyberShieldPerfectParryCost) return;
 
         // In Perma-Parry mode, every blocked hit is a parry.
         // In Standard mode, check whether the block happened within the parry window.
@@ -234,12 +234,12 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
             int blockDelay = blocksAttacks != null ? blocksAttacks.blockDelayTicks() : 0;
             int ticksSinceBlocking = defender.getTicksUsingItem() - blockDelay;
 
-            if (ticksSinceBlocking < 0 || ticksSinceBlocking > TechExtensionsConfig.cyberShieldPerfectParryWindow.get())
+            if (ticksSinceBlocking < 0 || ticksSinceBlocking > TechExtensionsConfig.cyberShieldPerfectParryWindow)
                 return;
         }
 
         // Drain parry energy cost
-        shield.tryUseEnergy(shieldStack, TechExtensionsConfig.cyberShieldPerfectParryCost.get());
+        shield.tryUseEnergy(shieldStack, TechExtensionsConfig.cyberShieldPerfectParryCost);
 
         // Play parry sound
         level.playSound(
@@ -298,13 +298,12 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
         Entity attacker = source.getEntity();
         if (attacker instanceof LivingEntity livingAttacker) {
             DamageSource parrySource = level.damageSources().thorns(defender);
-            float parryDamage = TechExtensionsConfig.cyberShieldPerfectParryDamage.get();
+            float parryDamage = TechExtensionsConfig.cyberShieldPerfectParryDamage;
             livingAttacker.hurtServer(level, parrySource, parryDamage);
 
             double dx = defender.getX() - livingAttacker.getX();
             double dz = defender.getZ() - livingAttacker.getZ();
-            livingAttacker.knockback(
-                    TechExtensionsConfig.cyberShieldPerfectParryKnockback.get(), dx, dz, parrySource, parryDamage);
+            livingAttacker.knockback(TechExtensionsConfig.cyberShieldPerfectParryKnockback, dx, dz);
         }
     }
 

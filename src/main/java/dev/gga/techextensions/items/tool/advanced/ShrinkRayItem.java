@@ -206,7 +206,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.shrinkRayCharge.get();
+        return TechExtensionsConfig.shrinkRayCharge;
     }
 
     @Override
@@ -230,7 +230,7 @@ public class ShrinkRayItem extends Item implements RcEnergyItem {
             return InteractionResult.PASS;
         }
         // Not enough energy, no-op
-        if (!tryUseEnergy(stack, TechExtensionsConfig.shrinkRayCost.get())) {
+        if (!tryUseEnergy(stack, TechExtensionsConfig.shrinkRayCost)) {
             return InteractionResult.SUCCESS;
         }
         // Raycast for entities along the player's look vector
