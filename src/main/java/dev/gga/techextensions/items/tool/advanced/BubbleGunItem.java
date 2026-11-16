@@ -119,7 +119,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 case INSPECT -> "techextensions.message.bubble_gun.mode_inspect";
                 case SHOOT -> "techextensions.message.bubble_gun.mode_shoot";
             };
-            serverPlayer.sendSystemMessage(
+            serverPlayer.displayClientMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")
@@ -191,7 +191,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
         // Aiming at a water source refills the tank, unless it is already full. The crosshair raycast ignores
         // fluids, so trace them here like buckets do.
-        if (getWaterAmount(stack) < TechExtensionsConfig.bubbleGunWaterCapacity.get()) {
+        if (getWaterAmount(stack) < TechExtensionsConfig.bubbleGunWaterCapacity) {
             BlockHitResult fluidHit = getPlayerPOVHitResult(world, player, ClipContext.Fluid.SOURCE_ONLY);
             if (fluidHit.getType() == HitResult.Type.BLOCK
                     && isWaterSource(world.getFluidState(fluidHit.getBlockPos()))) {
@@ -215,14 +215,14 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         // SHOOT mode — start using (hold to shoot)
         if (!world.isClientSide()) {
             // Validate conditions before starting
-            if (getStoredEnergy(stack) < TechExtensionsConfig.bubbleGunEnergyCostPerTick.get()) {
+            if (getStoredEnergy(stack) < TechExtensionsConfig.bubbleGunEnergyCostPerTick) {
                 world.playSound(
                         null, player.blockPosition(), SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 1.0F, 1.2F);
                 return InteractionResult.FAIL;
             }
-            if (getWaterAmount(stack) < TechExtensionsConfig.bubbleGunWaterCostPerTick.get()) {
+            if (getWaterAmount(stack) < TechExtensionsConfig.bubbleGunWaterCostPerTick) {
                 if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.sendSystemMessage(
+                    serverPlayer.displayClientMessage(
                             Component.translatable("techextensions.message.bubble_gun.no_water")
                                     .withStyle(ChatFormatting.RED),
                             true);
@@ -231,7 +231,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
             }
             if (!(getSoap(stack).getItem() instanceof SoapItem)) {
                 if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.sendSystemMessage(
+                    serverPlayer.displayClientMessage(
                             Component.translatable("techextensions.message.bubble_gun.no_soap")
                                     .withStyle(ChatFormatting.RED),
                             true);
@@ -262,7 +262,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
 
     private static void fillFromWorld(Level world, ItemStack stack, BlockPos pos) {
         long currentWater = getWaterAmount(stack);
-        long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+        long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
         if (currentWater >= maxWater) {
             return;
         }
@@ -277,7 +277,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         }
 
         // Check energy
-        long energyCostPerTick = TechExtensionsConfig.bubbleGunEnergyCostPerTick.get();
+        long energyCostPerTick = TechExtensionsConfig.bubbleGunEnergyCostPerTick;
         if (getStoredEnergy(stack) < energyCostPerTick) {
             entity.stopUsingItem();
             return;
@@ -288,7 +288,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
 
         // Check water
-        long waterCostPerTick = TechExtensionsConfig.bubbleGunWaterCostPerTick.get();
+        long waterCostPerTick = TechExtensionsConfig.bubbleGunWaterCostPerTick;
         long currentWater = tag.getLongOr(WATER_KEY, 0L);
         if (currentWater < waterCostPerTick) {
             entity.stopUsingItem();
@@ -309,7 +309,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         // Spawn bubble particles along the look direction
         Vec3 eyePos = player.getEyePosition(1.0F);
         Vec3 lookVec = player.getViewVector(1.0F).normalize();
-        double range = TechExtensionsConfig.bubbleGunRange.get();
+        double range = TechExtensionsConfig.bubbleGunRange;
 
         for (double d = 1.0; d < range; d += 0.8) {
             Vec3 particlePos = eyePos.add(lookVec.scale(d));
@@ -373,7 +373,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                     0.02);
 
             // Trap the entity once the threshold is met
-            if (trapProgress >= TechExtensionsConfig.bubbleGunTrapDuration.get()) {
+            if (trapProgress >= TechExtensionsConfig.bubbleGunTrapDuration) {
                 BubbleTrapEntity bubble = new BubbleTrapEntity(TEContent.BUBBLE_TRAP_ENTITY, serverLevel);
                 bubble.setPos(closestEntity.getX(), closestEntity.getY(), closestEntity.getZ());
                 bubble.setTrappedEntity(closestEntity);
@@ -397,9 +397,9 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
                 tag.putInt(CLEANING_PROGRESS_KEY, progress);
 
                 // Clean the block once the threshold is met
-                if (progress >= TechExtensionsConfig.bubbleGunCleanDuration.get()) {
+                if (progress >= TechExtensionsConfig.bubbleGunCleanDuration) {
                     if (TECleaningUtils.cleanBlock(level, hitPos)) {
-                        level.playSound(null, hitPos, SoundEvents.AXE_SCRAPE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                        level.playSound(null, hitPos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0F, 1.0F);
                         soapDamage = 1;
                     }
                     // Reset progress after cleaning
@@ -458,7 +458,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
             return;
         }
         long currentWater = getWaterAmount(stack);
-        long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+        long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
         if (currentWater >= maxWater) {
             return;
         }
@@ -692,8 +692,8 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
             if (s.is(TRContent.Upgrades.ENERGY_STORAGE.item)) energyStorage += s.getCount();
         }
 
-        final long energyCapacity = TechExtensionsConfig.bubbleGunCharge.get()
-                + (long) (energyStorage * TechRebornConfig.energyStoragePower.get());
+        final long energyCapacity =
+                TechExtensionsConfig.bubbleGunCharge + (long) (energyStorage * TechRebornConfig.energyStoragePower);
 
         CustomData.update(
                 DataComponents.CUSTOM_DATA, stack, tag -> tag.putLong(ENERGY_CAPACITY_CACHE_KEY, energyCapacity));
@@ -703,7 +703,7 @@ public class BubbleGunItem extends Item implements RcEnergyItem, IUpgradeable {
         return TECacheUtils.getCachedValue(
                 stack,
                 ENERGY_CAPACITY_CACHE_KEY,
-                (long) TechExtensionsConfig.bubbleGunCharge.get(),
+                (long) TechExtensionsConfig.bubbleGunCharge,
                 tag -> tag.getLong(ENERGY_CAPACITY_CACHE_KEY),
                 BubbleGunItem::getInventory,
                 BubbleGunItem::updateCache);

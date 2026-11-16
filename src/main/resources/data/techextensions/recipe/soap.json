@@ -3,19 +3,34 @@
   "heat": 1000,
   "ingredients": [
     {
-      "ingredient": "techreborn:oil_cell"
+      "count": 1,
+      "ingredient": {
+        "fabric:type": "fabric:components",
+        "base": "techreborn:cell",
+        "components": {
+          "techreborn:fluid": "techreborn:oil"
+        }
+      }
     },
     {
-      "ingredient": "techreborn:sodium_cell"
+      "count": 1,
+      "ingredient": {
+        "fabric:type": "fabric:components",
+        "base": "techreborn:cell",
+        "components": {
+          "techreborn:fluid": "techreborn:sodium"
+        }
+      }
     }
   ],
   "outputs": [
     {
+      "count": 1,
       "id": "techextensions:soap"
     },
     {
-      "id": "techreborn:cell",
-      "count": 2
+      "count": 2,
+      "id": "techreborn:cell"
     }
   ],
   "power": 128,

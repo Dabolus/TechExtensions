@@ -10,8 +10,8 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * A simple cube model for the bubble trap. The cube is 16x16x16 centered,
@@ -19,9 +19,9 @@ import net.minecraft.resources.Identifier;
  */
 public class BubbleTrapModel extends EntityModel<BubbleTrapEntityRenderState> {
     public static final ModelLayerLocation LAYER_LOCATION =
-            new ModelLayerLocation(Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_trap"), "main");
+            new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "bubble_trap"), "main");
 
-    public BubbleTrapModel(ModelPart root, Function<Identifier, RenderType> renderTypeFactory) {
+    public BubbleTrapModel(ModelPart root, Function<ResourceLocation, RenderType> renderTypeFactory) {
         super(root, renderTypeFactory);
     }
 

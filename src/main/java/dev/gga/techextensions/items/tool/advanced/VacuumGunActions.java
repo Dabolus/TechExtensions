@@ -5,17 +5,14 @@ import dev.gga.techextensions.utils.ItemAnimationManager;
 import dev.gga.techextensions.utils.TEAimingUtils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
@@ -97,7 +94,7 @@ final class VacuumGunActions {
     static boolean performVacuum(ServerLevel world, Player player, ItemStack gunStack) {
         Vec3 eyePos = player.getEyePosition(1.0F);
         Vec3 lookDir = player.getViewVector(1.0F).normalize();
-        double range = TechExtensionsConfig.vacuumGunRange.get();
+        double range = TechExtensionsConfig.vacuumGunRange;
         Vec3 endPos = eyePos.add(lookDir.scale(range));
 
         BlockHitResult blockHit = world.clip(new ClipContext(
@@ -162,9 +159,9 @@ final class VacuumGunActions {
         }
 
         // Second, if no equipped items, vacuum the mob itself as a spawn egg (if possible)
-        Optional<Holder<Item>> eggHolder = SpawnEggItem.byId(living.getType());
-        if (eggHolder.isPresent()) {
-            ItemStack eggStack = new ItemStack(eggHolder.get());
+        SpawnEggItem egg = SpawnEggItem.byId(living.getType());
+        if (egg != null) {
+            ItemStack eggStack = new ItemStack(egg);
             TagValueOutput output =
                     TagValueOutput.createWithContext(ProblemReporter.DISCARDING, world.registryAccess());
             living.saveWithoutId(output);
@@ -221,7 +218,7 @@ final class VacuumGunActions {
         ItemStack leftover = VacuumGunItem.insertIntoInventory(inventory, filledBucket);
         inventory.setChanged();
         if (!leftover.isEmpty()) {
-            player.drop(leftover, false, Prediction.SERVER_ONLY);
+            player.drop(leftover, false);
         }
         world.setBlock(fluidPos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         world.playSound(null, fluidPos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
@@ -297,7 +294,7 @@ final class VacuumGunActions {
         Item item = takenItem.getItem();
         Item nukeItem = TRContent.NUKE.asItem();
 
-        if (item == Items.TNT || (TechRebornConfig.nukeEnabled.get() && item == nukeItem)) {
+        if (item == Items.TNT || (TechRebornConfig.nukeEnabled && item == nukeItem)) {
             return () -> blowExplosive(world, player, takenItem, tr);
         }
         if (item instanceof SpawnEggItem) {
@@ -654,7 +651,7 @@ final class VacuumGunActions {
         for (ItemStack stack : stacks) {
             ItemStack leftover = VacuumGunItem.insertIntoInventory(inv, stack);
             if (!leftover.isEmpty()) {
-                player.drop(leftover, false, Prediction.SERVER_ONLY);
+                player.drop(leftover, false);
             }
         }
     }

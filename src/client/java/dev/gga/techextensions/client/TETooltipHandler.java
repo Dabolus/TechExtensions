@@ -60,7 +60,7 @@ public class TETooltipHandler implements ItemTooltipCallback {
 
             // Show water level
             long waterAmount = BubbleGunItem.getWaterAmount(stack);
-            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity.get();
+            long maxWater = TechExtensionsConfig.bubbleGunWaterCapacity;
             lines.add(Component.translatable(
                             "techextensions.tooltip.bubble_gun.water_level",
                             TEFormatUtils.formatNumber(waterAmount),

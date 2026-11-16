@@ -3,28 +3,27 @@ package dev.gga.techextensions.client.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.gga.techextensions.TechExtensions;
 import dev.gga.techextensions.entity.BubbleTrapEntity;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
 /**
  * Renders a semi-transparent bubble cube around the trapped entity.
  */
 public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, BubbleTrapEntityRenderState> {
-    private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "textures/entity/bubble_trap.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "textures/entity/bubble_trap.png");
 
     private final BubbleTrapModel model;
 
     public BubbleTrapEntityRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
-        this.model = new BubbleTrapModel(ctx.bakeLayer(BubbleTrapModel.LAYER_LOCATION), RenderTypes::entityTranslucent);
+        this.model = new BubbleTrapModel(ctx.bakeLayer(BubbleTrapModel.LAYER_LOCATION), RenderType::entityTranslucent);
     }
 
     @Override
@@ -74,7 +73,7 @@ public class BubbleTrapEntityRenderer extends EntityRenderer<BubbleTrapEntity, B
         // the default overload triggering a white outline silhouette.
         // Translucency comes from the texture's own alpha channel.
         collector.submitModel(
-                this.model, state, poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                this.model, state, poseStack, renderType, state.lightCoords, OverlayTexture.NO_OVERLAY, 0, null);
 
         poseStack.popPose();
 

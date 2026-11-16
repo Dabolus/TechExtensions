@@ -3,7 +3,7 @@ package dev.gga.techextensions.client.gui;
 import dev.gga.techextensions.items.tool.advanced.ResonanceScannerItem;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -14,14 +14,14 @@ public class GuiResonanceScanner extends AbstractUpgradeableItemScreen<Resonance
     }
 
     @Override
-    protected void extractItemContents(GuiGraphicsExtractor drawContext) {
+    protected void extractItemContents(GuiGraphics drawContext) {
         // Target slot
         drawSlot(drawContext, 80, 35);
     }
 
     @Override
-    protected void extractLabels(GuiGraphicsExtractor drawContext, int mouseX, int mouseY) {
-        super.extractLabels(drawContext, mouseX, mouseY);
+    protected void renderLabels(GuiGraphics drawContext, int mouseX, int mouseY) {
+        super.renderLabels(drawContext, mouseX, mouseY);
         // Read the live target slot of the open menu, which is what the player is looking at
         ItemStack targetStack =
                 this.menu.getSlot(ResonanceScannerItem.TARGET_SLOT).getItem();

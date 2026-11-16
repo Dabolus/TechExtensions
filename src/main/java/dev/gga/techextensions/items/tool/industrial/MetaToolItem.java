@@ -61,7 +61,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
             TRItemUtils.switchActive(stack, cost, entity);
             stack.set(TEDataComponentTypes.TOOL_MODE, MetaToolMode.AOE_3x3.ordinal());
             if (entity instanceof ServerPlayer serverPlayerEntity) {
-                serverPlayerEntity.sendSystemMessage(
+                serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -85,7 +85,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
                     case AOE_3x3 -> "techextensions.message.meta_tool.mode_aoe_3x3";
                     case SMART -> "techextensions.message.meta_tool.mode_smart";
                 };
-                serverPlayerEntity.sendSystemMessage(
+                serverPlayerEntity.displayClientMessage(
                         Component.translatable("techextensions.message.set_to")
                                 .withStyle(ChatFormatting.GRAY)
                                 .append(" ")
@@ -99,7 +99,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // MiningToolItem
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
-        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost.get()) {
+        if (getStoredEnergy(stack) >= TechExtensionsConfig.metaToolCost) {
             return TEToolMaterials.META_TOOL.speed();
         }
         Tool toolComponent = stack.get(DataComponents.TOOL);
@@ -109,7 +109,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     @Override
     public boolean mineBlock(
             ItemStack stack, Level worldIn, BlockState blockIn, BlockPos pos, LivingEntity entityLiving) {
-        int cost = TechExtensionsConfig.metaToolCost.get();
+        int cost = TechExtensionsConfig.metaToolCost;
         if (!(entityLiving instanceof Player)) {
             tryUseEnergy(stack, cost);
             return true;
@@ -146,7 +146,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
 
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost.get())
+        if (tryUseEnergy(stack, TechExtensionsConfig.metaToolHitCost)
                 && target.level() instanceof ServerLevel serverWorld) {
             // Mobs can wield the tool too (picked up, or handed over by the Vacuum Gun)
             DamageSource source = attacker instanceof Player player
@@ -161,7 +161,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
         final ItemStack stack = player.getItemInHand(interactionHand);
         if (player.isShiftKeyDown()) {
-            switchMode(stack, TechExtensionsConfig.metaToolCost.get(), player);
+            switchMode(stack, TechExtensionsConfig.metaToolCost, player);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
@@ -209,7 +209,7 @@ public class MetaToolItem extends Item implements RcEnergyItem, IToolHandler {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.metaToolCharge.get();
+        return TechExtensionsConfig.metaToolCharge;
     }
 
     @Override

@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.HolderGetter;
-import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -21,16 +19,15 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
-import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
@@ -64,20 +61,17 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
     /**
      * Creates a `BlocksAttacks` component with the given parameters.
      *
-     * @param provider registry lookup to resolve damage type tags
      * @param blockingAngle horizontal blocking angle in degrees
      * @param damageReductionFactor 0.0 (no protection) to 1.0 (full protection)
      */
-    private static BlocksAttacks createBlocksAttacks(
-            HolderGetter.Provider provider, float blockingAngle, float damageReductionFactor) {
-        HolderSet.Named<DamageType> bypassedBy = provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD);
+    private static BlocksAttacks createBlocksAttacks(float blockingAngle, float damageReductionFactor) {
         return new BlocksAttacks(
                 0.25F,
                 1.0F,
                 List.of(new BlocksAttacks.DamageReduction(
                         blockingAngle, Optional.empty(), 0.0F, damageReductionFactor)),
                 new BlocksAttacks.ItemDamageFunction(3.0F, 1.0F, 1.0F),
-                Optional.of(bypassedBy),
+                Optional.of(DamageTypeTags.BYPASSES_SHIELD),
                 Optional.of(SoundEvents.SHIELD_BLOCK),
                 Optional.of(SoundEvents.SHIELD_BREAK));
     }
@@ -97,16 +91,16 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
 
     private static long blockCostPerTickForMode(CyberShieldMode mode) {
         return mode == CyberShieldMode.PERMA_PARRY
-                ? TechExtensionsConfig.cyberShieldPermaParryCostPerTick.get()
-                : TechExtensionsConfig.cyberShieldStandardCostPerTick.get();
+                ? TechExtensionsConfig.cyberShieldPermaParryCostPerTick
+                : TechExtensionsConfig.cyberShieldStandardCostPerTick;
     }
 
     public CyberShieldItem(String name) {
         super(TEItemSettings.unbreakable(name)
                 .equippableUnswappable(EquipmentSlot.OFFHAND)
-                .delayedComponent(
+                .component(
                         DataComponents.BLOCKS_ATTACKS,
-                        provider -> createBlocksAttacks(provider, STANDARD_BLOCKING_ANGLE, CHARGED_DAMAGE_REDUCTION)));
+                        createBlocksAttacks(STANDARD_BLOCKING_ANGLE, CHARGED_DAMAGE_REDUCTION)));
     }
 
     @Override
@@ -127,7 +121,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
     // RcEnergyItem
     @Override
     public long getEnergyCapacity(ItemStack stack) {
-        return TechExtensionsConfig.cyberShieldCharge.get();
+        return TechExtensionsConfig.cyberShieldCharge;
     }
 
     @Override
@@ -208,8 +202,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
             return;
         }
 
-        stack.set(
-                DataComponents.BLOCKS_ATTACKS, createBlocksAttacks(world.registryAccess(), targetAngle, targetFactor));
+        stack.set(DataComponents.BLOCKS_ATTACKS, createBlocksAttacks(targetAngle, targetFactor));
     }
 
     /**
@@ -224,7 +217,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
             DamageSource source) {
 
         // Check energy
-        if (shield.getStoredEnergy(shieldStack) < TechExtensionsConfig.cyberShieldPerfectParryCost.get()) return;
+        if (shield.getStoredEnergy(shieldStack) < TechExtensionsConfig.cyberShieldPerfectParryCost) return;
 
         // In Perma-Parry mode, every blocked hit is a parry.
         // In Standard mode, check whether the block happened within the parry window.
@@ -234,12 +227,12 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
             int blockDelay = blocksAttacks != null ? blocksAttacks.blockDelayTicks() : 0;
             int ticksSinceBlocking = defender.getTicksUsingItem() - blockDelay;
 
-            if (ticksSinceBlocking < 0 || ticksSinceBlocking > TechExtensionsConfig.cyberShieldPerfectParryWindow.get())
+            if (ticksSinceBlocking < 0 || ticksSinceBlocking > TechExtensionsConfig.cyberShieldPerfectParryWindow)
                 return;
         }
 
         // Drain parry energy cost
-        shield.tryUseEnergy(shieldStack, TechExtensionsConfig.cyberShieldPerfectParryCost.get());
+        shield.tryUseEnergy(shieldStack, TechExtensionsConfig.cyberShieldPerfectParryCost);
 
         // Play parry sound
         level.playSound(
@@ -287,7 +280,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
         if (directEntity instanceof Projectile projectile) {
             Entity attacker = source.getEntity();
             if (attacker != null) {
-                projectile.deflect(ProjectileDeflection.REVERSE, defender, EntityReference.of(defender), true, 1.0);
+                projectile.deflect(ProjectileDeflection.REVERSE, defender, EntityReference.of(defender), true);
                 projectile.setDeltaMovement(
                         projectile.getDeltaMovement().normalize().scale(1.5));
             }
@@ -298,13 +291,12 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
         Entity attacker = source.getEntity();
         if (attacker instanceof LivingEntity livingAttacker) {
             DamageSource parrySource = level.damageSources().thorns(defender);
-            float parryDamage = TechExtensionsConfig.cyberShieldPerfectParryDamage.get();
+            float parryDamage = TechExtensionsConfig.cyberShieldPerfectParryDamage;
             livingAttacker.hurtServer(level, parrySource, parryDamage);
 
             double dx = defender.getX() - livingAttacker.getX();
             double dz = defender.getZ() - livingAttacker.getZ();
-            livingAttacker.knockback(
-                    TechExtensionsConfig.cyberShieldPerfectParryKnockback.get(), dx, dz, parrySource, parryDamage);
+            livingAttacker.knockback(TechExtensionsConfig.cyberShieldPerfectParryKnockback, dx, dz);
         }
     }
 
@@ -319,7 +311,7 @@ public class CyberShieldItem extends Item implements RcEnergyItem {
                 case STANDARD -> "techextensions.message.cyber_shield.mode_standard";
                 case PERMA_PARRY -> "techextensions.message.cyber_shield.mode_perma_parry";
             };
-            serverPlayer.sendSystemMessage(
+            serverPlayer.displayClientMessage(
                     Component.translatable("techextensions.message.set_to")
                             .withStyle(ChatFormatting.GRAY)
                             .append(" ")

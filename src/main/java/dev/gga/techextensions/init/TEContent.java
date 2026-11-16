@@ -8,7 +8,7 @@ import dev.gga.techextensions.menu.BubbleGunMenu;
 import dev.gga.techextensions.menu.ResonanceScannerMenu;
 import dev.gga.techextensions.menu.VacuumGunMenu;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
@@ -38,7 +38,7 @@ public class TEContent {
 
     public static final class BlockTags {
         public static final TagKey<Block> META_TOOL_MINEABLE = TagKey.create(
-                Registries.BLOCK, Identifier.fromNamespaceAndPath(TechExtensions.MOD_ID, "mineable/meta_tool"));
+                Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(TechExtensions.MOD_ID, "mineable/meta_tool"));
 
         private BlockTags() {}
     }
