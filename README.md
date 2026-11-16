@@ -8,6 +8,7 @@ It introduces new high-tech gadgets and utilities to enhance the gameplay experi
 - **Dependencies:**
   - [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
   - [Tech Reborn](https://www.curseforge.com/minecraft/mc-mods/techreborn)
+  - [Pehkui](https://modrinth.com/mod/pehkui)
 
 ## Items
 
