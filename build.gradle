@@ -152,7 +152,8 @@ publishing {
 def publishMinecraftVersions = project.publish_minecraft_versions.split(",")*.trim()
 
 publishMods {
-    file = jar.archiveFile
+    // The plain jar is the dev jar (Mojang names): publish the remapped one
+    file = remapJar.archiveFile
     version = project.version.toString()
     changelog = providers.environmentVariable("CHANGELOG").orElse("").map { it.isBlank() ? "See the commit history for the list of changes." : it }
     type = providers.environmentVariable("RELEASE_CHANNEL").orElse("stable").map { value ->
